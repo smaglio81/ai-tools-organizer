@@ -75,6 +75,7 @@ You can customize the extension behavior through VS Code settings. Press `Ctrl+,
 
 By default, the extension fetches skills from:
 - `anthropics/skills` - Official Anthropic skills
+- `github/awesome-copilot` - GitHub Copilot community skills
 - `pytorch/pytorch` - PyTorch agent skills
 - `openai/skills` - OpenAI curated skills
 - `formulahendry/agent-skill-code-runner` - Code runner skill

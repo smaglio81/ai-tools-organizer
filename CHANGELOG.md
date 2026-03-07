@@ -9,6 +9,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ### Added
 
 - Added support for skills directories `~/.copilot/skills` and `~/.claude/skills`.
+- Added `github/awesome-copilot` as a default skill repository source.
 
 ## [0.0.2]
 

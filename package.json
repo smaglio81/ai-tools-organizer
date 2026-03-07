@@ -155,6 +155,12 @@
               "branch": "main"
             },
             {
+              "owner": "github",
+              "repo": "awesome-copilot",
+              "path": "skills",
+              "branch": "main"
+            },
+            {
               "owner": "pytorch",
               "repo": "pytorch",
               "path": ".claude/skills",
