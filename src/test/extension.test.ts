@@ -17,6 +17,63 @@ suite('Extension Test Suite', () => {
 		assert.strictEqual(-1, [1, 2, 3].indexOf(0));
 	});
 
+	suite('SkillPathService.resolveInstallTarget path traversal validation', () => {
+		class TestSkillPathService extends SkillPathService {
+			override getInstallLocation(): string {
+				return '.github/skills';
+			}
+
+			override getWorkspaceFolder(): vscode.WorkspaceFolder | undefined {
+				return {
+					uri: vscode.Uri.file('/workspace'),
+					name: 'test-workspace',
+					index: 0
+				};
+			}
+
+			override getHomeDirectory(): string {
+				return '/home/user';
+			}
+		}
+
+		test('allows a normal skill name', () => {
+			const service = new TestSkillPathService();
+			const result = service.resolveInstallTarget('my-skill');
+			assert.ok(result, 'Expected a URI for a normal skill name');
+			assert.ok(result!.fsPath.endsWith('my-skill'), 'Path should end with the skill name');
+		});
+
+		test('rejects skill name containing forward slash', () => {
+			const service = new TestSkillPathService();
+			const result = service.resolveInstallTarget('evil/skill');
+			assert.strictEqual(result, undefined, 'Expected undefined for skill name with forward slash');
+		});
+
+		test('rejects skill name containing backslash', () => {
+			const service = new TestSkillPathService();
+			const result = service.resolveInstallTarget('evil\\skill');
+			assert.strictEqual(result, undefined, 'Expected undefined for skill name with backslash');
+		});
+
+		test('rejects skill name that is dot-dot', () => {
+			const service = new TestSkillPathService();
+			const result = service.resolveInstallTarget('..');
+			assert.strictEqual(result, undefined, 'Expected undefined for dot-dot skill name');
+		});
+
+		test('rejects skill name containing dot-dot as substring', () => {
+			const service = new TestSkillPathService();
+			const result = service.resolveInstallTarget('..evil');
+			assert.strictEqual(result, undefined, 'Expected undefined for skill name containing dot-dot');
+		});
+
+		test('rejects empty skill name', () => {
+			const service = new TestSkillPathService();
+			const result = service.resolveInstallTarget('');
+			assert.strictEqual(result, undefined, 'Expected undefined for empty skill name');
+		});
+	});
+
 	test('scanInstalledSkills expands ~ paths and skips missing directories before readDirectory', async () => {
 		const workspaceRoot = path.join(os.tmpdir(), 'agent-skills-test-workspace');
 		const workspaceUri = vscode.Uri.file(workspaceRoot);

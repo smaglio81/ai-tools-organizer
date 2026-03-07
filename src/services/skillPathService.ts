@@ -61,6 +61,10 @@ export class SkillPathService {
     }
 
     resolveInstallTarget(skillName: string, workspaceFolder?: vscode.WorkspaceFolder): vscode.Uri | undefined {
+        if (!skillName || /[/\\]/.test(skillName) || skillName.includes('..')) {
+            return undefined;
+        }
+
         const installLocation = this.getInstallLocation();
         const resolvedWorkspaceFolder = workspaceFolder ?? this.getWorkspaceFolderForLocation(installLocation);
         const baseDir = this.resolveLocationToUri(installLocation, resolvedWorkspaceFolder);
