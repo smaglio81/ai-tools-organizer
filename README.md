@@ -96,7 +96,7 @@ Add custom repositories by modifying this setting:
 
 **Setting**: `agentSkills.installLocation`
 
-Choose where to install skills in your workspace:
+Choose where to install skills in your workspace or home directory:
 - `.github/skills` (default)
 - `.claude/skills`
 - `~/.copilot/skills`

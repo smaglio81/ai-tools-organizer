@@ -56,7 +56,7 @@ export class SkillPathService {
             return undefined;
         }
 
-        const segments = this.normalizeLocation(location).split(/[\\/]+/).filter(s => s.length > 0);
+        const segments = this.normalizeWorkspaceLocation(location).split(/[\\/]+/).filter(s => s.length > 0);
         return vscode.Uri.joinPath(workspaceFolder.uri, ...segments);
     }
 
@@ -72,8 +72,14 @@ export class SkillPathService {
         return vscode.Uri.joinPath(baseDir, skillName);
     }
 
-    private normalizeLocation(location: string): string {
-        return this.normalizePath(location);
+    private normalizeWorkspaceLocation(location: string): string {
+        const normalized = path.posix.normalize(location.replace(/\\/g, '/'));
+        const root = path.posix.parse(normalized).root;
+        if (normalized.length <= root.length) {
+            return normalized;
+        }
+
+        return normalized.replace(/\/+$/, '');
     }
 
     private normalizePath(value: string): string {
