@@ -179,7 +179,7 @@ export class SkillInstallationService {
         try {
             await vscode.commands.executeCommand('revealInExplorer', skillDir);
             await vscode.window.showTextDocument(skillMd);
-        } catch (error) {
+        } catch (_error) {
             vscode.window.showErrorMessage(`Failed to open skill folder`);
         }
     }

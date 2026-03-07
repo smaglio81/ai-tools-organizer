@@ -198,7 +198,7 @@ export class GitHubSkillsClient {
                 fullContent: content,
                 bodyContent: parsed.body
             };
-        } catch (error) {
+        } catch (_error) {
             console.warn(`No SKILL.md found for ${skillName}`);
             return null;
         }
