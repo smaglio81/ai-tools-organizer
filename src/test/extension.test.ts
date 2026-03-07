@@ -72,6 +72,25 @@ suite('Extension Test Suite', () => {
 			const result = service.resolveInstallTarget('');
 			assert.strictEqual(result, undefined, 'Expected undefined for empty skill name');
 		});
+
+		test('rejects single dot skill name', () => {
+			const service = new TestSkillPathService();
+			const result = service.resolveInstallTarget('.');
+			assert.strictEqual(result, undefined, 'Expected undefined for single dot skill name');
+		});
+
+		test('rejects whitespace-only skill name', () => {
+			const service = new TestSkillPathService();
+			const result = service.resolveInstallTarget('   ');
+			assert.strictEqual(result, undefined, 'Expected undefined for whitespace-only skill name');
+		});
+
+		test('trims whitespace from valid skill name', () => {
+			const service = new TestSkillPathService();
+			const result = service.resolveInstallTarget('  my-skill  ');
+			assert.ok(result, 'Expected a URI for a padded skill name');
+			assert.ok(result!.fsPath.endsWith('my-skill'), 'Path should end with the trimmed skill name');
+		});
 	});
 
 	suite('SkillPathService.resolveLocationToUri whitespace trimming', () => {

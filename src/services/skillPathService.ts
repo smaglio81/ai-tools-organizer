@@ -63,7 +63,8 @@ export class SkillPathService {
     }
 
     resolveInstallTarget(skillName: string, workspaceFolder?: vscode.WorkspaceFolder): vscode.Uri | undefined {
-        if (!skillName || /[/\\]/.test(skillName) || skillName.includes('..')) {
+        const trimmed = skillName.trim();
+        if (!trimmed || trimmed === '.' || /[/\\]/.test(trimmed) || trimmed.includes('..')) {
             return undefined;
         }
 
@@ -75,7 +76,7 @@ export class SkillPathService {
             return undefined;
         }
 
-        return vscode.Uri.joinPath(baseDir, skillName);
+        return vscode.Uri.joinPath(baseDir, trimmed);
     }
 
     private normalizeWorkspaceLocation(location: string): string {
