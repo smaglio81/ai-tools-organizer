@@ -58,7 +58,24 @@ CRITICAL INSTRUCTIONS:
    - Secrets or sensitive data stored on disk (these are handled by other processes)
    - Rate limiting or resource exhaustion issues
 
-SECURITY CATEGORIES TO EXAMINE:
+NODE.JS AND TYPESCRIPT CATEGORIES TO EXAMINE:
+
+**Node.js Specific Vulnerabilities**
+
+- **Injection:** Check for `eval()`, `child_process.exec()`, or unsanitized input in SQL/NoSQL queries.
+- **Prototype Pollution:** Look for unsafe merging of objects or user-controlled keys.
+- **ReDoS:** Check for complex RegEx patterns that could lead to Denial of Service.
+
+**Dependency Security**
+
+- Review changes to `package.json`. If a new dependency is added, check if it is a known malicious package or has high CVE counts.
+- Ensure `npm audit` or `yarn audit` logic isn't being bypassed.
+
+**Secret Detection**
+
+- Flag any hardcoded strings that look like API Keys, Bearer Tokens, or Database URI credentials.
+
+GENERAL SECURITY CATEGORIES TO EXAMINE:
 
 **Input Validation Vulnerabilities:**
 - SQL injection via unsanitized user input
