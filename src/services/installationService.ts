@@ -15,7 +15,7 @@ export class SkillInstallationService {
     ) {}
 
     /**
-     * Install a skill to the workspace
+     * Install a skill to the configured location (workspace or user home directory)
      */
     async installSkill(skill: Skill): Promise<boolean> {
         const installLocation = this.pathService.getInstallLocation();
@@ -122,7 +122,7 @@ export class SkillInstallationService {
     }
 
     /**
-     * Uninstall a skill from the workspace
+     * Uninstall a skill from its installed location (workspace or user home directory)
      */
     async uninstallSkill(skill: InstalledSkill): Promise<boolean> {
         const workspaceFolder = this.pathService.getWorkspaceFolderForLocation(skill.location);
@@ -179,7 +179,7 @@ export class SkillInstallationService {
         try {
             await vscode.commands.executeCommand('revealInExplorer', skillDir);
             await vscode.window.showTextDocument(skillMd);
-        } catch (error) {
+        } catch (_error) {
             vscode.window.showErrorMessage(`Failed to open skill folder`);
         }
     }

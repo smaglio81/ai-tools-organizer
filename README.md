@@ -21,10 +21,7 @@ A VS Code extension that provides a marketplace for discovering, installing, and
 
 ## Installation
 
-1. Open VS Code
-2. Go to Extensions (Ctrl+Shift+X / Cmd+Shift+X)
-3. Search for "Agent Skills"
-4. Click Install
+Install: [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=formulahendry.agent-skills) | [Open in VS Code](https://vscode.dev/redirect?url=vscode%3Aextension%2Fformulahendry.agent-skills) | [Open VSX Marketplace](https://open-vsx.org/extension/formulahendry/agent-skills)
 
 ## Quick Start
 
@@ -75,6 +72,7 @@ You can customize the extension behavior through VS Code settings. Press `Ctrl+,
 
 By default, the extension fetches skills from:
 - `anthropics/skills` - Official Anthropic skills
+- `github/awesome-copilot` - GitHub Copilot community skills
 - `pytorch/pytorch` - PyTorch agent skills
 - `openai/skills` - OpenAI curated skills
 - `formulahendry/agent-skill-code-runner` - Code runner skill
@@ -96,13 +94,13 @@ Add custom repositories by modifying this setting:
 
 **Setting**: `agentSkills.installLocation`
 
-Choose where to install skills in your workspace:
+Choose where to install skills in your workspace or home directory:
 - `.github/skills` (default)
 - `.claude/skills`
-- `~/.copilot/skills` (CLI only)
-- `~/.claude/skills` (CLI only)
+- `~/.copilot/skills`
+- `~/.claude/skills`
 
-Github Copilot CLI can also use skills installed under the users home directory ([link](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills#about-agent-skills)).
+GitHub Copilot CLI can also use skills installed under the user's home directory ([link](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills#about-agent-skills)).
 
 ### GitHub Token
 

@@ -31,7 +31,8 @@ export class SkillPathService {
     }
 
     isHomeLocation(location: string): boolean {
-        return location.trim().startsWith('~');
+        const loc = location.trim();
+        return loc.startsWith('~');
     }
 
     requiresWorkspaceFolder(location: string): boolean {
@@ -47,8 +48,9 @@ export class SkillPathService {
     }
 
     resolveLocationToUri(location: string, workspaceFolder?: vscode.WorkspaceFolder): vscode.Uri | undefined {
-        if (this.isHomeLocation(location)) {
-            const resolvedPath = path.join(this.getHomeDirectory(), location.slice(1).replace(/^[/\\]+/, ''));
+        const loc = location.trim();
+        if (this.isHomeLocation(loc)) {
+            const resolvedPath = path.join(this.getHomeDirectory(), loc.slice(1).replace(/^[/\\]+/, ''));
             return vscode.Uri.file(this.normalizePath(resolvedPath));
         }
 
@@ -56,10 +58,16 @@ export class SkillPathService {
             return undefined;
         }
 
-        return vscode.Uri.joinPath(workspaceFolder.uri, this.normalizeLocation(location));
+        const segments = this.normalizeWorkspaceLocation(loc).split(/[\\/]+/).filter(s => s.length > 0);
+        return vscode.Uri.joinPath(workspaceFolder.uri, ...segments);
     }
 
     resolveInstallTarget(skillName: string, workspaceFolder?: vscode.WorkspaceFolder): vscode.Uri | undefined {
+        const trimmed = skillName.trim();
+        if (!trimmed || trimmed === '.' || /[/\\]/.test(trimmed) || trimmed.includes('..')) {
+            return undefined;
+        }
+
         const installLocation = this.getInstallLocation();
         const resolvedWorkspaceFolder = workspaceFolder ?? this.getWorkspaceFolderForLocation(installLocation);
         const baseDir = this.resolveLocationToUri(installLocation, resolvedWorkspaceFolder);
@@ -68,11 +76,17 @@ export class SkillPathService {
             return undefined;
         }
 
-        return vscode.Uri.joinPath(baseDir, skillName);
+        return vscode.Uri.joinPath(baseDir, trimmed);
     }
 
-    private normalizeLocation(location: string): string {
-        return this.normalizePath(location);
+    private normalizeWorkspaceLocation(location: string): string {
+        const normalized = path.posix.normalize(location.replace(/\\/g, '/'));
+        const root = path.posix.parse(normalized).root;
+        if (normalized.length <= root.length) {
+            return normalized;
+        }
+
+        return normalized.replace(/\/+$/, '');
     }
 
     private normalizePath(value: string): string {

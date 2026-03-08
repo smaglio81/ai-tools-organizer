@@ -210,7 +210,7 @@ export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<
                 const entries = await fileSystem.readDirectory(dir);
                 
                 for (const [name, type] of entries) {
-                    if (type === vscode.FileType.Directory) {
+                    if ((type & vscode.FileType.Directory) !== 0) {
                         const skillMdUri = vscode.Uri.joinPath(dir, name, 'SKILL.md');
                         
                         try {
