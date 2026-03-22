@@ -617,10 +617,11 @@ export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<
 
     /**
      * Create file system watchers for all scan locations.
-     * Returns disposables that should be added to context.subscriptions.
+     * Watchers are tracked internally via activeWatchers and disposed
+     * by recreateFileWatchers() on refresh or dispose() on deactivation.
      */
-    createFileWatchers(): vscode.Disposable[] {
-        const disposables: vscode.Disposable[] = [];
+    createFileWatchers(): void {
+        const watchers: vscode.Disposable[] = [];
         const locations = this.pathService.getScanLocations();
 
         for (const location of locations) {
@@ -633,7 +634,7 @@ export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<
                     watcher.onDidChange(fileUri => this.onSkillFileChanged(fileUri));
                     watcher.onDidCreate(fileUri => this.onSkillFileChanged(fileUri));
                     watcher.onDidDelete(fileUri => this.onSkillFileChanged(fileUri));
-                    disposables.push(watcher);
+                    watchers.push(watcher);
                 }
             } else {
                 // Workspace-relative locations: watch using glob pattern
@@ -641,12 +642,11 @@ export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<
                 watcher.onDidChange(fileUri => this.onSkillFileChanged(fileUri));
                 watcher.onDidCreate(fileUri => this.onSkillFileChanged(fileUri));
                 watcher.onDidDelete(fileUri => this.onSkillFileChanged(fileUri));
-                disposables.push(watcher);
+                watchers.push(watcher);
             }
         }
 
-        this.activeWatchers = disposables;
-        return disposables;
+        this.activeWatchers = watchers;
     }
 
     /**

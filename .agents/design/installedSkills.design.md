@@ -37,7 +37,10 @@ Skills are displayed in a two-level tree grouped by their parent install locatio
   - Blue (`skills-icon-blue.svg`) — all copies with that name are identical
 - Collapsible: yes (expands to show skill files and folders)
 - Tooltip (markdown): name, description, install location
-- `contextValue`: `installedSkill`
+- `contextValue`: base key `installedSkill`, with duplicate status encoded via suffix:
+  - `installedSkill_newest` — newest copy among duplicates
+  - `installedSkill_older` — older copy among duplicates
+  - `installedSkill` (no suffix) — used when there is no duplicate-specific status
 
 ---
 
