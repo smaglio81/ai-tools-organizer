@@ -403,7 +403,13 @@ export function activate(context: vscode.ExtensionContext) {
             const parsed = parseGitHubUrl(input)!;
 
             // Resolve the actual default branch when it wasn't in the URL
-            const branch = parsed.branch ?? await githubClient.fetchDefaultBranch(parsed.owner, parsed.repo);
+            let branch: string;
+            try {
+                branch = parsed.branch ?? await githubClient.fetchDefaultBranch(parsed.owner, parsed.repo);
+            } catch {
+                vscode.window.showErrorMessage('Failed to fetch repository information. Please check the URL and your network connection.');
+                return;
+            }
 
             // Prompt for the path within the repo when it was not encoded in the URL
             let skillsPath = parsed.path;

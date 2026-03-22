@@ -170,6 +170,11 @@ export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<
      * Refresh the installed skills list and recreate file watchers
      */
     async refresh(): Promise<void> {
+        if (this.debounceTimer) {
+            clearTimeout(this.debounceTimer);
+            this.debounceTimer = undefined;
+        }
+        this.pendingSkillNames.clear();
         this.installedSkills = await this.scanInstalledSkills();
         await this.computeDuplicateStatuses();
         this.recreateFileWatchers();
@@ -754,7 +759,10 @@ export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<
 
     getParent(element: TreeNode): vscode.ProviderResult<TreeNode> {
         if (element instanceof InstalledSkillTreeItem) {
-            return this.locationItems.get(element.installedSkill.location);
+            const loc = element.installedSkill.location;
+            const lastSlash = loc.lastIndexOf('/');
+            const baseLocation = lastSlash > 0 ? loc.substring(0, lastSlash) : loc;
+            return this.locationItems.get(baseLocation);
         }
         
         if (element instanceof SkillFolderTreeItem) {
