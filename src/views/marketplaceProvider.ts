@@ -81,7 +81,7 @@ export class SourceTreeItem extends vscode.TreeItem {
  */
 function repoLabel(repo: SkillRepository): string {
     const base = `${repo.owner}/${repo.repo}`;
-    const branchSuffix = repo.branch ? `@ ${repo.branch}` : '';
+    const branchSuffix = repo.branch ? `@${repo.branch}` : '';
     if (repo.path) {
         return `${base}${branchSuffix} (${repo.path})`;
     }

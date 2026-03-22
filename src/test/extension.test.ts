@@ -250,9 +250,9 @@ suite('Extension Test Suite', () => {
 			class TestPathService extends SkillPathService {
 				override getScanLocations(): string[] { return [sourceBase, targetBase]; }
 				override getHomeDirectory(): string { return os.tmpdir(); }
-				override isHomeLocation(): boolean { return false; }
-				override requiresWorkspaceFolder(): boolean { return false; }
-				override getWorkspaceFolderForLocation(): vscode.WorkspaceFolder | undefined { return undefined; }
+				override isHomeLocation(_location: string): boolean { return false; }
+				override requiresWorkspaceFolder(_location: string): boolean { return false; }
+				override getWorkspaceFolderForLocation(_location: string): vscode.WorkspaceFolder | undefined { return undefined; }
 				override resolveLocationToUri(location: string): vscode.Uri | undefined {
 					return vscode.Uri.file(location);
 				}
@@ -301,9 +301,9 @@ suite('Extension Test Suite', () => {
 			class TestPathService extends SkillPathService {
 				override getScanLocations(): string[] { return [sourceBase, targetBase]; }
 				override getHomeDirectory(): string { return os.tmpdir(); }
-				override isHomeLocation(): boolean { return false; }
-				override requiresWorkspaceFolder(): boolean { return false; }
-				override getWorkspaceFolderForLocation(): vscode.WorkspaceFolder | undefined { return undefined; }
+				override isHomeLocation(_location: string): boolean { return false; }
+				override requiresWorkspaceFolder(_location: string): boolean { return false; }
+				override getWorkspaceFolderForLocation(_location: string): vscode.WorkspaceFolder | undefined { return undefined; }
 				override resolveLocationToUri(location: string): vscode.Uri | undefined {
 					return vscode.Uri.file(location);
 				}
