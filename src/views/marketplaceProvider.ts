@@ -6,7 +6,7 @@ import * as vscode from 'vscode';
 import { Skill, FailedRepository, SkillRepository } from '../types';
 import { GitHubSkillsClient } from '../github/skillsClient';
 
-let skillIconUri: vscode.Uri;
+let skillIconUri: vscode.Uri | undefined;
 
 /**
  * Initialize skill icon from extension resources

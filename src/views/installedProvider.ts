@@ -12,9 +12,9 @@ type TreeNode = LocationTreeItem | InstalledSkillTreeItem | SkillFolderTreeItem 
 /** Duplicate status for a skill relative to other copies with the same name */
 export type SkillDuplicateStatus = 'unique' | 'newest' | 'older' | 'same';
 
-let folderIconUri: vscode.Uri;
+let folderIconUri: vscode.Uri | undefined;
 // Icon URIs keyed by duplicate status
-let skillIconUris: Record<SkillDuplicateStatus, vscode.Uri>;
+let skillIconUris: Record<SkillDuplicateStatus, vscode.Uri> | undefined;
 
 /**
  * Initialize icons from extension resources
@@ -131,7 +131,7 @@ const TEXT_EXTENSIONS = new Set([
     '.gitignore', '.editorconfig', '.prettierrc', '.eslintrc', '.svg', '.csv',
 ]);
 
-export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<TreeNode> {
+export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<TreeNode>, vscode.Disposable {
     private _onDidChangeTreeData = new vscode.EventEmitter<TreeNode | undefined | null | void>();
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
@@ -317,8 +317,10 @@ export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<
         const source = skills ?? this.installedSkills;
         
         for (const skill of source) {
-            const lastSlash = skill.location.lastIndexOf('/');
-            const baseLocation = lastSlash > 0 ? skill.location.substring(0, lastSlash) : skill.location;
+            // Normalize separators so both POSIX ('/') and Windows ('\') paths group consistently
+            const normalizedLocation = skill.location.replace(/\\/g, '/');
+            const lastSlash = normalizedLocation.lastIndexOf('/');
+            const baseLocation = lastSlash > 0 ? normalizedLocation.substring(0, lastSlash) : normalizedLocation;
             
             if (!groups[baseLocation]) {
                 groups[baseLocation] = [];
@@ -660,6 +662,17 @@ export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<
             watcher.dispose();
         }
         this.createFileWatchers();
+    }
+
+    /**
+     * Dispose all active file watchers. Called on extension deactivation
+     * via context.subscriptions.
+     */
+    dispose(): void {
+        for (const watcher of this.activeWatchers) {
+            watcher.dispose();
+        }
+        this.activeWatchers = [];
     }
 
     /**

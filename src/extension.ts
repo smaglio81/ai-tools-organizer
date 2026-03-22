@@ -479,9 +479,11 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(...skillWatchers);
 
-    // Watch all scan locations for file changes to refresh duplicate status icons
-    const duplicateWatchers = installedProvider.createFileWatchers();
-    context.subscriptions.push(...duplicateWatchers);
+    // Watch all scan locations for file changes to refresh duplicate status icons.
+    // Initial watchers are created here; recreated internally on refresh.
+    // The provider itself is registered as a disposable to clean up on deactivation.
+    installedProvider.createFileWatchers();
+    context.subscriptions.push(installedProvider);
 
     // Listen for configuration changes
     context.subscriptions.push(
