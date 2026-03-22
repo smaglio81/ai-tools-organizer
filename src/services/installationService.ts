@@ -215,7 +215,7 @@ export class SkillInstallationService {
             if (overwrite !== 'Overwrite') {
                 return false;
             }
-            await vscode.workspace.fs.delete(targetDir, { recursive: true });
+            await vscode.workspace.fs.delete(targetDir, { recursive: true, useTrash: true });
         } catch {
             // Doesn't exist at target, continue
         }
@@ -296,7 +296,7 @@ export class SkillInstallationService {
             if (overwrite !== 'Overwrite') {
                 return false;
             }
-            await vscode.workspace.fs.delete(targetDir, { recursive: true });
+            await vscode.workspace.fs.delete(targetDir, { recursive: true, useTrash: true });
         } catch {
             // Doesn't exist at target, continue
         }
@@ -357,7 +357,7 @@ export class SkillInstallationService {
             }
 
             try {
-                await vscode.workspace.fs.delete(targetDir, { recursive: true });
+                await vscode.workspace.fs.delete(targetDir, { recursive: true, useTrash: true });
                 await vscode.workspace.fs.copy(sourceDir, targetDir, { overwrite: true });
                 synced++;
             } catch (error) {
@@ -393,7 +393,7 @@ export class SkillInstallationService {
         }
 
         try {
-            await vscode.workspace.fs.delete(targetDir, { recursive: true });
+            await vscode.workspace.fs.delete(targetDir, { recursive: true, useTrash: true });
             await vscode.workspace.fs.copy(sourceDir, targetDir, { overwrite: true });
             vscode.window.showInformationMessage(`Updated "${targetSkill.name}" from latest copy.`);
             return true;
@@ -434,9 +434,9 @@ export class SkillInstallationService {
     }
 
     /**
-     * Inject a `source:` line into SKILL.md frontmatter pointing to the GitHub URL.
-     * If frontmatter exists, appends the line before the closing `---`.
-     * If no frontmatter exists, wraps the content with new frontmatter.
+     * Inject an `agent-skills-source:` line into SKILL.md frontmatter pointing to the GitHub URL.
+     * If frontmatter exists, replaces any existing `agent-skills-source:` line and appends the new line
+     * before the closing `---`. If no frontmatter exists, wraps the content with new frontmatter.
      */
     private injectSourceFrontmatter(content: string, skill: Skill): string {
         const sourceUrl = `https://github.com/${skill.source.owner}/${skill.source.repo}/tree/${skill.source.branch}/${skill.skillPath}`;
@@ -449,10 +449,13 @@ export class SkillInstallationService {
             const rest = content.slice(frontmatterMatch[0].length);
 
             // Remove any existing agent-skills-source line
-            body = body.replace(/^agent-skills-source:\s.*\n?/m, '').replace(/\n$/, '');
+            body = body.replace(/^agent-skills-source:\s.*\r?\n?/m, '').replace(/\r?\n$/, '');
 
-            // Append as the last line of frontmatter
-            body += `\nagent-skills-source: ${sourceUrl}`;
+            // Append as the last line of frontmatter, preserving existing newline style
+            const newlineMatch = opening.match(/\r\n|\n/);
+            const newline = newlineMatch ? newlineMatch[0] : '\n';
+
+            body += `${newline}agent-skills-source: ${sourceUrl}`;
 
             return `${opening}${body}${closing}${rest}`;
         }

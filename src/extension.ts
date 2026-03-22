@@ -42,12 +42,10 @@ function parseGitHubUrl(input: string): { owner: string; repo: string; branch: s
     const owner = parts[0];
     // Strip trailing .git suffix from repo name
     const repo = parts[1].replace(/\.git$/, '');
-    let branch: string | undefined;
-    let path: string | undefined;
 
     if (parts.length === 2) {
         // Exactly owner/repo — valid bare form
-        return { owner, repo, branch, path };
+        return { owner, repo, branch: undefined, path: undefined };
     }
 
     // Only accept /tree/<branch>[/<path...>] beyond owner/repo
@@ -55,10 +53,8 @@ function parseGitHubUrl(input: string): { owner: string; repo: string; branch: s
         return undefined;
     }
 
-    branch = parts[3];
-    if (parts.length > 4) {
-        path = parts.slice(4).join('/');
-    }
+    const branch = parts[3];
+    const path = parts.length > 4 ? parts.slice(4).join('/') : undefined;
 
     return { owner, repo, branch, path };
 }
