@@ -342,8 +342,7 @@ export class MarketplaceTreeDataProvider implements vscode.TreeDataProvider<Skil
 
         // Find the parent source group and expand it (this triggers getChildren
         // which caches the child SkillTreeItems)
-        const sourceKey = `${skill.source.owner}/${skill.source.repo}`;
-        const sourceItem = this.cachedSourceItems.find(s => s.sourceName === sourceKey);
+        const sourceItem = this.cachedSourceItems.find(s => this.isSameRepository(s.repo, skill.source));
         if (sourceItem) {
             try {
                 await this.treeView.reveal(sourceItem, { select: false, focus: false, expand: true });
@@ -449,7 +448,9 @@ export class MarketplaceTreeDataProvider implements vscode.TreeDataProvider<Skil
         const groups = new Map<string, { skills: Skill[]; repo: SkillRepository }>();
         
         for (const skill of skills) {
-            const key = `${skill.source.owner}/${skill.source.repo}`;
+            // Include path (and branch if non-default) in the key so the same
+            // repo configured with different paths/branches stays distinct
+            const key = this.repoGroupKey(skill.source);
             if (!groups.has(key)) {
                 groups.set(key, { skills: [], repo: skill.source });
             }
@@ -458,7 +459,40 @@ export class MarketplaceTreeDataProvider implements vscode.TreeDataProvider<Skil
         
         return Array.from(groups.entries())
             .sort(([left], [right]) => left.localeCompare(right))
-            .map(([name, { skills: skillList, repo }]) => new SourceTreeItem(name, skillList, repo));
+            .map(([key, { skills: skillList, repo }]) => {
+                // Use a friendlier label: owner/repo when path is the only
+                // config, otherwise append the distinguishing path
+                const base = `${repo.owner}/${repo.repo}`;
+                const label = this.hasMultiplePathsForRepo(repo, groups) ? `${base} (${repo.path})` : base;
+                return new SourceTreeItem(label, skillList, repo);
+            });
+    }
+
+    /**
+     * Build a stable grouping key for a SkillRepository that includes
+     * owner, repo, path, and branch so distinct configs stay separate.
+     */
+    private repoGroupKey(repo: SkillRepository): string {
+        return `${repo.owner}/${repo.repo}/${repo.path}@${repo.branch}`;
+    }
+
+    /**
+     * Check whether the same owner/repo appears more than once in the
+     * current groups (i.e. configured with different paths/branches).
+     */
+    private hasMultiplePathsForRepo(
+        repo: SkillRepository,
+        groups: Map<string, { skills: Skill[]; repo: SkillRepository }>
+    ): boolean {
+        const base = `${repo.owner}/${repo.repo}`;
+        let count = 0;
+        for (const [, { repo: r }] of groups) {
+            if (`${r.owner}/${r.repo}` === base) {
+                count++;
+                if (count > 1) { return true; }
+            }
+        }
+        return false;
     }
 
     private createEmptyItem(): SkillTreeItem {

@@ -743,7 +743,7 @@ export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<
     private async directoryExists(uri: vscode.Uri, fileSystem: vscode.FileSystem): Promise<boolean> {
         try {
             const stat = await fileSystem.stat(uri);
-            return stat.type === vscode.FileType.Directory;
+            return (stat.type & vscode.FileType.Directory) !== 0;
         } catch {
             return false;
         }

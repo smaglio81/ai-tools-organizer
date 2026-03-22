@@ -73,12 +73,12 @@
       },
       {
         "command": "agentSkills.refresh",
-        "title": "Refresh",
+        "title": "Refresh Marketplace",
         "icon": "$(refresh)"
       },
       {
         "command": "agentSkills.refreshInstalled",
-        "title": "Refresh",
+        "title": "Refresh Installed Skills",
         "icon": "$(refresh)"
       },
       {
@@ -98,12 +98,12 @@
       },
       {
         "command": "agentSkills.search",
-        "title": "Search Skills",
+        "title": "Search Marketplace Skills",
         "icon": "$(search)"
       },
       {
         "command": "agentSkills.clearSearch",
-        "title": "Clear Search",
+        "title": "Clear Marketplace Search",
         "icon": "$(close)"
       },
       {
@@ -137,12 +137,12 @@
       },
       {
         "command": "agentSkills.searchInstalled",
-        "title": "Search Skills",
+        "title": "Search Installed Skills",
         "icon": "$(search)"
       },
       {
         "command": "agentSkills.clearSearchInstalled",
-        "title": "Clear Search",
+        "title": "Clear Installed Search",
         "icon": "$(close)"
       },
       {
