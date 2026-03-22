@@ -3,7 +3,7 @@
  */
 
 import * as vscode from 'vscode';
-import { Skill, InstalledSkill } from '../types';
+import { Skill, InstalledSkill, normalizeSeparators } from '../types';
 import { GitHubSkillsClient } from '../github/skillsClient';
 import { SkillPathService } from './skillPathService';
 
@@ -154,20 +154,12 @@ export class SkillInstallationService {
     }
 
     /**
-     * Normalize a location string to use forward slashes consistently,
-     * so path splitting works regardless of OS separator style.
-     */
-    private normalizeSeparators(location: string): string {
-        return location.replace(/\\/g, '/');
-    }
-
-    /**
      * Extract the actual folder basename from a skill's location path.
      * skill.location is e.g. "~/.copilot/skills/my-skill" — the last segment
      * is the real folder name on disk, which may differ from skill.name (frontmatter).
      */
     private getSkillFolderName(skill: InstalledSkill): string {
-        const normalized = this.normalizeSeparators(skill.location);
+        const normalized = normalizeSeparators(skill.location);
         const lastSlash = normalized.lastIndexOf('/');
         return lastSlash >= 0 ? normalized.substring(lastSlash + 1) : normalized;
     }
@@ -179,21 +171,21 @@ export class SkillInstallationService {
         const locations = this.pathService.getScanLocations();
         // skill.location includes the skill name (e.g. "~/.copilot/skills/my-skill"),
         // strip the trailing segment to get the parent scan location for display
-        const currentParentLocation = this.normalizeSeparators(skill.location).replace(/\/[^/]+$/, '');
+        const currentParentLocation = normalizeSeparators(skill.location).replace(/\/[^/]+$/, '');
         // Use the actual folder name on disk, not the frontmatter name
         const folderName = this.getSkillFolderName(skill);
 
-        // Build quick pick items, marking the current location
+        // Build quick pick items, marking the current location (normalize for comparison)
         const items: vscode.QuickPickItem[] = locations.map(loc => ({
             label: loc,
-            description: loc === currentParentLocation ? '(current)' : undefined
+            description: normalizeSeparators(loc) === currentParentLocation ? '(current)' : undefined
         }));
 
         const selected = await vscode.window.showQuickPick(items, {
             placeHolder: `Move "${skill.name}" to...`
         });
 
-        if (!selected || selected.label === currentParentLocation) {
+        if (!selected || normalizeSeparators(selected.label) === currentParentLocation) {
             return false;
         }
 
@@ -213,6 +205,14 @@ export class SkillInstallationService {
 
         const targetDir = vscode.Uri.joinPath(targetBaseUri, folderName);
 
+        // Guard against source and target resolving to the same directory
+        const sourceWorkspaceFolder = this.pathService.getWorkspaceFolderForLocation(skill.location);
+        const sourceDir = this.pathService.resolveLocationToUri(skill.location, sourceWorkspaceFolder);
+        if (sourceDir && targetDir.fsPath === sourceDir.fsPath) {
+            vscode.window.showInformationMessage(`"${skill.name}" is already at that location.`);
+            return false;
+        }
+
         // Check if skill already exists at target
         try {
             await vscode.workspace.fs.stat(targetDir);
@@ -229,9 +229,6 @@ export class SkillInstallationService {
             // Doesn't exist at target, continue
         }
 
-        // Resolve source directory using the full skill.location (includes skill name)
-        const sourceWorkspaceFolder = this.pathService.getWorkspaceFolderForLocation(skill.location);
-        const sourceDir = this.pathService.resolveLocationToUri(skill.location, sourceWorkspaceFolder);
         if (!sourceDir) {
             vscode.window.showErrorMessage('Failed to resolve source skill location.');
             return false;
@@ -260,21 +257,21 @@ export class SkillInstallationService {
     async copySkill(skill: InstalledSkill): Promise<boolean> {
         const locations = this.pathService.getScanLocations();
         // Strip trailing skill name to get the parent scan location for display
-        const currentParentLocation = this.normalizeSeparators(skill.location).replace(/\/[^/]+$/, '');
+        const currentParentLocation = normalizeSeparators(skill.location).replace(/\/[^/]+$/, '');
         // Use the actual folder name on disk, not the frontmatter name
         const folderName = this.getSkillFolderName(skill);
 
-        // Build quick pick items, marking the current location
+        // Build quick pick items, marking the current location (normalize for comparison)
         const items: vscode.QuickPickItem[] = locations.map(loc => ({
             label: loc,
-            description: loc === currentParentLocation ? '(current)' : undefined
+            description: normalizeSeparators(loc) === currentParentLocation ? '(current)' : undefined
         }));
 
         const selected = await vscode.window.showQuickPick(items, {
             placeHolder: `Copy "${skill.name}" to...`
         });
 
-        if (!selected || selected.label === currentParentLocation) {
+        if (!selected || normalizeSeparators(selected.label) === currentParentLocation) {
             return false;
         }
 
@@ -294,6 +291,14 @@ export class SkillInstallationService {
 
         const targetDir = vscode.Uri.joinPath(targetBaseUri, folderName);
 
+        // Guard against source and target resolving to the same directory
+        const sourceWorkspaceFolder = this.pathService.getWorkspaceFolderForLocation(skill.location);
+        const sourceDir = this.pathService.resolveLocationToUri(skill.location, sourceWorkspaceFolder);
+        if (sourceDir && targetDir.fsPath === sourceDir.fsPath) {
+            vscode.window.showInformationMessage(`"${skill.name}" is already at that location.`);
+            return false;
+        }
+
         // Check if skill already exists at target
         try {
             await vscode.workspace.fs.stat(targetDir);
@@ -310,9 +315,6 @@ export class SkillInstallationService {
             // Doesn't exist at target, continue
         }
 
-        // Resolve source directory using the full skill.location (includes skill name)
-        const sourceWorkspaceFolder = this.pathService.getWorkspaceFolderForLocation(skill.location);
-        const sourceDir = this.pathService.resolveLocationToUri(skill.location, sourceWorkspaceFolder);
         if (!sourceDir) {
             vscode.window.showErrorMessage('Failed to resolve source skill location.');
             return false;

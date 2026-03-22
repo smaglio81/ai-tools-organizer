@@ -4,7 +4,7 @@
 
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { InstalledSkill, SkillMetadata } from '../types';
+import { InstalledSkill, SkillMetadata, normalizeSeparators } from '../types';
 import { SkillPathService } from '../services/skillPathService';
 
 type TreeNode = LocationTreeItem | InstalledSkillTreeItem | SkillFolderTreeItem | SkillFileTreeItem;
@@ -718,7 +718,7 @@ export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<
         for (const rawLocation of locations) {
             // Normalize separators so all downstream code (getParent,
             // groupSkillsByLocation, etc.) consistently sees forward slashes
-            const location = rawLocation.replace(/\\/g, '/');
+            const location = normalizeSeparators(rawLocation);
             const locationWorkspaceFolder = this.pathService.requiresWorkspaceFolder(location)
                 ? workspaceFolder
                 : undefined;

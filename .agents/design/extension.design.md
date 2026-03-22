@@ -63,12 +63,21 @@ Scans all known skill locations (workspace-relative and home-directory paths) fo
 |---|---|
 | `GitHubSkillsClient` | Fetches skill listings and file content from GitHub. Uses Git Trees API for efficiency; falls back to `raw.githubusercontent.com` for file content (no rate limit). Also resolves repository default branches for URL-based repository adds. Caches results per `agentSkills.cacheTimeout`. |
 | `SkillPathService` | Resolves location strings (including `~` home paths) to `vscode.Uri` values. Provides the scan location list (read from `chat.agentSkillsLocations`, with a built-in default fallback) and the current install location. |
-| `SkillInstallationService` | Installs, deletes, moves, copies, syncs, and gets-latest for skills. Copies all files from GitHub into the resolved install target directory. Confirms overwrites with the user. Move and copy operations use a QuickPick to select the target scan location (current location marked). Delete sends the skill folder to trash without confirmation. Sync copies the newest skill to all other locations with older copies. Get-latest replaces an older copy with the newest version. Delete-all removes every skill under a location folder. |
+| `SkillInstallationService` | Installs, deletes, moves, copies, syncs, and gets-latest for skills. Copies all files from GitHub into the resolved install target directory. Confirms overwrites with the user. Move and copy operations use a QuickPick to select the target scan location (current location marked); both normalize path separators and guard against selecting the same directory as the source. Delete sends the skill folder to trash without confirmation. Sync copies the newest skill to all other locations with older copies. Get-latest replaces an older copy with the newest version. Delete-all removes every skill under a location folder. |
+
+---
+
+## Shared Utilities (`types.ts`)
+
+| Function | Description |
+|---|---|
+| `isSameRepository(a, b)` | Compares two `SkillRepository` entries by owner, repo, path, branch, and singleSkill. Used by both the Marketplace provider and extension commands (add/remove repository). |
+| `normalizeSeparators(p)` | Replaces backslashes with forward slashes. Used throughout the codebase (installed provider, installation service) to ensure consistent path separators on all platforms. |
 
 ---
 
 ## File Watchers
 
-The extension watches `**/.github/skills/*/SKILL.md`, `**/.agents/skills/*/SKILL.md`, and `**/.claude/skills/*/SKILL.md` for creation and deletion events, triggering a refresh of the Installed view and syncing installed status back to the Marketplace view.
+The extension watches for `SKILL.md` creation and deletion events in workspace skill folders. Watcher patterns are derived from `pathService.getScanLocations()` (workspace-relative entries only) rather than being hardcoded, so user-configured scan locations are automatically covered.
 
-Additionally, file watchers are created for all scan locations (both workspace-relative and home directory paths) to monitor file changes within skill folders. When a file changes, the duplicate status is recomputed for the affected skill and all other skills sharing the same name. These watchers are recreated on every refresh and when `chat.agentSkillsLocations` changes, ensuring new location directories are automatically watched. File change events are debounced (500ms) to avoid excessive recomputation during rapid edits.
+Additionally, file watchers are created for all scan locations (both workspace-relative and home directory paths) to monitor file changes within skill folders. When a file changes, the duplicate status is recomputed for the affected skill and all other skills sharing the same name. The `InstalledSkillsTreeDataProvider` implements `vscode.Disposable` and manages watchers internally via an `activeWatchers` array. The provider is registered in `context.subscriptions` so all watchers are cleaned up on extension deactivation. Watchers are recreated on every refresh and when `chat.agentSkillsLocations` changes, ensuring new location directories are automatically watched. File change events are debounced (500ms) to avoid excessive recomputation during rapid edits.

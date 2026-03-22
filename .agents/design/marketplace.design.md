@@ -40,7 +40,7 @@ loading-owner/new-repo             ← LoadingSourceTreeItem (spinning icon)
 
 ### LoadingSourceTreeItem
 
-- Label: `owner/repo`
+- Label: `owner/repo:path@branch` (path and branch included when present, via `repoLabel()` helper)
 - Description: `Loading...`
 - Icon: spinning loading icon
 - Collapsible: none (leaf node)
@@ -48,7 +48,7 @@ loading-owner/new-repo             ← LoadingSourceTreeItem (spinning icon)
 
 ### FailedSourceTreeItem
 
-- Label: `owner/repo`
+- Label: `owner/repo:path@branch` (path and branch included when present, via `repoLabel()` helper)
 - Description: `Failed to load`
 - Icon: warning (yellow theme color)
 - Collapsible: none (leaf node)
@@ -120,6 +120,7 @@ All actions appear in the `agentSkills.marketplace` view title bar.
 
 | Menu Item | Command | Description |
 |---|---|---|
+| Open in Browser | `agentSkills.openInBrowser` | Opens the repository on GitHub in the system default browser. Appears first in the menu (group `0_open@1`). |
 | Delete | `agentSkills.removeRepository` | Removes a source entry from `agentSkills.skillRepositories` immediately (no confirmation prompt). |
 
 ---
@@ -174,7 +175,7 @@ The Marketplace is kept in sync with the Installed view. After any install, unin
 
 ## Reveal from Installed View
 
-The Installed view's "Show in Marketplace" command calls `revealSkillByName()` on the Marketplace provider. This clears any active search, refreshes the tree, expands the parent source group, then selects and focuses the matching `SkillTreeItem` so it is highlighted. The provider implements `getParent()` and caches source/skill tree items to support `TreeView.reveal()`.
+The Installed view's "Show in Marketplace" command calls `revealSkillByName()` on the Marketplace provider. This clears any active search, refreshes the tree, expands the parent source group, then selects and focuses the matching `SkillTreeItem` so it is highlighted. The provider implements `getParent()` and caches source/skill tree items to support `TreeView.reveal()`. Cache keys include the full repository identity (`owner/repo/path@branch/skillPath`) to avoid collisions when the same repo is configured with different branches or paths. Caches (`cachedSourceItems`, `cachedSkillItems`) are cleared at the start of every root-level `getChildren()` call and during `loadRepositoriesProgressively()` to prevent stale entries.
 
 ---
 

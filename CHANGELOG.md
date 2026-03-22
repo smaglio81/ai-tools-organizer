@@ -18,6 +18,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
   - Right-click menus
     - On repositories
       - "Delete" (in addition to the existing inline trash icon)
+      - "Open in Browser" — opens the repository on GitHub in the default browser
     - On Skill
       - "Install skill" (in addition to the existing inline install skill icon)
   - Toolbar now includes `agentSkills.addRepository` (Add Repository).

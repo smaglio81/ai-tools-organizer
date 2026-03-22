@@ -103,3 +103,11 @@ export function isSameRepository(left: SkillRepository, right: SkillRepository):
         left.branch === right.branch &&
         left.singleSkill === right.singleSkill;
 }
+
+/**
+ * Normalize path separators to forward slashes so string comparisons
+ * work consistently regardless of OS separator style.
+ */
+export function normalizeSeparators(location: string): string {
+    return location.replace(/\\/g, '/');
+}

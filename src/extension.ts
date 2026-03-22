@@ -10,7 +10,7 @@ import { InstalledSkillsTreeDataProvider, InstalledSkillTreeItem, LocationTreeIt
 import { SkillDetailPanel } from './views/skillDetailPanel';
 import { SkillInstallationService } from './services/installationService';
 import { SkillPathService } from './services/skillPathService';
-import { Skill, InstalledSkill, SkillRepository, isSameRepository } from './types';
+import { Skill, InstalledSkill, SkillRepository, isSameRepository, normalizeSeparators } from './types';
 
 /**
  * Parse a GitHub URL into its SkillRepository components.
@@ -392,6 +392,13 @@ export function activate(context: vscode.ExtensionContext) {
             marketplaceProvider.setInstalledSkills(installedProvider.getInstalledSkillNames());
         }),
 
+        // Open a skill repository in the default browser
+        vscode.commands.registerCommand('agentSkills.openInBrowser', (item: SourceTreeItem | FailedSourceTreeItem) => {
+            const repo = item instanceof SourceTreeItem ? item.repo : item.failure.repo;
+            const url = `https://github.com/${repo.owner}/${repo.repo}/tree/${repo.branch}/${repo.path}`;
+            vscode.env.openExternal(vscode.Uri.parse(url));
+        }),
+
         // Add a new skill repository from a GitHub URL
         vscode.commands.registerCommand('agentSkills.addRepository', async () => {
             const input = await vscode.window.showInputBox({
@@ -418,12 +425,22 @@ export function activate(context: vscode.ExtensionContext) {
             // Prompt for the path within the repo when it was not encoded in the URL
             let skillsPath = parsed.path;
             if (skillsPath === undefined) {
-                skillsPath = await vscode.window.showInputBox({
+                const rawPath = await vscode.window.showInputBox({
                     prompt: `Path within ${parsed.owner}/${parsed.repo} where skills are stored`,
                     placeHolder: 'skills',
-                    value: 'skills'
+                    value: 'skills',
+                    validateInput: value => {
+                        // Reject empty/whitespace-only input
+                        if (!value?.trim()) { return 'Path is required'; }
+                        return undefined;
+                    }
                 });
-                if (skillsPath === undefined) { return; }
+                if (rawPath === undefined) { return; }
+                // Normalize: trim whitespace and strip leading/trailing slashes
+                skillsPath = rawPath.trim().replace(/^\/+|\/+$/g, '');
+            } else {
+                // Normalize path extracted from URL
+                skillsPath = skillsPath.trim().replace(/^\/+|\/+$/g, '');
             }
 
             const newRepo: SkillRepository = {
@@ -460,7 +477,9 @@ export function activate(context: vscode.ExtensionContext) {
     const workspaceScanLocations = pathService.getScanLocations()
         .filter(loc => !pathService.isHomeLocation(loc));
     const skillWatchers = workspaceScanLocations.map(loc => {
-        const watcher = vscode.workspace.createFileSystemWatcher(`**/${loc}/*/SKILL.md`);
+        // Normalize backslashes to forward slashes so the glob pattern works on Windows
+        const normalizedLoc = normalizeSeparators(loc);
+        const watcher = vscode.workspace.createFileSystemWatcher(`**/${normalizedLoc}/*/SKILL.md`);
         watcher.onDidCreate(() => syncInstalledStatus());
         watcher.onDidDelete(() => syncInstalledStatus());
         return watcher;

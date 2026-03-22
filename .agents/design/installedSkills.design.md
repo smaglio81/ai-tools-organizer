@@ -57,7 +57,7 @@ The view scans the locations defined by the `chat.agentSkillsLocations` VS Code 
 | `~/.copilot/skills` | User home directory |
 | `~/.claude/skills` | User home directory |
 
-Each location is scanned for immediate subdirectories. A subdirectory is considered a valid skill if it contains a `SKILL.md` file. Locations that don't exist are silently skipped.
+Each location is scanned for immediate subdirectories. A subdirectory is considered a valid skill if it contains a `SKILL.md` file. Locations that don't exist are silently skipped. Skill locations are normalized to forward slashes at scan time (via `normalizeSeparators()`) so all downstream path comparisons work consistently across platforms.
 
 ---
 
@@ -152,7 +152,7 @@ Additionally, file watchers are created for all scan locations (workspace-relati
 2. The duplicate status is recomputed for that skill and all other skills sharing the same name.
 3. The tree view is refreshed so icons update.
 
-Events are debounced (500ms) to avoid excessive recomputation during rapid edits. Watchers are recreated on every refresh and when `chat.agentSkillsLocations` changes, ensuring new location directories are automatically watched.
+Events are debounced (500ms) to avoid excessive recomputation during rapid edits. The provider implements `vscode.Disposable` and manages watchers internally via an `activeWatchers` array; it is registered in `context.subscriptions` so all watchers are cleaned up on extension deactivation. Watchers are recreated on every refresh and when `chat.agentSkillsLocations` changes, ensuring new location directories are automatically watched.
 
 ---
 
