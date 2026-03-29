@@ -2,7 +2,7 @@
   "name": "agent-organizer",
   "displayName": "Agent Organizer",
   "description": "Agent Organizer Marketplace and Toolkit",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "icon": "resources/logo.png",
   "publisher": "smaglio81",
   "engines": {
@@ -1061,7 +1061,7 @@
     "package": "npm run check-types && npm run lint && node esbuild.js --production",
     "package:vsix": "npx vsce package",
     "install:vsix": "npx vsce package && node -e \"const fs=require('fs'); const files=fs.readdirSync('.').filter(f=>f.startsWith('agent-organizer-')&&f.endsWith('.vsix')).sort(); if(files.length) require('child_process').execSync('code --install-extension '+files[files.length-1], {stdio:'inherit'});\"",
-    "uninstall:vsix": "code --uninstall-extension formulahendry.agent-organizer",
+    "uninstall:vsix": "code --uninstall-extension smaglio81.agent-organizer",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",

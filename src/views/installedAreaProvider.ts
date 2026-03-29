@@ -6,6 +6,7 @@
 import * as vscode from 'vscode';
 import { InstalledSkill, normalizeSeparators, ContentArea, AREA_DEFINITIONS } from '../types';
 import { SkillPathService } from '../services/skillPathService';
+import { DuplicateStatus, computeAllDuplicateStatuses, createLocationWatchers, FileInfo } from '../services/duplicateService';
 
 type TreeNode = AreaLocationTreeItem | AreaInstalledItemTreeItem | AreaItemFolderTreeItem | AreaItemFileTreeItem;
 
@@ -101,12 +102,14 @@ export class InstalledAreaTreeDataProvider implements vscode.TreeDataProvider<Tr
     private initialLoading = true;
     private initialScanStarted = false;
     private searchQuery = '';
-    private activeWatchers: vscode.FileSystemWatcher[] = [];
+    private activeWatchers: vscode.Disposable[] = [];
     private treeView?: vscode.TreeView<TreeNode>;
     /** Mutex: if a scan is in progress, all callers share this single promise. */
     private pendingScan: Promise<InstalledSkill[]> | null = null;
     /** Whether loadItems has completed at least once (cache is warm). */
     private cacheReady = false;
+    /** Duplicate status per item location */
+    private duplicateStatusMap = new Map<string, DuplicateStatus>();
 
     constructor(
         private readonly context: vscode.ExtensionContext,
@@ -151,6 +154,7 @@ export class InstalledAreaTreeDataProvider implements vscode.TreeDataProvider<Tr
      */
     async preload(): Promise<void> {
         await this.loadItems();
+        await this.computeDuplicateStatuses();
     }
 
     /**
@@ -162,6 +166,7 @@ export class InstalledAreaTreeDataProvider implements vscode.TreeDataProvider<Tr
         if (this.initialScanStarted) { return; }
         this.initialScanStarted = true;
         this.loadItems().then(async () => {
+            await this.computeDuplicateStatuses();
             this.initialLoading = false;
             await vscode.commands.executeCommand('setContext', `${this.viewId}:initialScanComplete`, true);
             this._onDidChangeTreeData.fire();
@@ -174,6 +179,7 @@ export class InstalledAreaTreeDataProvider implements vscode.TreeDataProvider<Tr
     async refresh(): Promise<void> {
         this.initialScanStarted = true;
         await this.loadItems(true);
+        await this.computeDuplicateStatuses();
         this.initialLoading = false;
         this.recreateFileWatchers();
         await vscode.commands.executeCommand('setContext', `${this.viewId}:initialScanComplete`, true);
@@ -203,6 +209,13 @@ export class InstalledAreaTreeDataProvider implements vscode.TreeDataProvider<Tr
 
     getInstalledItems(): InstalledSkill[] {
         return this.installedItems;
+    }
+
+    /**
+     * Get the duplicate status for a given item location.
+     */
+    getDuplicateStatus(location: string): DuplicateStatus {
+        return this.duplicateStatusMap.get(location) || 'unique';
     }
 
     setSearchQuery(query: string): void {
@@ -236,6 +249,45 @@ export class InstalledAreaTreeDataProvider implements vscode.TreeDataProvider<Tr
             groups[parentLoc].push(item);
         }
         return groups;
+    }
+
+    /**
+     * Compute duplicate statuses for all installed items using the shared duplicate service.
+     */
+    private async computeDuplicateStatuses(): Promise<void> {
+        const fs = this.pathService.getFileSystem();
+        const def = AREA_DEFINITIONS[this.area];
+
+        const resolveUri = (item: InstalledSkill): vscode.Uri | undefined => {
+            const loc = normalizeSeparators(item.location);
+            const workspaceFolder = this.pathService.getWorkspaceFolderForLocation(loc);
+            return this.pathService.resolveLocationToUri(loc, workspaceFolder);
+        };
+
+        const collectFn = async (uri: vscode.Uri): Promise<FileInfo[]> => {
+            if (def.kind === 'singleFile') {
+                // Single-file: one file entry with content and mtime
+                try {
+                    const content = new TextDecoder().decode(await fs.readFile(uri));
+                    const stat = await fs.stat(uri);
+                    return [{ relativePath: '', mtime: stat.mtime, content }];
+                } catch { return []; }
+            } else if (def.definitionFile) {
+                // Multi-file: compare the definition file
+                const defFileUri = await this.findDefinitionFile(uri, def.definitionFile);
+                if (!defFileUri) { return []; }
+                try {
+                    const content = new TextDecoder().decode(await fs.readFile(defFileUri));
+                    const stat = await fs.stat(defFileUri);
+                    return [{ relativePath: def.definitionFile, mtime: stat.mtime, content }];
+                } catch { return []; }
+            }
+            return [];
+        };
+
+        this.duplicateStatusMap = await computeAllDuplicateStatuses(
+            this.installedItems, resolveUri, collectFn
+        );
     }
 
     async scanInstalledItems(): Promise<InstalledSkill[]> {
@@ -416,7 +468,8 @@ export class InstalledAreaTreeDataProvider implements vscode.TreeDataProvider<Tr
                 const workspaceFolder = this.pathService.getWorkspaceFolderForLocation(parentLoc);
                 const parentUri = this.pathService.resolveLocationToUri(parentLoc, workspaceFolder);
                 const itemUri = parentUri ? vscode.Uri.joinPath(parentUri, itemName) : vscode.Uri.file(item.location);
-                return new AreaInstalledItemTreeItem(item, itemUri, this.area, isSingleFile);
+                return new AreaInstalledItemTreeItem(item, itemUri, this.area, isSingleFile,
+                    this.duplicateStatusMap.get(item.location) || 'unique');
             });
         }
 
@@ -481,37 +534,31 @@ export class InstalledAreaTreeDataProvider implements vscode.TreeDataProvider<Tr
     createFileWatchers(): void {
         const def = AREA_DEFINITIONS[this.area];
         const conventionalDir = def.conventionalDir || this.area;
-        const locations = this.pathService.getScanLocations()
-            .filter(loc => !this.pathService.isHomeLocation(loc));
+        const locations = this.pathService.getScanLocations();
 
-        // Build deduplicated set of area-specific workspace locations to watch
+        // Build deduplicated set of area-specific locations to watch
         const areaLocsSet = new Set<string>();
         for (const loc of locations) {
             const segments = loc.split('/');
             segments[segments.length - 1] = conventionalDir;
             areaLocsSet.add(normalizeSeparators(segments.join('/')));
         }
-
-        // Also watch the configured default download location if it's workspace-relative
         const defaultDownload = normalizeSeparators(this.pathService.getDefaultDownloadLocation(this.area));
-        if (!this.pathService.isHomeLocation(defaultDownload)) {
-            areaLocsSet.add(defaultDownload);
+        areaLocsSet.add(defaultDownload);
+
+        // Determine the file pattern for this area
+        let filePattern: string;
+        if (def.kind === 'multiFile' && def.definitionFile) {
+            filePattern = `**/${def.definitionFile}`;
+        } else {
+            filePattern = `**/*${def.fileSuffix}`;
         }
 
-        for (const areaLoc of areaLocsSet) {
-
-            let pattern: string;
-            if (def.kind === 'multiFile' && def.definitionFile) {
-                pattern = `**/${areaLoc}/*/${def.definitionFile}`;
-            } else {
-                pattern = `**/${areaLoc}/**/*${def.fileSuffix}`;
-            }
-
-            const watcher = vscode.workspace.createFileSystemWatcher(pattern);
-            watcher.onDidCreate(() => this.refresh());
-            watcher.onDidDelete(() => this.refresh());
-            this.activeWatchers.push(watcher);
-        }
+        const watchers = createLocationWatchers(
+            [...areaLocsSet], this.pathService, filePattern,
+            () => this.refresh()
+        );
+        this.activeWatchers.push(...watchers);
     }
 
     private recreateFileWatchers(): void {

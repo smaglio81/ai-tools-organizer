@@ -364,7 +364,8 @@ suite('Extension Test Suite', () => {
 		test('addRepoToMarketplace adds skills from the repository', async () => {
 			// Create a mock GitHubSkillsClient that returns a known skill
 			const mockClient = {
-				fetchSkillsFromRepo: async () => [testSkill],
+				discoverAreas: async () => ({ skills: 'skills' }),
+				fetchRepoContent: async () => ({ skills: [testSkill], fileItems: [] }),
 				clearCache: () => {}
 			} as unknown as GitHubSkillsClient;
 
@@ -399,9 +400,10 @@ suite('Extension Test Suite', () => {
 
 			// Add skills from two repos, then remove one
 			const mockClient = {
-				fetchSkillsFromRepo: async (repo: SkillRepository) => {
-					if (repo.owner === 'test-owner') { return [testSkill]; }
-					return [otherSkill];
+				discoverAreas: async () => ({ skills: 'skills' }),
+				fetchRepoContent: async (_repo: SkillRepository, _areas: Record<string, string>) => {
+					if (_repo.owner === 'test-owner') { return { skills: [testSkill], fileItems: [] }; }
+					return { skills: [otherSkill], fileItems: [] };
 				},
 				clearCache: () => {}
 			} as unknown as GitHubSkillsClient;
