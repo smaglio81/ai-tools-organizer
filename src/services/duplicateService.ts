@@ -116,6 +116,9 @@ export function compareFiles(filesA: FileInfo[], filesB: FileInfo[]): number {
                 && fileA.content === fileB.content) {
                 continue;
             }
+            // When mtimes are equal but content wasn't compared (e.g. binary files or
+            // mixed text/binary), we treat the files as equivalent. There isn't enough
+            // information to determine a meaningful difference without content comparison.
             if (fileA.mtime > fileB.mtime) { return 1; }
             if (fileA.mtime < fileB.mtime) { return -1; }
         } else if (fileA && !fileB) {

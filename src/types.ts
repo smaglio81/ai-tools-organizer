@@ -175,7 +175,7 @@ export interface RepoContent {
 
 /**
  * Compare two SkillRepository configs for identity equality.
- * Compares owner, repo, branch. For path, compares the legacy path field.
+ * Compares owner, repo, and branch.
  */
 export function isSameRepository(left: SkillRepository, right: SkillRepository): boolean {
     return left.owner === right.owner &&
@@ -202,8 +202,7 @@ export function buildGitHubUrl(owner: string, repo: string, branch: string, skil
 
 /**
  * Normalize a SkillRepository read from user config.
- * Ensures branch defaults to 'main' when omitted, trims path,
- * and converts backslashes to forward slashes in path.
+ * Ensures branch defaults to 'main' when omitted.
  */
 export function normalizeRepository(repo: SkillRepository): SkillRepository {
     return {
@@ -214,8 +213,8 @@ export function normalizeRepository(repo: SkillRepository): SkillRepository {
 
 /**
  * Parse a repository config entry which may be either:
- * - A string in "owner/repo@branch" format (legacy compact format)
- * - An object with { owner, repo, branch }
+ * - A string in "owner/repo@branch" format (fallback for manual/non-standard config entries)
+ * - An object with { owner, repo, branch } (standard format used by the Settings UI)
  * Returns a normalized SkillRepository, or undefined if unparseable.
  */
 export function parseRepositoryEntry(entry: string | SkillRepository): SkillRepository | undefined {
@@ -231,13 +230,6 @@ export function parseRepositoryEntry(entry: string | SkillRepository): SkillRepo
         return normalizeRepository(entry);
     }
     return undefined;
-}
-
-/**
- * Serialize a SkillRepository to the compact "owner/repo@branch" string format.
- */
-export function serializeRepository(repo: SkillRepository): string {
-    return `${repo.owner}/${repo.repo}@${repo.branch || 'main'}`;
 }
 
 /**

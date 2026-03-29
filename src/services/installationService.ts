@@ -47,7 +47,7 @@ export class SkillInstallationService {
                 return false;
             }
             // Delete existing
-            await vscode.workspace.fs.delete(targetDir, { recursive: true });
+            await vscode.workspace.fs.delete(targetDir, { recursive: true, useTrash: true });
         } catch {
             // Not installed, continue
         }

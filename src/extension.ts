@@ -107,12 +107,12 @@ export function parseGitHubUrl(input: string): { owner: string; repo: string; br
 export function activate(context: vscode.ExtensionContext) {
     console.log('Agent Organizer extension is now active!');
 
-    // Initialize services
+    // ─── Section 1: Service initialization ───────────────────────────────
     const githubClient = new GitHubSkillsClient(context);
     const pathService = new SkillPathService();
     const installationService = new SkillInstallationService(githubClient, context, pathService);
 
-    // Initialize view providers
+    // ─── Section 2: View provider initialization ──────────────────────────
     const marketplaceProvider = new MarketplaceTreeDataProvider(githubClient, context);
     const installedProvider = new InstalledSkillsTreeDataProvider(context, pathService);
     initializeAreaIcons(context);
@@ -129,6 +129,9 @@ export function activate(context: vscode.ExtensionContext) {
 
     const areaProviders = new Map<string, InstalledAreaTreeDataProvider>();
     const areaTreeViews: vscode.Disposable[] = [];
+
+    // ─── Section 3: Helper functions (move/copy/download location) ─────
+    // These closures capture pathService, areaProviders, areaViewIds, etc.
 
     /** Refresh all area providers */
     async function refreshAreaProviders(): Promise<void> {
@@ -373,6 +376,8 @@ export function activate(context: vscode.ExtensionContext) {
         context.subscriptions.push(provider, treeView);
     }
 
+    // ─── Section 4: Tree view registration ─────────────────────────────
+
     // Register TreeViews
     const marketplaceTreeView = vscode.window.createTreeView('agentOrganizer.marketplace', {
         treeDataProvider: marketplaceProvider,
@@ -400,6 +405,8 @@ export function activate(context: vscode.ExtensionContext) {
     
     context.subscriptions.push(collapseDisposable, expandDisposable);
 
+    // ─── Section 5: Sync helper ─────────────────────────────────────────
+
     // Helper to sync installed status with marketplace
     const syncInstalledStatus = async () => {
         await installedProvider.refresh();
@@ -418,6 +425,8 @@ export function activate(context: vscode.ExtensionContext) {
         marketplaceProvider.setInstalledSkills(installedProvider.getInstalledSkillNames());
         marketplaceProvider.setInstalledItemNames(allNames);
     };
+
+    // ─── Section 6: Command registration ────────────────────────────────
 
     // Register commands
     const commands = [
@@ -1005,21 +1014,22 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(...commands, marketplaceTreeView, installedTreeView);
 
-    // Watch for SKILL.md create/delete in workspace-relative scan locations
-    // to trigger a full rescan. Derived from pathService so custom locations
-    // configured via chat.agentSkillsLocations are included automatically.
-    const workspaceScanLocations = pathService.getScanLocations()
-        .filter(loc => !pathService.isHomeLocation(loc));
-    const skillWatchers = workspaceScanLocations.map(loc => {
-        // Normalize backslashes to forward slashes so the glob pattern works on Windows
-        const normalizedLoc = normalizeSeparators(loc);
-        const watcher = vscode.workspace.createFileSystemWatcher(`**/${normalizedLoc}/*/SKILL.md`);
-        watcher.onDidCreate(() => syncInstalledStatus());
-        watcher.onDidDelete(() => syncInstalledStatus());
-        return watcher;
-    });
+    // ─── Section 7: File watchers & configuration listeners ──────────────
 
-    context.subscriptions.push(...skillWatchers);
+    // ROLLBACK NOTE (Finding 6): Removed redundant SKILL.md watchers that duplicated
+    // installedProvider.createFileWatchers() coverage. If skills stop auto-detecting
+    // new installs, restore the following block:
+    //
+    //   const workspaceScanLocations = pathService.getScanLocations()
+    //       .filter(loc => !pathService.isHomeLocation(loc));
+    //   const skillWatchers = workspaceScanLocations.map(loc => {
+    //       const normalizedLoc = normalizeSeparators(loc);
+    //       const watcher = vscode.workspace.createFileSystemWatcher(`**/${normalizedLoc}/*/SKILL.md`);
+    //       watcher.onDidCreate(() => syncInstalledStatus());
+    //       watcher.onDidDelete(() => syncInstalledStatus());
+    //       return watcher;
+    //   });
+    //   context.subscriptions.push(...skillWatchers);
 
     // Watch all scan locations for file changes to refresh duplicate status icons.
     // Initial watchers are created here; recreated internally on refresh.
@@ -1044,6 +1054,8 @@ export function activate(context: vscode.ExtensionContext) {
             }
         })
     );
+
+    // ─── Section 8: Startup & initial load ─────────────────────────────
 
     // Ensure per-area install locations are persisted in settings
     pathService.ensureInstallLocations();
