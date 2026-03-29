@@ -12,6 +12,9 @@ Click any item to view its details in a panel with:
 - For plugins: the raw `plugin.json` definition
 - Download and View Source buttons
 
+&nbsp;
+![Marketplace](../resources/agent-organizer-marketplace.png)
+
 ## Downloading
 
 **Multi-file items** (skills, plugins, hooks): click the download button to copy the entire folder to your configured download location.

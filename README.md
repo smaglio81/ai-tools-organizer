@@ -17,6 +17,8 @@ Agent Organizer adds a sidebar panel to VS Code with views for each type of AI t
 
 Each view shows what you have installed locally, grouped by location. The Marketplace lets you browse repositories and download items with one click.
 
+![Agent Organizer](resources/agent-organizer.png)
+
 ## Getting started
 
 1. Install the extension from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=smaglio81.agent-organizer)
@@ -49,23 +51,65 @@ The extension comes pre-configured with these GitHub repositories:
 
 | Repository | Content |
 |---|---|
+| anthropics/claude-code | Claude Code tools |
 | anthropics/skills | Anthropic's official skills |
 | github/awesome-copilot | Community agents, hooks, instructions, plugins, prompts, skills |
-| pytorch/pytorch | PyTorch skills |
-| openai/skills | OpenAI curated skills |
-| microsoftdocs/mcp | Microsoft MCP documentation |
 | formulahendry/agent-skill-code-runner | Code runner skill |
+| iamaanahmad/everything-kiro-ide | Kiro IDE hooks and tools |
+| microsoftdocs/mcp | Microsoft MCP documentation |
+| openai/skills | OpenAI curated skills |
+| pytorch/pytorch | PyTorch skills |
 
 Add your own repositories from the Marketplace toolbar or in Settings.
 
-## Issues & feedback
+## For Skill Developers
+
+To create skills compatible with this extension:
+
+1. **Follow the SKILL.md specification** with proper YAML frontmatter
+2. **Store skills in a public GitHub repository**
+3. **Organize skills** in a directory structure with one skill per folder
+4. **Document thoroughly** with clear README and usage examples
+5. **Include metadata** (license, compatibility, description)
+
+Users can then discover and install your skills through this marketplace!
+
+## Learning More
+
+- [Agent Skills Specification](https://agentskills.io)
+- [VS Code Extension Documentation](https://code.visualstudio.com/api)
+- [GitHub API Documentation](https://docs.github.com/en/rest)
+
+## Issues & Feedback
 
 Found a bug or have a feature request? [Open an issue on GitHub](https://github.com/smaglio81/agent-organizer/issues).
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+MIT License - see [LICENSE](LICENSE) file for details
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit pull requests or open issues.
+
+### Development Setup
+
+1. Clone the repository
+2. Run `npm install` to install dependencies
+3. Run `npm run watch` to start the development watcher
+4. Press `F5` in VS Code to launch the extension in debug mode
+
+### Building
+
+```bash
+npm run compile    # Compile with type checking and linting
+npm run package    # Build production bundle
+```
 
 ## Credits
 
 Based on the original work from [formulahendry/vscode-agent-skills](https://github.com/formulahendry/vscode-agent-skills).
+
+---
+
+Made with ❤️ for AI and Agent enthusiasts

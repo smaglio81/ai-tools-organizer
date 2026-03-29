@@ -1116,6 +1116,11 @@
           "default": [
             {
               "owner": "anthropics",
+              "repo": "claude-code",
+              "branch": "main"
+            },
+            {
+              "owner": "anthropics",
               "repo": "skills",
               "branch": "main"
             },
@@ -1125,13 +1130,13 @@
               "branch": "main"
             },
             {
-              "owner": "pytorch",
-              "repo": "pytorch",
+              "owner": "formulahendry",
+              "repo": "agent-skill-code-runner",
               "branch": "main"
             },
             {
-              "owner": "openai",
-              "repo": "skills",
+              "owner": "iamaanahmad",
+              "repo": "everything-kiro-ide",
               "branch": "main"
             },
             {
@@ -1140,8 +1145,13 @@
               "branch": "main"
             },
             {
-              "owner": "formulahendry",
-              "repo": "agent-skill-code-runner",
+              "owner": "openai",
+              "repo": "skills",
+              "branch": "main"
+            },
+            {
+              "owner": "pytorch",
+              "repo": "pytorch",
               "branch": "main"
             }
           ],

@@ -27,6 +27,8 @@ Every area view has these toolbar buttons:
 | Expand All | Expand all location groups |
 | Collapse All | Collapse all location groups |
 
+![Toolbar Buttons](../resources/area-views-toolbar-buttons.png)
+
 ## Duplicate detection
 
 When the same item name appears in multiple locations, icons change color:
@@ -39,6 +41,8 @@ When the same item name appears in multiple locations, icons change color:
 | Blue | Same — all copies are identical |
 
 Editing a file automatically triggers re-comparison. File watchers cover both workspace and home directory locations.
+
+![Color-coded icons](../resources/installed-skills-color-coded-icons.png)
 
 ## Right-click options
 

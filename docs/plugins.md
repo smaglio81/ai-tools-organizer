@@ -2,6 +2,8 @@
 
 Plugins can contain subfolders that mirror other content areas:
 
+![Plugins](../resources/agent-organizer-plugins.png)
+
 | Plugin subfolder | Content area |
 |---|---|
 | `/agents` | Agents |
