@@ -12,7 +12,7 @@ The extension adds an **Agent Organizer** activity bar container with 8 tree vie
 - **Hooks - Kiro** — View and manage installed Kiro-style hooks (`*.json` files).
 - **Instructions** — View and manage installed instruction files (`*.instructions.md`).
 - **Plugins** — View and manage installed plugins (folders with `plugin.json`).
-- **Prompts** — View and manage installed prompt files (`*.prompt.md`).
+- **Prompts / Commands** — View and manage installed prompt files (`*.prompt.md`).
 - **Skills** — View and manage installed skills (folders with `SKILL.md`). Has additional features: duplicate detection, move/copy, sync.
 
 ---
@@ -44,7 +44,7 @@ The extension recognizes 7 active content areas (Powers is excluded, still being
 **Single-file areas** (individual files matching a suffix):
 - Agents — `*.agent.md`
 - Instructions — `*.instructions.md`
-- Prompts — `*.prompt.md`
+- Prompts / Commands — `*.prompt.md`
 - Hooks - Kiro — `*.json` in `hooks/` directory, `conventionalOnly`
 
 Each area has a unique icon design and color. Hooks - GitHub and Hooks - Kiro share the same icon (via `iconPrefix`) and conventional directory (`hooks/`) but are mutually exclusive per repository — if GitHub-style hooks are found, Kiro-style discovery is skipped.
@@ -72,10 +72,19 @@ Each content area (except Skills, which has its own dedicated provider) uses the
 | Node Type | Context Value | Actions |
 |---|---|---|
 | Location | `areaLocation` | Move to..., Copy to..., Delete, Reveal in File Explorer |
-| Multi-file item | `areaInstalledFolder` | Add File, Add Folder, Move to..., Copy to..., Show in Marketplace, Reveal in File Explorer, Delete (inline + menu), View Installed Item (inline) |
-| Single-file item | `areaInstalledFile` | Move to..., Copy to..., Show in Marketplace, Reveal in File Explorer, Delete (inline + menu), View Installed Item (inline) |
+| Multi-file item | `areaInstalledFolder` | Add File, Add Folder, Move to..., Copy to..., Copy to Plugin... (not in Plugins view), Show in Marketplace, Reveal in File Explorer, Delete (inline + menu), View Installed Item (inline) |
+| Single-file item | `areaInstalledFile` | Move to..., Copy to..., Copy to Plugin..., Show in Marketplace, Reveal in File Explorer, Delete (inline + menu), View Installed Item (inline) |
 | Subfolder | `areaItemFolder` | Add File, Add Folder, Delete, Reveal in File Explorer |
 | File | `areaItemFile` | Rename, Delete, Reveal in File Explorer |
+
+Additional Plugins view commands:
+
+| Node Type | Context Value | Actions (Plugins view only) |
+|---|---|---|
+| Plugin item | `areaInstalledFolder` | Get latest copy of AI tools |
+| Area subfolder | `areaItemFolder` | Get latest copies, Copy to area |
+| Item in subfolder | `areaItemFile` | Get latest copy, Copy to area |
+| Folder in subfolder | `areaItemFolder` | Get latest copy (delegates to folder or item sync based on folder name) |
 
 "Reveal in File Explorer" appears at the bottom of all right-click menus (group `9_reveal`), except on installed items (skills and area items) where it groups with "Show in Marketplace" (group `3_marketplace`).
 
@@ -98,6 +107,7 @@ The Skills view uses its own dedicated `InstalledSkillsTreeDataProvider` with ad
 | `GitHubSkillsClient` | Fetches content from GitHub. Uses Git Trees API for efficiency; `raw.githubusercontent.com` for file content (no rate limit). Discovers content areas via `discoverAreas()`. Fetches all area content via `fetchRepoContent()`. Parses `plugin.json`/`hooks.json` as JSON and markdown files via YAML frontmatter. For JSON-based areas, also fetches `README.md` for detail panel body content. Caches results per `agentOrganizer.cacheTimeout`. |
 | `SkillPathService` | Resolves location strings (including `~` home paths) to `vscode.Uri` values. Provides scan locations, per-area default download locations (`getDefaultDownloadLocation(area)`), and install target resolution. Manages `agentOrganizer.installLocations` config (read, write, ensure defaults on activation). |
 | `SkillInstallationService` | Downloads, deletes, moves, copies, syncs skills. Uses area-specific download locations based on `skill.area`. Handles overwrite confirmation, progress notifications, and trash-based deletion. |
+| `PluginSyncService` | Handles "Get latest copy" and "Copy to area" operations for plugin subfolders. Maps plugin subfolder names to content areas (`agents→agents`, `skills→skills`, `commands→prompts`, `hooks→hooksGithub`). Provides `syncPluginItem()` with `SyncResult` including failure reasons. |
 
 ---
 

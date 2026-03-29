@@ -132,3 +132,29 @@ Currently, Skills has a view.
   * If `agentOrganizer.installLocations` is not defined in settings, then the setting should be created.
     * When the settings are being created this way, the default value of each setting should be `~/.copilot/{area}`
   * The `Custom Location` option in the QuickPick location menus should take you to the `agentOrganizer.installLocations` setting in User Settings (instead of the User Settings JSON file).
+
+## Adding `Copy To Plugin ...`
+
+* Plugins have a structure where they have some standardized subfolders for
+  * /agents
+  * /skills
+  * /commands - These are prompts
+  * /hooks
+* Example docs:
+  * https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference
+  * https://code.claude.com/docs/en/plugins
+* Can the items in each of the areas above have a right-click menu option for `Copy To Plugin ...`
+  * This should appear in the same group as `Copy To ...` and appear below `Copy To ...`
+* The copy action should create the area folder in the plugin if it doesn't already exist.
+* A right-click option should be added to the Plugins Area:
+  * On the Plugin Item, `Get latest copy of AI tools`
+  * On the area folders (agents, skills, etc), `Get latest copy of {area}s`
+  * On the individual items in an area, `Get latest copy`
+    * Individual items should also have a right-click option for `Copy to {area}s`
+      * `{area}s` should be `Agents`, `Skills`, `Prompts`, or `Hooks`
+* The functionality for getting the latest copy, should get the latest copy of the item for the items original area. The files in the plugin should not be checked to see if they are the latest. This should allow the developer to make changes to the files in the plugin, and then overwrite those files with the files from the original. This allows the developer to make a change, and then "revert it" if they don't like the change.
+* The repository, https://github.com/devsforge/marketplace/tree/main/, is doing something unusual.
+  * Under their `plugins` folder, they have an `agents` folder.
+  * And the `agents` folder is actually filled with plugins.
+  * Can this be detected and handled by the Plugins search?
+* If a plugin doesn't have a README.md file, can skillDetailPanel say `No README.MD found` instead of `No additional details avaliable.`

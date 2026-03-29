@@ -44,7 +44,7 @@ export const AREA_DEFINITIONS: Record<ContentArea, AreaDefinition> = {
     instructions: { label: 'Instructions', groupIcon: 'note', kind: 'singleFile', fileSuffix: '.instructions.md' },
     plugins: { label: 'Plugins', groupIcon: 'plug', kind: 'multiFile', definitionFile: 'plugin.json' },
     powers: { label: 'Powers', groupIcon: 'zap', kind: 'multiFile', definitionFile: 'POWER.md' },
-    prompts: { label: 'Prompts', groupIcon: 'comment-discussion', kind: 'singleFile', fileSuffix: '.prompt.md' },
+    prompts: { label: 'Prompts / Commands', groupIcon: 'comment-discussion', kind: 'singleFile', fileSuffix: '.prompt.md' },
     skills: { label: 'Skills', groupIcon: 'package', kind: 'multiFile', definitionFile: 'SKILL.md' },
 };
 
@@ -110,6 +110,8 @@ export interface Skill {
     area: ContentArea;
     fullContent?: string;
     bodyContent?: string;
+    /** Raw definition file content (e.g. plugin.json, hooks.json) for JSON-based areas */
+    definitionContent?: string;
 }
 
 /**

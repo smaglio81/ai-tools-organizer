@@ -17,7 +17,7 @@ The extension recognizes 8 content areas, each with its own detection pattern an
 | Hooks - Kiro | singleFile | `*.json` in `hooks/` | `.json` | Amber hook |
 | Instructions | singleFile | `*.instructions.md` | `.instructions.md` | Slate clipboard |
 | Plugins | multiFile | Folders with `plugin.json` | `plugin.json` (JSON) | Cyan plug |
-| Prompts | singleFile | `*.prompt.md` | `.prompt.md` | Pink chat bubble |
+| Prompts / Commands | singleFile | `*.prompt.md` | `.prompt.md` | Pink chat bubble |
 | Skills | multiFile | Folders with `SKILL.md` | `SKILL.md` | Purple star-document |
 
 Hooks - GitHub and Hooks - Kiro are mutually exclusive per repository: if GitHub-style hooks are found, Kiro-style discovery is skipped.
@@ -154,7 +154,8 @@ Results are cached in memory per `agentOrganizer.cacheTimeout` seconds.
 Clicking a multi-file item (skill, plugin, hook) or single-file item (agent, instruction, prompt) opens a `SkillDetailPanel` webview. The panel title reflects the area type (e.g., "Hooks - GitHub: Dependency License Checker").
 
 - For markdown-based areas (Skills, single-file areas): the README tab shows the rendered markdown body; Raw Source shows the full file content.
-- For JSON-based multi-file areas (Hooks - GitHub, Plugins): the panel fetches `README.md` from the item's folder. The README tab shows the rendered README markdown; Raw Source shows the raw README content. Name and description are taken from the JSON definition file, with README frontmatter as fallback.
+- For JSON-based multi-file areas (Hooks - GitHub, Plugins): the panel fetches `README.md` from the item's folder (also checks the item root if the definition file is nested). The README tab shows the rendered README markdown; Raw Source shows the raw README content. A third tab shows the raw definition file (e.g. `plugin.json`, `hooks.json`). Name and description are taken from the JSON definition file, with README frontmatter as fallback.
+- When no README.md is found for JSON-based areas, the README tab shows "No README.md found." instead of the generic "No additional details available."
 - For single-file items, the file content is fetched on demand via `agentOrganizer.viewFileDetails`.
 
 ---
@@ -169,7 +170,7 @@ Each area has a unique icon design in its own color for group nodes and view tit
 | Hooks | Hook/branch | Amber |
 | Instructions | Clipboard | Slate |
 | Plugins | Plug | Cyan |
-| Prompts | Chat bubble | Pink |
+| Prompts / Commands | Chat bubble | Pink |
 | Skills | 3D Package/box | Purple |
 
 Individual items use the same icon shape in 4 status colors:

@@ -128,7 +128,13 @@ export class SkillDetailPanel {
         const isInstalled = this._installedProvider.isSkillInstalled(skill.name);
         
         // Convert markdown body to HTML
-        const bodyHtml = this._markdownToHtml(skill.bodyContent || '');
+        const def = AREA_DEFINITIONS[skill.area];
+        const emptyMessage = def?.definitionFile?.endsWith('.json')
+            ? '<p><em>No README.md found.</em></p>'
+            : '<p><em>No additional details available.</em></p>';
+        const bodyHtml = skill.bodyContent
+            ? this._markdownToHtml(skill.bodyContent)
+            : emptyMessage;
         
         const nonce = this._getNonce();
 
@@ -183,6 +189,7 @@ export class SkillDetailPanel {
         <div class="tabs">
             <button class="tab active" data-tab="readme">README</button>
             <button class="tab" data-tab="raw">Raw Source</button>
+            ${skill.definitionContent ? `<button class="tab" data-tab="definition">${this._escapeHtml(AREA_DEFINITIONS[skill.area]?.definitionFile || 'Definition')}</button>` : ''}
         </div>
         
         <div id="readme" class="tab-content active">
@@ -194,6 +201,10 @@ export class SkillDetailPanel {
         <div id="raw" class="tab-content">
             <pre class="raw-content"><code>${this._escapeHtml(skill.fullContent || '')}</code></pre>
         </div>
+        
+        ${skill.definitionContent ? `<div id="definition" class="tab-content">
+            <pre class="raw-content"><code>${this._escapeHtml(skill.definitionContent)}</code></pre>
+        </div>` : ''}
     </div>
     
     <script nonce="${nonce}">

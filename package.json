@@ -76,7 +76,7 @@
         },
         {
           "id": "agentOrganizer.prompts",
-          "name": "Prompts",
+          "name": "Prompts / Commands",
           "icon": "resources/prompts-icon.svg"
         },
         {
@@ -221,6 +221,26 @@
       {
         "command": "agentOrganizer.copySkill",
         "title": "Copy to..."
+      },
+      {
+        "command": "agentOrganizer.copyToPlugin",
+        "title": "Copy to Plugin..."
+      },
+      {
+        "command": "agentOrganizer.pluginGetLatestAll",
+        "title": "Get latest copy of AI tools"
+      },
+      {
+        "command": "agentOrganizer.pluginGetLatestFolder",
+        "title": "Get latest copies"
+      },
+      {
+        "command": "agentOrganizer.pluginGetLatestItem",
+        "title": "Get latest copy"
+      },
+      {
+        "command": "agentOrganizer.pluginCopyToArea",
+        "title": "Copy to area"
       },
       {
         "command": "agentOrganizer.syncSkill",
@@ -457,7 +477,7 @@
         {
           "command": "agentOrganizer.addRepository",
           "when": "view == agentOrganizer.marketplace",
-          "group": "9_reveal@1"
+          "group": "navigation@3"
         },
         {
           "command": "agentOrganizer.search",
@@ -757,6 +777,11 @@
           "group": "1_move@2"
         },
         {
+          "command": "agentOrganizer.copyToPlugin",
+          "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
+          "group": "1_move@3"
+        },
+        {
           "command": "agentOrganizer.syncSkill",
           "when": "view == agentOrganizer.skills && viewItem == installedSkill_newest",
           "group": "1_move@3"
@@ -877,9 +902,19 @@
           "group": "1_move@2"
         },
         {
+          "command": "agentOrganizer.copyToPlugin",
+          "when": "viewItem == areaInstalledFolder && view != agentOrganizer.plugins",
+          "group": "1_move@3"
+        },
+        {
           "command": "agentOrganizer.showInMarketplace",
           "when": "viewItem == areaInstalledFolder",
           "group": "3_marketplace@1"
+        },
+        {
+          "command": "agentOrganizer.pluginGetLatestAll",
+          "when": "view == agentOrganizer.plugins && viewItem == areaInstalledFolder",
+          "group": "1_move@4"
         },
         {
           "command": "agentOrganizer.openSkillFolder",
@@ -917,6 +952,11 @@
           "group": "1_move@2"
         },
         {
+          "command": "agentOrganizer.copyToPlugin",
+          "when": "viewItem == areaInstalledFile",
+          "group": "1_move@3"
+        },
+        {
           "command": "agentOrganizer.showInMarketplace",
           "when": "viewItem == areaInstalledFile",
           "group": "3_marketplace@1"
@@ -942,6 +982,16 @@
           "group": "2_delete@1"
         },
         {
+          "command": "agentOrganizer.pluginGetLatestFolder",
+          "when": "view == agentOrganizer.plugins && viewItem == areaItemFolder",
+          "group": "1_move@1"
+        },
+        {
+          "command": "agentOrganizer.pluginCopyToArea",
+          "when": "view == agentOrganizer.plugins && viewItem == areaItemFolder",
+          "group": "1_move@2"
+        },
+        {
           "command": "agentOrganizer.renameFile",
           "when": "viewItem == areaItemFile",
           "group": "0_rename@1"
@@ -955,6 +1005,16 @@
           "command": "agentOrganizer.deleteSkillFile",
           "when": "viewItem == areaItemFile",
           "group": "2_delete@1"
+        },
+        {
+          "command": "agentOrganizer.pluginGetLatestItem",
+          "when": "view == agentOrganizer.plugins && viewItem == areaItemFile",
+          "group": "1_move@1"
+        },
+        {
+          "command": "agentOrganizer.pluginCopyToArea",
+          "when": "view == agentOrganizer.plugins && viewItem == areaItemFile",
+          "group": "1_move@2"
         }
       ]
     },

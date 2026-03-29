@@ -12,6 +12,7 @@ import { SkillDetailPanel } from './views/skillDetailPanel';
 import { SkillInstallationService } from './services/installationService';
 import { SkillPathService } from './services/skillPathService';
 import { Skill, InstalledSkill, SkillRepository, isSameRepository, normalizeSeparators, buildGitHubUrl, readRepositoriesConfig, writeRepositoriesConfig, AreaFileItem, ContentArea, AREA_DEFINITIONS } from './types';
+import { PLUGIN_SUBFOLDER_TO_AREA, PLUGIN_AREA_SUBFOLDERS, resolveInstalledItemUri, syncPluginItem } from './services/pluginSyncService';
 
 /**
  * Validate a file or folder name: non-empty, no path separators, no traversal.
@@ -111,6 +112,8 @@ export function activate(context: vscode.ExtensionContext) {
     const githubClient = new GitHubSkillsClient(context);
     const pathService = new SkillPathService();
     const installationService = new SkillInstallationService(githubClient, context, pathService);
+    const outputChannel = vscode.window.createOutputChannel('Agent Organizer');
+    context.subscriptions.push(outputChannel);
 
     // ─── Section 2: View provider initialization ──────────────────────────
     const marketplaceProvider = new MarketplaceTreeDataProvider(githubClient, context);
@@ -828,6 +831,355 @@ export function activate(context: vscode.ExtensionContext) {
                 if (success) {
                     await syncInstalledStatus();
                 }
+            }
+        }),
+
+        // Copy an item into a plugin's subfolder
+        vscode.commands.registerCommand('agentOrganizer.copyToPlugin', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
+            // Determine the source area and the target plugin subfolder
+            const pluginSubfolderMap: Partial<Record<ContentArea, string>> = {
+                agents: 'agents',
+                skills: 'skills',
+                prompts: 'commands',
+                hooksGithub: 'hooks',
+            };
+
+            let sourceArea: ContentArea;
+            let sourceUri: vscode.Uri;
+            let itemName: string;
+
+            if (item instanceof AreaInstalledItemTreeItem) {
+                sourceArea = item.area;
+                sourceUri = item.itemUri;
+                itemName = item.installedItem.name;
+            } else if (item instanceof InstalledSkillTreeItem) {
+                sourceArea = 'skills';
+                sourceUri = item.skillUri;
+                itemName = item.installedSkill.name;
+            } else {
+                return;
+            }
+
+            const targetSubfolder = pluginSubfolderMap[sourceArea];
+            if (!targetSubfolder) {
+                vscode.window.showWarningMessage(`"Copy to Plugin" is not supported for ${AREA_DEFINITIONS[sourceArea].label} items.`);
+                return;
+            }
+
+            // Get all installed plugins from the plugins area provider
+            const pluginsProvider = areaProviders.get('agentOrganizer.plugins');
+            if (!pluginsProvider) { return; }
+            const plugins = pluginsProvider.getInstalledItems();
+
+            if (plugins.length === 0) {
+                vscode.window.showInformationMessage('No plugins installed. Download a plugin from the Marketplace first.');
+                return;
+            }
+
+            // Show quick pick of available plugins
+            const picks = plugins.map(p => ({
+                label: p.name,
+                description: p.location,
+                plugin: p
+            }));
+
+            const selected = await vscode.window.showQuickPick(picks, {
+                placeHolder: `Copy "${itemName}" to which plugin?`
+            });
+            if (!selected) { return; }
+
+            // Resolve the plugin's directory
+            const pluginLoc = normalizeSeparators(selected.plugin.location);
+            const pluginWorkspaceFolder = pathService.getWorkspaceFolderForLocation(pluginLoc);
+            const pluginUri = pathService.resolveLocationToUri(pluginLoc, pluginWorkspaceFolder);
+            if (!pluginUri) {
+                vscode.window.showErrorMessage('Failed to resolve plugin location.');
+                return;
+            }
+
+            // Create the target subfolder inside the plugin if it doesn't exist
+            const targetDir = vscode.Uri.joinPath(pluginUri, targetSubfolder);
+            await vscode.workspace.fs.createDirectory(targetDir);
+
+            // Determine the target name (file name for single-file, folder name for multi-file)
+            const sourceLoc = normalizeSeparators(item instanceof AreaInstalledItemTreeItem ? item.installedItem.location : item.installedSkill.location);
+            const sourceBaseName = sourceLoc.substring(sourceLoc.lastIndexOf('/') + 1);
+            const targetUri = vscode.Uri.joinPath(targetDir, sourceBaseName);
+
+            // Check if target already exists
+            try {
+                await vscode.workspace.fs.stat(targetUri);
+                const overwrite = await vscode.window.showWarningMessage(
+                    `"${sourceBaseName}" already exists in ${selected.label}/${targetSubfolder}. Overwrite?`,
+                    { modal: true },
+                    'Overwrite'
+                );
+                if (overwrite !== 'Overwrite') { return; }
+                await vscode.workspace.fs.delete(targetUri, { recursive: true, useTrash: true });
+            } catch { /* doesn't exist, continue */ }
+
+            try {
+                await vscode.workspace.fs.copy(sourceUri, targetUri, { overwrite: true });
+                vscode.window.showInformationMessage(`Copied "${itemName}" to ${selected.label}/${targetSubfolder}`);
+                await syncInstalledStatus();
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                vscode.window.showErrorMessage(`Failed to copy to plugin: ${message}`);
+            }
+        }),
+
+        // Get latest copy of all AI tools in a plugin (agents, skills, commands, hooks)
+        vscode.commands.registerCommand('agentOrganizer.pluginGetLatestAll', async (item: AreaInstalledItemTreeItem) => {
+            if (!item || item.area !== 'plugins') { return; }
+            const pluginUri = item.itemUri;
+            const allResults: { area: string; name: string; updated: boolean; reason?: string }[] = [];
+
+            for (const subfolder of PLUGIN_AREA_SUBFOLDERS) {
+                const area = PLUGIN_SUBFOLDER_TO_AREA[subfolder];
+                const subfolderUri = vscode.Uri.joinPath(pluginUri, subfolder);
+                try { await vscode.workspace.fs.stat(subfolderUri); } catch { continue; }
+
+                let sourceItems: InstalledSkill[];
+                if (area === 'skills') {
+                    sourceItems = installedProvider.getInstalledSkills();
+                } else {
+                    const viewId = areaViewIds.find(a => a.area === area)?.viewId;
+                    const provider = viewId ? areaProviders.get(viewId) : undefined;
+                    sourceItems = provider ? provider.getInstalledItems() : [];
+                }
+
+                try {
+                    const entries = await vscode.workspace.fs.readDirectory(subfolderUri);
+                    for (const [name] of entries) {
+                        const itemUri = vscode.Uri.joinPath(subfolderUri, name);
+                        const def = AREA_DEFINITIONS[area];
+                        const itemName = def.kind === 'singleFile' && def.fileSuffix && name.endsWith(def.fileSuffix)
+                            ? name.substring(0, name.length - def.fileSuffix.length)
+                            : name;
+                        const resolveUri = (i: InstalledSkill) => resolveInstalledItemUri(i, pathService);
+                        const result = await syncPluginItem(itemUri, itemName, sourceItems, resolveUri);
+                        allResults.push({ area: AREA_DEFINITIONS[area].label, name: itemName, ...result });
+                    }
+                } catch { /* can't read subfolder */ }
+            }
+
+            if (allResults.length === 0) {
+                vscode.window.showInformationMessage(`No AI tool subfolders found in "${item.installedItem.name}".`);
+            } else {
+                const updated = allResults.filter(r => r.updated).length;
+                outputChannel.clear();
+                outputChannel.appendLine(`Get Latest — "${item.installedItem.name}"`);
+                outputChannel.appendLine(`Updated ${updated} of ${allResults.length} item(s)\n`);
+                for (const r of allResults) {
+                    const status = r.updated ? '✅' : '⏭️';
+                    const note = !r.updated && r.reason ? ` — ${r.reason}` : '';
+                    outputChannel.appendLine(`  ${status} [${r.area}] ${r.name}${note}`);
+                }
+                const action = await vscode.window.showInformationMessage(
+                    `Updated ${updated} of ${allResults.length} item(s) in "${item.installedItem.name}".`,
+                    'Show Details'
+                );
+                if (action === 'Show Details') { outputChannel.show(); }
+            }
+            await syncInstalledStatus();
+        }),
+
+        // Get latest copies of all items in a plugin area subfolder
+        vscode.commands.registerCommand('agentOrganizer.pluginGetLatestFolder', async (item: AreaItemFolderTreeItem) => {
+            if (!item) { return; }
+            const folderName = item.folderName;
+            const area = PLUGIN_SUBFOLDER_TO_AREA[folderName];
+
+            if (!area) {
+                // Not an area subfolder — this is an individual item (e.g. a skill folder).
+                // Delegate to the single-item sync by invoking the same logic as pluginGetLatestItem.
+                await vscode.commands.executeCommand('agentOrganizer.pluginGetLatestItem', item);
+                return;
+            }
+
+            // Get source items
+            let sourceItems: InstalledSkill[];
+            if (area === 'skills') {
+                sourceItems = installedProvider.getInstalledSkills();
+            } else {
+                const viewId = areaViewIds.find(a => a.area === area)?.viewId;
+                const provider = viewId ? areaProviders.get(viewId) : undefined;
+                sourceItems = provider ? provider.getInstalledItems() : [];
+            }
+
+            const results: { name: string; updated: boolean; reason?: string }[] = [];
+            try {
+                const entries = await vscode.workspace.fs.readDirectory(item.folderUri);
+                for (const [name] of entries) {
+                    const itemUri = vscode.Uri.joinPath(item.folderUri, name);
+                    const def = AREA_DEFINITIONS[area];
+                    const itemName = def.kind === 'singleFile' && def.fileSuffix && name.endsWith(def.fileSuffix)
+                        ? name.substring(0, name.length - def.fileSuffix.length)
+                        : name;
+
+                    const resolveUri = (i: InstalledSkill) => resolveInstalledItemUri(i, pathService);
+                    const result = await syncPluginItem(itemUri, itemName, sourceItems, resolveUri);
+                    results.push({ name: itemName, ...result });
+                }
+            } catch { /* can't read folder */ }
+
+            const areaLabel = AREA_DEFINITIONS[area].label;
+            const updated = results.filter(r => r.updated).length;
+            outputChannel.clear();
+            outputChannel.appendLine(`Get Latest — ${areaLabel}`);
+            outputChannel.appendLine(`Updated ${updated} of ${results.length} item(s)\n`);
+            for (const r of results) {
+                const status = r.updated ? '✅' : '⏭️';
+                const note = !r.updated && r.reason ? ` — ${r.reason}` : '';
+                outputChannel.appendLine(`  ${status} ${r.name}${note}`);
+            }
+            const action = await vscode.window.showInformationMessage(
+                `${areaLabel}: Updated ${updated} of ${results.length} item(s).`,
+                'Show Details'
+            );
+            if (action === 'Show Details') { outputChannel.show(); }
+            await syncInstalledStatus();
+        }),
+
+        // Get latest copy of a single item in a plugin area subfolder
+        vscode.commands.registerCommand('agentOrganizer.pluginGetLatestItem', async (item: AreaItemFileTreeItem | AreaItemFolderTreeItem) => {
+            if (!item) { return; }
+
+            // Determine the item's URI and name
+            const itemUri = item instanceof AreaItemFileTreeItem ? item.fileUri : item.folderUri;
+            const itemFileName = item instanceof AreaItemFileTreeItem ? item.fileName : item.folderName;
+
+            // Walk up to find the area subfolder name
+            let parent: AreaInstalledItemTreeItem | AreaItemFolderTreeItem | undefined;
+            if (item instanceof AreaItemFileTreeItem) {
+                parent = item.parentFolder;
+            } else {
+                parent = item.parentItem;
+            }
+
+            let subfolderName: string | undefined;
+            while (parent) {
+                if (parent instanceof AreaItemFolderTreeItem) {
+                    if (PLUGIN_SUBFOLDER_TO_AREA[parent.folderName]) {
+                        subfolderName = parent.folderName;
+                        break;
+                    }
+                    parent = parent.parentItem;
+                } else if (parent instanceof AreaInstalledItemTreeItem) {
+                    // We've reached the plugin root without finding an area subfolder.
+                    // Check if the item itself is directly under the plugin — meaning
+                    // the item's parent is the plugin and the item name might be an area folder.
+                    break;
+                } else {
+                    break;
+                }
+            }
+
+            // If the item is a folder directly under the plugin and its name is an area subfolder,
+            // that's the pluginGetLatestFolder case, not this one. But if the item is inside
+            // an area subfolder, we proceed.
+            if (!subfolderName) {
+                vscode.window.showInformationMessage(`Could not determine the AI tool area for "${itemFileName}".`);
+                return;
+            }
+
+            const area = PLUGIN_SUBFOLDER_TO_AREA[subfolderName];
+            let sourceItems: InstalledSkill[];
+            if (area === 'skills') {
+                sourceItems = installedProvider.getInstalledSkills();
+            } else {
+                const viewId = areaViewIds.find(a => a.area === area)?.viewId;
+                const provider = viewId ? areaProviders.get(viewId) : undefined;
+                sourceItems = provider ? provider.getInstalledItems() : [];
+            }
+
+            const def = AREA_DEFINITIONS[area];
+            const itemName = def.kind === 'singleFile' && def.fileSuffix && itemFileName.endsWith(def.fileSuffix)
+                ? itemFileName.substring(0, itemFileName.length - def.fileSuffix.length)
+                : itemFileName;
+
+            const resolveUri = (i: InstalledSkill) => resolveInstalledItemUri(i, pathService);
+            const result = await syncPluginItem(itemUri, itemName, sourceItems, resolveUri);
+
+            if (result.updated) {
+                vscode.window.showInformationMessage(`Updated "${itemFileName}" with latest copy.`);
+            } else {
+                vscode.window.showInformationMessage(`Could not update "${itemFileName}": ${result.reason || 'unknown reason'}.`);
+            }
+            await syncInstalledStatus();
+        }),
+
+        // Copy an item from a plugin's area subfolder to the corresponding installed area location
+        vscode.commands.registerCommand('agentOrganizer.pluginCopyToArea', async (item: AreaItemFileTreeItem | AreaItemFolderTreeItem) => {
+            if (!item) { return; }
+
+            const itemUri = item instanceof AreaItemFileTreeItem ? item.fileUri : item.folderUri;
+            const itemFileName = item instanceof AreaItemFileTreeItem ? item.fileName : item.folderName;
+
+            // Walk up to find the area subfolder name
+            let parent: AreaInstalledItemTreeItem | AreaItemFolderTreeItem | undefined;
+            if (item instanceof AreaItemFileTreeItem) {
+                parent = item.parentFolder;
+            } else {
+                parent = item.parentItem;
+            }
+
+            let subfolderName: string | undefined;
+            while (parent) {
+                if (parent instanceof AreaItemFolderTreeItem) {
+                    if (PLUGIN_SUBFOLDER_TO_AREA[parent.folderName]) {
+                        subfolderName = parent.folderName;
+                        break;
+                    }
+                    parent = parent.parentItem;
+                } else {
+                    break;
+                }
+            }
+
+            if (!subfolderName) {
+                vscode.window.showInformationMessage(`Could not determine the AI tool area for "${itemFileName}".`);
+                return;
+            }
+
+            const area = PLUGIN_SUBFOLDER_TO_AREA[subfolderName];
+            const areaLabel = AREA_DEFINITIONS[area].label;
+            const downloadLocation = pathService.getDefaultDownloadLocation(area);
+            const workspaceFolder = pathService.getWorkspaceFolderForLocation(downloadLocation);
+
+            if (pathService.requiresWorkspaceFolder(downloadLocation) && !workspaceFolder) {
+                vscode.window.showErrorMessage('No workspace folder open. Please open a folder first.');
+                return;
+            }
+
+            const targetDir = pathService.resolveLocationToUri(downloadLocation, workspaceFolder);
+            if (!targetDir) {
+                vscode.window.showErrorMessage(`Failed to resolve ${areaLabel} location.`);
+                return;
+            }
+
+            await vscode.workspace.fs.createDirectory(targetDir);
+            const targetUri = vscode.Uri.joinPath(targetDir, itemFileName);
+
+            // Check if target already exists
+            try {
+                await vscode.workspace.fs.stat(targetUri);
+                const overwrite = await vscode.window.showWarningMessage(
+                    `"${itemFileName}" already exists in ${downloadLocation}. Overwrite?`,
+                    { modal: true },
+                    'Overwrite'
+                );
+                if (overwrite !== 'Overwrite') { return; }
+                await vscode.workspace.fs.delete(targetUri, { recursive: true, useTrash: true });
+            } catch { /* doesn't exist */ }
+
+            try {
+                await vscode.workspace.fs.copy(itemUri, targetUri, { overwrite: true });
+                vscode.window.showInformationMessage(`Copied "${itemFileName}" to ${areaLabel} (${downloadLocation})`);
+                await syncInstalledStatus();
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                vscode.window.showErrorMessage(`Failed to copy: ${message}`);
             }
         }),
 

@@ -95,6 +95,39 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 - Area views may briefly show blank content when first expanded, before the tree data renders. The "Searching for installed {area}..." spinner does not reliably appear. See `.agents/design/areaViewLoading.design.md` for details on attempted solutions.
 
+### Added (continued)
+
+- "Copy to Plugin..." right-click option on installed items in Agents, Skills, Prompts / Commands, and Hooks - GitHub views. Copies the item into a selected plugin's area subfolder (`/agents`, `/skills`, `/commands`, `/hooks`), creating the subfolder if needed.
+- Plugin sync commands in the Plugins view:
+  - "Get latest copy of AI tools" on plugin items — syncs all area subfolders (agents, skills, commands, hooks) with the latest versions from installed areas.
+  - "Get latest copies" on area subfolders within a plugin — syncs all items in that subfolder.
+  - "Get latest copy" on individual items within a plugin's area subfolder — syncs a single item.
+  - Results shown via output channel with per-item ✅/⏭️ status and failure reasons. Toast notification includes "Show Details" button.
+- "Copy to area" right-click option on files and folders inside a plugin's area subfolders. Copies the item to the corresponding installed area's default download location.
+- `src/services/pluginSyncService.ts` — shared service for plugin sync operations with `PLUGIN_SUBFOLDER_TO_AREA` mapping, `syncPluginItem()`, and `SyncResult` type with failure reasons.
+- "Agent Organizer" output channel for detailed sync results.
+- Plugin detail panel now shows a third tab for the raw `plugin.json` (or `hooks.json`) content when the definition file is JSON-based.
+- Plugin discovery now handles nested category folders (e.g. `plugins/agents/my-plugin/.claude-plugin/plugin.json`) by stripping known wrapper directories (`.claude-plugin`, `.github`) when determining the item root.
+- Plugin README.md fallback: when `plugin.json` is nested and README.md isn't found next to it, the detail panel also checks the plugin's root directory.
+- Detail panel shows "No README.md found." for JSON-based areas (plugins, hooks) when no body content is available, instead of the generic "No additional details available."
+- Code review and implement-fixes agents added to `.github/agents/`.
+- `src/test/pluginSync.test.ts` — 13 tests covering single-item sync, folder sync, full plugin sync, copy-from-plugin, and mapping constants.
+
+### Changed (continued)
+
+- "Prompts" view and area label renamed to "Prompts / Commands" to reflect the plugin `commands/` subfolder mapping.
+- "Add Repository" button moved back to the Marketplace view navigation bar (from the overflow `...` menu).
+- "Copy to Plugin..." excluded from the Plugins view itself (plugins can't be copied into plugins).
+- `installSkill` overwrite now uses `useTrash: true` for safety, matching all other delete operations.
+- Stale JSDoc on `isSameRepository` and `normalizeRepository` cleaned up (removed references to removed `path` field).
+- Unused `serializeRepository` function removed from `types.ts`.
+- `parseRepositoryEntry` JSDoc updated to clarify string format is a fallback for manual config entries.
+- Redundant SKILL.md file watchers in `extension.ts` removed (covered by `installedProvider.createFileWatchers()`).
+- `activate()` function organized with section divider comments (8 sections) for navigability.
+- `compareFiles` in `duplicateService.ts` — added comment explaining equal-mtime behavior is intentional when content comparison isn't available.
+- `version` bumped to `0.0.5` in `package.json`.
+- `uninstall:vsix` script updated from old `formulahendry` publisher to `smaglio81`.
+
 ## [0.0.4]
 
 ### Changed

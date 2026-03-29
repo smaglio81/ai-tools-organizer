@@ -152,7 +152,7 @@ After any refresh, install, uninstall, move, copy, or delete operation, `syncIns
 2. Collects installed names from the Skills provider and all area providers into a combined set.
 3. Pushes skill names to the Marketplace via `setInstalledSkills()` and all installed names via `setInstalledItemNames()`.
 
-The Marketplace shows a green check icon on items whose name appears in the installed set. This works for all content areas (skills, agents, hooks, instructions, plugins, prompts).
+The Marketplace shows a green check icon on items whose name appears in the installed set. This works for all content areas (skills, agents, hooks, instructions, plugins, prompts/commands).
 
 ---
 

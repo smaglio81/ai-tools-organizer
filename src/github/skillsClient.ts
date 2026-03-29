@@ -177,7 +177,9 @@ export class GitHubSkillsClient {
                 skillPath,
                 area,
                 fullContent: readmeFullContent || content,
-                bodyContent
+                bodyContent,
+                // For JSON-based areas, preserve the raw definition file content
+                definitionContent: defFile.endsWith('.json') ? content : undefined
             };
         } catch (_error) {
             console.warn(`No ${defFile} found for ${skillName}`);
@@ -548,13 +550,30 @@ export class GitHubSkillsClient {
                     !otherPrefixes.some(op => item.path.startsWith(op))
                 );
 
-                // Deduplicate: extract the immediate child folder under the area path as the item name
-                // e.g. "plugins/foo/.github/plugin/plugin.json" → "plugins/foo"
+                // Deduplicate: find the item root folder for each definition file.
+                // The item root is determined by removing the definition file and any
+                // known wrapper directories (e.g. .claude-plugin/, .github/plugin/).
+                // This handles repos that use category subfolders like plugins/agents/my-plugin/.claude-plugin/plugin.json
                 const seenItems = new Map<string, string>(); // itemDir → first defFile path
                 for (const item of defFiles) {
+                    // Strip the area prefix and definition file name to get the relative structure
+                    // e.g. "plugins/agents/my-plugin/.claude-plugin/plugin.json" → "agents/my-plugin/.claude-plugin"
                     const relativePath = item.path.substring(prefix.length);
-                    const firstSegment = relativePath.split('/')[0];
-                    const itemDir = prefix + firstSegment;
+                    const segments = relativePath.split('/');
+                    // Remove the definition file name (last segment)
+                    segments.pop();
+                    // Remove known wrapper directory segments from the end
+                    while (segments.length > 0) {
+                        const last = segments[segments.length - 1];
+                        if (last.startsWith('.') || last === 'plugin' || last === 'hooks') {
+                            segments.pop();
+                        } else {
+                            break;
+                        }
+                    }
+                    // The remaining segments form the item path relative to the area
+                    const itemRelative = segments.join('/');
+                    const itemDir = itemRelative ? prefix + itemRelative : prefix.replace(/\/$/, '');
                     if (!seenItems.has(itemDir)) {
                         seenItems.set(itemDir, item.path);
                     }
@@ -568,7 +587,21 @@ export class GitHubSkillsClient {
                         try {
                             const skill = await this.fetchSkillMetadataRaw(repo, skillName, defParentDir, area);
                             // Override skillPath to point to the item's root folder (not the nested def file location)
-                            if (skill) { skill.skillPath = itemDir; }
+                            if (skill) {
+                                skill.skillPath = itemDir;
+                                // If README wasn't found at the def file location, try the item root
+                                if (!skill.bodyContent && defParentDir !== itemDir) {
+                                    try {
+                                        const readmePath = `${itemDir}/README.md`;
+                                        const readmeContent = await this.fetchRawContent(repo.owner, repo.repo, readmePath, repo.branch || 'main');
+                                        const readmeParsed = this.parseSkillMd(readmeContent);
+                                        skill.bodyContent = readmeParsed.body || readmeContent;
+                                        skill.fullContent = readmeContent;
+                                        if (skill.name === skillName && readmeParsed.metadata.name) { skill.name = readmeParsed.metadata.name; }
+                                        if (skill.description === 'No description available' && readmeParsed.metadata.description) { skill.description = readmeParsed.metadata.description; }
+                                    } catch { /* no README at root either */ }
+                                }
+                            }
                             return skill;
                         } catch (error) {
                             console.warn(`Failed to fetch ${area} at ${itemDir}:`, error);
