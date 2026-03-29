@@ -6,27 +6,94 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [0.0.5]
 
+### Added
+
+- Multi-area content support: the Marketplace now discovers and displays content areas from repositories:
+  - Agents (single-file, `*.agent.md`)
+  - Hooks - GitHub (multi-file, folders with `hooks.json`)
+  - Hooks - Kiro (single-file, `*.json` in `hooks/` directory)
+  - Instructions (single-file, `*.instructions.md`)
+  - Plugins (multi-file, folders with `plugin.json`)
+  - Prompts (single-file, `*.prompt.md`)
+  - Skills (multi-file, folders with `SKILL.md`)
+- Automatic area discovery: on every load/refresh, each repository's tree is scanned to detect which content areas exist. Top-level directories matching conventional area names are checked first; a fallback search handles non-standard layouts.
+- Area exclusion logic: files under one area's directory are excluded from other areas' searches (e.g., a `.prompt.md` inside a plugin folder won't appear under Prompts).
+- Unique color-coded icons for each area (7 area shapes × 4 status colors + 7 area-colored group icons).
+- Area group nodes under each repository in the Marketplace tree, each with its own icon and item count.
+- Single-file area items (Agents, Instructions, Prompts) support click-to-view-details, inline "View Details" button, and right-click "Open in Browser".
+- `agentOrganizer.viewFileDetails` command: fetches single-file content from GitHub and opens the detail panel.
+- "Open in Browser" right-click menu on area group nodes (opens the area's directory on GitHub).
+- `plugin.json` files are parsed as JSON to extract `name` and `description` for Plugins.
+- New Activity Bar icon (books/library design using `currentColor`).
+- New installed views for each content area (Agents, Hooks - GitHub, Hooks - Kiro, Instructions, Plugins, Prompts) alongside the existing Skills view. Each view:
+  - Scans local scan locations for area-specific content (e.g., `~/.claude/agents`, `~/.copilot/hooks`)
+  - Has its own Search, Clear Search, and Refresh toolbar commands
+  - Groups items by install location with colored folder icons
+  - Multi-file items expand to show folder contents
+  - Single-file items open in the editor on double-click
+  - Right-click menus match the Skills view: Delete, Reveal in File Explorer, Add File/Add Folder (multi-file only), Rename (files), Open Folder (multi-file inline)
+  - File watchers auto-refresh when items are created or deleted
+  - "Move to..." and "Copy to..." on items and location folders
+  - Expand All toolbar button
+  - "Searching for installed {area}..." loading message with spinner
+  - Welcome messages ("No {area} found.") when empty
+  - "View Installed Item" inline button on all items: opens the definition file (single-file areas open the file directly; multi-file areas open the definition file, searching recursively for plugins)
+- "Move to..." and "Copy to..." added to top-level location folders in all views (Skills and area views)
+- View title icons: each view displays its area-colored icon in the title
+- For JSON-based multi-file areas (Hooks - GitHub, Plugins), the detail panel now fetches and renders `README.md` from the item's folder. The README tab shows rendered markdown; Raw Source shows the raw README content. Name and description fall back to README frontmatter if not provided by the JSON definition file.
+- Per-area "Default Download Location" button in all view title bars (Skills and all area views). Each area can have its own configured download location via `agentOrganizer.installLocations`.
+- `agentOrganizer.installLocations` setting: an object with per-area default download locations. Defaults to `~/.copilot/{area}` for each area (hooksKiro defaults to `.kiro/hooks`). Created automatically in user settings on first activation if not present.
+- Each area resolves its list of possible download locations from its `chat.*` configuration key (e.g., `chat.agentFilesLocations` for agents, `chat.pluginLocations` for plugins). Falls back to a generated default list using 6 template prefixes (`{.agents,.claude,.github,~/.agents,~/.claude,~/.copilot}/{area}`).
+- "Show in Marketplace" right-click menu on all area view items (both single-file and multi-file). Uses `revealItemByName()` which searches both skills and area file items in the marketplace tree.
+- Green check icon on marketplace items that are installed locally — now works for all content areas, not just skills. Installed names are collected from both the Skills provider and all area providers on every sync.
+- Area-specific download: the install command now uses the area-specific default download location (from `agentOrganizer.installLocations`) instead of always using the skills location.
+- Installed area scan now includes the configured default download location for each area, ensuring downloaded items are always found even if the location doesn't match a derived scan path.
+- Recursive definition file search for multi-file areas: the installed scan now searches recursively for definition files (e.g., `plugin.json`) within item folders, matching how the marketplace discovers items in repos.
+- Marketplace View
+  - Right-click menus
+    - On Skill: "Open in Browser"
+    - On Area Group nodes: "Open in Browser"
+    - On Single-file items: "Download" (inline + menu), "Open in Browser", inline "View Details"
+- Skills View
+  - Right-click menus
+    - On all item types: "Reveal in File Explorer" (grouped contextually with related actions)
+
 ### Changed
 
 - Renamed the Installed view from "Installed" (`agentOrganizer.installed`) to "Skills" (`agentOrganizer.skills`).
-- Skill names parsed from `SKILL.md` frontmatter now have surrounding quotes (single or double) stripped. This also affects the folder name used when installing a skill.
+- Skill names parsed from `SKILL.md` frontmatter now have surrounding quotes (single or double) stripped.
+- Removed `path`, `paths`, and `singleSkill` from `SkillRepository` config. Repositories now only need `owner`, `repo`, and optionally `branch`. Area paths are discovered automatically.
+- Simplified `isSameRepository()` to compare only `owner`, `repo`, and `branch`.
+- Simplified `parseGitHubUrl()` — no longer extracts path from URLs.
+- Simplified Add Repository flow — just provide a GitHub URL; no path prompting.
+- "Install Skill" renamed to "Download" across all UI surfaces (command title, detail panel button, progress notifications, messages).
+- "View Skill Details" renamed to "View Details".
+- Detail panel title now shows the area type (e.g., "Hooks - GitHub: Dependency License Checker" instead of "Skill: ...").
+- Detail panel "Raw SKILL.md" tab renamed to "Raw Source".
+- Area group nodes in the Marketplace load collapsed by default.
+- Hooks - GitHub definition updated to require `hooks.json` (not just `README.md`) as the definition file.
+- Hooks split into two separate areas: "Hooks - GitHub" (folder-based with `hooks.json`) and "Hooks - Kiro" (single JSON files). They are mutually exclusive per repository — if GitHub-style hooks are found, Kiro-style discovery is skipped.
+- "Reveal in File Explorer" moved to the bottom of all right-click menus (group `9_reveal`), except on installed skill items where it groups with "Show in Marketplace" (group `3_marketplace`).
+- "Open Skill Folder" command renamed to "View Installed Item".
+- Skills icon redesigned as a 3D package/box (matching the VS Code `package` codicon style) in all 4 status colors.
+- Powers area excluded from discovery (still being planned).
+- "Install Location" button renamed to "Default Download Location" across all views.
+- `agentOrganizer.installLocation` (string) replaced by `agentOrganizer.installLocations` (object with per-area properties). Legacy `installLocation` is no longer used.
+- `agentOrganizer.skillRepositories` schema simplified: `additionalProperties` constraint removed so the VS Code Settings UI renders entries inline with editable `owner`, `repo`, and `branch` fields.
+- `readRepositoriesConfig()` and `writeRepositoriesConfig()` centralize all config read/write for repositories, supporting both string and object entry formats.
+- "Custom..." option in Default Download Location quick pick now opens the VS Code Settings UI filtered to `agentOrganizer.installLocations` instead of opening `settings.json`.
+- `refreshAreaProviders()` is now async and properly awaited, fixing timing issues where installed item names were collected before area providers finished refreshing.
+- All item-level mutations (delete, move, copy, delete-all) for area items now route through `syncInstalledStatus()`, ensuring the marketplace green check icons update correctly on every change.
+- "Show in Marketplace" and "Reveal in File Explorer" now share the same right-click menu group (`3_marketplace`) on area view items, matching the Skills view layout.
+- "Open in Browser" on single-file marketplace items moved from group `0_open` to `2_open` to match the Skills right-click menu ordering (Download first, then Open in Browser).
+- "Show in Marketplace" (`revealSkillByName`) now correctly expands the matching area group (e.g., Plugins) instead of always expanding the first group (e.g., Agents).
+- Activity bar icon redesigned: first two books angled to form the letter "A", third book upright like the letter "I" (for "AI").
+- Area provider scan uses mutex-based caching via `loadItems()`: concurrent callers share a single scan promise, and results are cached. `preload()` warms the cache at startup without clearing the loading state. `refresh()` forces a fresh scan.
+- `getChildren()` checks `cacheReady` before showing the spinner — if preload already warmed the cache, data renders immediately without a blank flash.
 
-### Added
+### Known Issues
 
-- Marketplace View
-  - Right-click menus
-    - On Skill
-      - "Open in Browser" — opens the skill's GitHub folder in the default browser.
-- Skills View
-  - Right-click menus
-    - On Root Folder (location)
-      - "Reveal in File Explorer" — opens the location folder in the system file explorer. Grouped with Delete.
-    - On Skill
-      - "Reveal in File Explorer" — opens the skill folder in the system file explorer. Grouped with Add File / Add Folder.
-    - On Skill Subfolder
-      - "Reveal in File Explorer" — opens the subfolder in the system file explorer. Grouped with Add File / Add Folder.
-    - On File
-      - "Reveal in File Explorer" — opens the file's location in the system file explorer. Grouped with Rename.
+- Area views may briefly show blank content when first expanded, before the tree data renders. The "Searching for installed {area}..." spinner does not reliably appear. See `.agents/design/areaViewLoading.design.md` for details on attempted solutions.
 
 ## [0.0.4]
 

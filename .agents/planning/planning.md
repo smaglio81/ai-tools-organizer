@@ -1,0 +1,134 @@
+
+# Planning
+
+I'd like to expand the functionality to be more than just Skills. There are a handful of areas in AI where groups are
+agreeing on reusable patterns:
+
+* Agents
+* Hooks - GitHub
+* Hooks - Kiro
+* Instructions
+* Plugins
+* Powers - Ignore this one (still planning)
+* Prompts
+* Skills - Already implemented
+
+## Marketplace View
+
+I would like each repository to have a node for that area, if a folder with the matching name exists in the repository.
+
+* The repository paths for each of these areas should be stored in `agentOrganizer.skillRepositories`. The `path` property should be updated to a `paths` object and should have a property for each area.
+* When loading the marketplace and when refreshing the marketplace, the repository should be searched to see if any new areas have been added.
+* Each of these areas will need a unique icon.
+  * The icon should be generated in the 4 colors: blue, green, orange, and purple.
+  * The icons will be used in the same way as the Skills icons are used to denote uniqueness, duplication and which copy is newest.
+
+### Single File areas
+
+Many of the areas are only individual files:
+
+* Agents - *.agent.md
+* Instructions - *.instruction.md
+* Prompts - *.prompt.md
+
+* These areas can have a folder structure within the source control repository.
+* The tree that displays the files for this area, should also list folders if the repository contains prompt files under folders in that area.
+
+### Multi File areas
+
+Some areas, like Skills, are based around folder structure on disk.
+
+* Hooks - GitHub
+  * Definition at: https://code.visualstudio.com/docs/copilot/customization/hooks#_hook-configuration-format
+  * Examples at: https://github.com/github/awesome-copilot/tree/main/hooks
+  * It's a folder with files underneath
+  * The README.md will contain the name and description.
+  * There has to be a hooks.json file at the root of the folder, along with the README.md
+  * Hooks - GitHub and Hooks - Kiro should use the same icons
+* Hooks - Kiro
+  * Example: https://github.com/iamaanahmad/everything-kiro-ide/blob/main/hooks/file-watchers.json
+  * It's a single file, that can potentially have multiple definitions within it
+  * Hooks - GitHub and Hooks - Kiro should use the same icons
+* Skills
+  * The folder is named after the Skill, and all files under that folder are part of the skill.
+  * The definition of the skill comes from the frontmatter of SKILL.md, which must be at the root of the folder.
+* Plugins
+  * Definition at: https://code.visualstudio.com/docs/copilot/customization/agent-plugins
+  * The definition of the Plugin comes from plugin.json, which must be at the root of the folder.
+* Powers - Ignore this one (still planning)
+  * Definition at: https://kiro.dev/blog/introducing-powers/
+  * The folder is named after the Power, and all files under that folder are part of the power.
+  * The definition of the Power come from the frontmatter of POWER.md, which must be at the root of the folder.
+
+## New Extension Views for each Area
+
+Currently, Skills has a view.
+
+* I would like to create a view for the other Areas defined above. (Except Powers, that one is still being planned)
+* The code behind the Skill view should be refactored to be reused across views when possible.
+* The right-click menus should have the same entries across all views, using the Skills view as the example.
+  * If an option shouldn't appear, or act differently it will be noted in the sections below
+
+### View Title Bar Commands
+
+* The new views should function the same way as the Skill views, with the same title bar commands.
+* Each view specific command should be specific to that area.
+* The code behind the Skill commands should be refactored to be reused across views when possible.
+  
+### View Folder Nodes Commands
+
+* The new view folders should function the same way as the Skill views, with the same folder commands.
+* Each view folder specific command should be specific to that area.
+* The code behind the Skill folders should be refactored to be reused across views when possible.
+
+### View Item Commands
+
+* The new view items should function the same way as the Skill views, with the same item commands.
+* Each view item specific command should be specific to that area.
+* The code behind the Skill view items should be refactored to be reused across views when possible.
+* The Single File Areas should function slightly differently:
+  * Right-click should not contain `Add File` or `Add Folder`
+  * Double-clicking should open the file for editing
+
+### Refactor `agentOrganizer.skillRepositories`
+
+* Refactor the setting `agentOrganizer.skillRepositories` to exists in the User Settings as opposed to the User Settings (JSON).
+* The display should only one contain properties for `owner`, `repo`, and `branch`.
+* If an add button appears in User Settings, then button should take a github url and scan it for the correct values.
+
+
+## Refactoring Defualt Download Location
+
+* Currently, in Skills, we have an `Install Location` button. We need to make similar buttons for all the Area Views.
+  * The names of these should be changed to `Default Download Location`.
+* Each Area view should get the list of possible values from a configuration setting.
+  * If the configuration setting isn't available, then a default list should be calculated using the description below.
+* These are the configuration settings that should hold the collection of possible values (if the configuration setting exists):
+  * agents -> `chat.agentFilesLocations`
+  * hooks - github -> `chat.hookFilesLocations`
+  * hooks - kiro -> no setting, the only location is possible is `.kiro/hooks`
+  * instructions -> `chat.instructionsFilesLocations`
+  * plugins -> `chat.pluginLocations`
+  * prompts -> `chat.promptFilesLocations`
+  * skills -> `chat.agentSkillsLocations`
+* The Default List should start created from
+  * These templated locations:
+    * .agents/{area}
+    * .claude/{area}
+    * .github/{area}
+    * ~/.agents/{area}
+    * ~/.claude/{area}
+    * ~/.copilot/{area}
+  * These `area` values:
+    * agents
+    * hooks
+    * instructions
+    * plugins
+    * prompts
+    * skills
+* The setting `agentOrganizer.installLocation` currently only stores the location of the default download location for skills.
+  * This setting should be refactored into an array `agentOrganizer.installLocations` which properties for each area.
+  * The code should be updated to reflect these changes, including package.json.
+  * If `agentOrganizer.installLocations` is not defined in settings, then the setting should be created.
+    * When the settings are being created this way, the default value of each setting should be `~/.copilot/{area}`
+  * The `Custom Location` option in the QuickPick location menus should take you to the `agentOrganizer.installLocations` setting in User Settings (instead of the User Settings JSON file).

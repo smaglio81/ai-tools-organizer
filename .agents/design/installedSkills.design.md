@@ -70,7 +70,7 @@ All actions appear in the `agentOrganizer.skills` view title bar.
 | Search (search icon) | `agentOrganizer.searchInstalled` | Opens an input box; filters displayed skills by name or description (case-insensitive). |
 | Clear Search (close icon) | `agentOrganizer.clearSearchInstalled` | Clears the active search filter. Only shown when a search is active (`agentOrganizer:installedSearchActive` context key). |
 | Refresh | `agentOrganizer.refreshInstalled` | Re-scans all skill locations and refreshes the tree. Also syncs installed skill names back to the Marketplace view. |
-| Install Location (folder icon) | `agentOrganizer.selectInstallLocation` | Opens a QuickPick to change `agentOrganizer.installLocation`. Selecting "Custom..." opens `settings.json` with the cursor on the setting. |
+| Default Download Location (folder icon) | `agentOrganizer.selectInstallLocation` | Opens a QuickPick to change the skills download location in `agentOrganizer.installLocations`. Selecting "Custom..." opens the VS Code Settings UI filtered to `agentOrganizer.installLocations`. |
 | Expand All | `agentOrganizer.expandAll` | Expands all location groups. Uses `TreeView.reveal()` (requires `getParent()` implementation). |
 | Collapse All | `agentOrganizer.collapseAll` | Collapses all location groups. Delegates to the built-in `workbench.actions.treeView.agentOrganizer.skills.collapseAll` command. |
 
@@ -146,7 +146,13 @@ The collapsed/expanded state of each location group is persisted in `workspaceSt
 
 ## Marketplace Sync
 
-After any refresh or install/uninstall operation, the set of installed skill names is pushed to the Marketplace view via `marketplaceProvider.setInstalledSkills()`. This allows the Marketplace to show a checkmark icon on already-installed skills.
+After any refresh, install, uninstall, move, copy, or delete operation, `syncInstalledStatus()` is called. This:
+
+1. Refreshes the Skills provider and all area providers (awaited).
+2. Collects installed names from the Skills provider and all area providers into a combined set.
+3. Pushes skill names to the Marketplace via `setInstalledSkills()` and all installed names via `setInstalledItemNames()`.
+
+The Marketplace shows a green check icon on items whose name appears in the installed set. This works for all content areas (skills, agents, hooks, instructions, plugins, prompts).
 
 ---
 

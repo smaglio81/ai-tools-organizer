@@ -350,7 +350,6 @@ suite('Extension Test Suite', () => {
 		const testRepo: SkillRepository = {
 			owner: 'test-owner',
 			repo: 'test-repo',
-			path: 'skills',
 			branch: 'main'
 		};
 
@@ -358,7 +357,8 @@ suite('Extension Test Suite', () => {
 			name: 'test-skill',
 			description: 'A test skill',
 			source: testRepo,
-			skillPath: 'skills/test-skill'
+			skillPath: 'skills/test-skill',
+			area: 'skills'
 		};
 
 		test('addRepoToMarketplace adds skills from the repository', async () => {
@@ -386,7 +386,6 @@ suite('Extension Test Suite', () => {
 			const otherRepo: SkillRepository = {
 				owner: 'other-owner',
 				repo: 'other-repo',
-				path: 'skills',
 				branch: 'main'
 			};
 
@@ -394,7 +393,8 @@ suite('Extension Test Suite', () => {
 				name: 'other-skill',
 				description: 'Another skill',
 				source: otherRepo,
-				skillPath: 'skills/other-skill'
+				skillPath: 'skills/other-skill',
+				area: 'skills'
 			};
 
 			// Add skills from two repos, then remove one
@@ -474,52 +474,52 @@ suite('Extension Test Suite', () => {
 
 		test('parses bare owner/repo URL', () => {
 			const result = parseGitHubUrl('https://github.com/owner/repo');
-			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined, path: undefined });
+			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined });
 		});
 
 		test('parses owner/repo with trailing slash', () => {
 			const result = parseGitHubUrl('https://github.com/owner/repo/');
-			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined, path: undefined });
+			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined });
 		});
 
 		test('strips .git suffix from repo name', () => {
 			const result = parseGitHubUrl('https://github.com/owner/repo.git');
-			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined, path: undefined });
+			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined });
 		});
 
 		test('parses /tree/branch URL', () => {
 			const result = parseGitHubUrl('https://github.com/owner/repo/tree/main');
-			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: 'main', path: undefined });
+			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: 'main' });
 		});
 
 		test('parses /tree/branch/path URL', () => {
 			const result = parseGitHubUrl('https://github.com/owner/repo/tree/main/skills');
-			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: 'main', path: 'skills' });
+			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: 'main' });
 		});
 
 		test('parses /tree/branch with deep path', () => {
 			const result = parseGitHubUrl('https://github.com/owner/repo/tree/develop/path/to/skills');
-			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: 'develop', path: 'path/to/skills' });
+			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: 'develop' });
 		});
 
 		test('strips query string and fragment', () => {
 			const result = parseGitHubUrl('https://github.com/owner/repo?tab=readme#section');
-			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined, path: undefined });
+			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined });
 		});
 
 		test('handles http:// protocol', () => {
 			const result = parseGitHubUrl('http://github.com/owner/repo');
-			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined, path: undefined });
+			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined });
 		});
 
 		test('handles www. prefix', () => {
 			const result = parseGitHubUrl('https://www.github.com/owner/repo');
-			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined, path: undefined });
+			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined });
 		});
 
 		test('trims whitespace', () => {
 			const result = parseGitHubUrl('  https://github.com/owner/repo  ');
-			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined, path: undefined });
+			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined });
 		});
 
 		// --- Invalid URLs ---

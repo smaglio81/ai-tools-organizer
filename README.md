@@ -269,6 +269,10 @@ npm run compile    # Compile with type checking and linting
 npm run package    # Build production bundle
 ```
 
+## Original Work
+
+Agent Organizer is based off the great work from [formulahendry/vscode-agent-skills](https://github.com/formulahendry/vscode-agent-skills).
+
 ---
 
 Made with ❤️ for AI and Agent enthusiasts

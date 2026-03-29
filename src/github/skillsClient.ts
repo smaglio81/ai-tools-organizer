@@ -9,7 +9,7 @@
  */
 
 import * as vscode from 'vscode';
-import { Skill, SkillRepository, SkillMetadata, CacheEntry, FailedRepository, normalizeRepository } from '../types';
+import { Skill, SkillRepository, SkillMetadata, CacheEntry, FailedRepository, readRepositoriesConfig, ContentArea, ALL_CONTENT_AREAS, AREA_DEFINITIONS, AreaFileItem, RepoContent, AreaPaths } from '../types';
 
 /**
  * GitHub Git Tree item from Trees API
@@ -47,81 +47,37 @@ export class GitHubSkillsClient {
      * File content: Fetched via raw.githubusercontent.com (no API limit)
      */
     async fetchAllSkills(): Promise<{ skills: Skill[]; failures: FailedRepository[] }> {
-        const config = vscode.workspace.getConfiguration('agentOrganizer');
-        const repositories = config.get<SkillRepository[]>('skillRepositories', []).map(normalizeRepository);
+        const repositories = readRepositoriesConfig();
         
         const allSkills: Skill[] = [];
         const failures: FailedRepository[] = [];
 
         await vscode.window.withProgress({
             location: vscode.ProgressLocation.Window,
-            title: 'Fetching skills...',
+            title: 'Fetching content...',
         }, async (progress) => {
-            // Fetch all repositories in parallel
             const results = await Promise.allSettled(
                 repositories.map(async (repo) => {
                     progress.report({ message: `${repo.owner}/${repo.repo}` });
-                    return this.fetchSkillsFromRepo(repo);
+                    const discovered = await this.discoverAreas(repo.owner, repo.repo, repo.branch || 'main');
+                    return this.fetchRepoContent(repo, discovered);
                 })
             );
 
             for (let i = 0; i < results.length; i++) {
                 const result = results[i];
                 if (result.status === 'fulfilled') {
-                    allSkills.push(...result.value);
+                    allSkills.push(...result.value.skills);
                 } else {
                     const repo = repositories[i];
                     const message = result.reason instanceof Error ? result.reason.message : String(result.reason);
-                    console.error(`Failed to fetch skills from ${repo.owner}/${repo.repo}:`, result.reason);
+                    console.error(`Failed to fetch content from ${repo.owner}/${repo.repo}:`, result.reason);
                     failures.push({ repo, error: message });
                 }
             }
         });
 
         return { skills: allSkills, failures };
-    }
-
-    /**
-     * Fetch skills from a single repository using Git Trees API
-     * 
-     * API calls: 1 (Git Trees API with recursive=1)
-     */
-    async fetchSkillsFromRepo(repo: SkillRepository): Promise<Skill[]> {
-        if (repo.singleSkill) {
-            return this.fetchSingleSkill(repo);
-        }
-
-        // Use Git Trees API to get entire directory structure in ONE call
-        const branch = repo.branch || 'main';
-        const tree = await this.fetchRepoTree(repo.owner, repo.repo, branch);
-        
-        // Find all SKILL.md files under the configured path
-        const skillMdFiles = tree.tree.filter(item => 
-            item.type === 'blob' && 
-            item.path.startsWith(repo.path + '/') &&
-            item.path.endsWith('/SKILL.md')
-        );
-
-        // Extract skill directory paths
-        const skillPaths = skillMdFiles.map(item => {
-            // e.g., "skills/pdf-processing/SKILL.md" -> "skills/pdf-processing"
-            return item.path.substring(0, item.path.lastIndexOf('/'));
-        });
-
-        // Fetch all SKILL.md contents in parallel using raw.githubusercontent.com (no API limit)
-        const skills = await Promise.all(
-            skillPaths.map(async (skillPath) => {
-                try {
-                    const skillName = skillPath.split('/').pop() || skillPath;
-                    return await this.fetchSkillMetadataRaw(repo, skillName, skillPath);
-                } catch (error) {
-                    console.warn(`Failed to fetch skill at ${skillPath}:`, error);
-                    return null;
-                }
-            })
-        );
-
-        return skills.filter((s): s is Skill => s !== null);
     }
 
     /**
@@ -159,43 +115,72 @@ export class GitHubSkillsClient {
     }
 
     /**
-     * Fetch a single skill when path points directly to skill folder
-     */
-    private async fetchSingleSkill(repo: SkillRepository): Promise<Skill[]> {
-        try {
-            const skillName = repo.path.split('/').pop() || repo.path;
-            const skill = await this.fetchSkillMetadataRaw(repo, skillName, repo.path);
-            return skill ? [skill] : [];
-        } catch (error) {
-            console.warn(`Failed to fetch single skill from ${repo.path}:`, error);
-            return [];
-        }
-    }
-
-    /**
      * Fetch and parse SKILL.md using raw.githubusercontent.com (bypasses API rate limit)
      * 
      * API calls: 0 (uses raw content URL)
      */
-    async fetchSkillMetadataRaw(repo: SkillRepository, skillName: string, skillPath: string): Promise<Skill | null> {
-        const skillMdPath = `${skillPath}/SKILL.md`;
+    async fetchSkillMetadataRaw(repo: SkillRepository, skillName: string, skillPath: string, area: ContentArea = 'skills'): Promise<Skill | null> {
+        const def = AREA_DEFINITIONS[area];
+        const defFile = def.definitionFile || 'SKILL.md';
+        const defFilePath = `${skillPath}/${defFile}`;
         
         try {
-            const content = await this.fetchRawContent(repo.owner, repo.repo, skillMdPath, repo.branch || 'main');
-            const parsed = this.parseSkillMd(content);
-            
+            const content = await this.fetchRawContent(repo.owner, repo.repo, defFilePath, repo.branch || 'main');
+
+            let name = skillName;
+            let description = 'No description available';
+            let license: string | undefined;
+            let compatibility: string | undefined;
+            let bodyContent: string | undefined;
+            let readmeFullContent: string | undefined;
+
+            if (defFile.endsWith('.json')) {
+                // Parse JSON definition files (e.g. plugin.json, hooks.json)
+                try {
+                    const json = JSON.parse(content);
+                    name = json.name || skillName;
+                    description = json.description || description;
+                    license = json.license;
+                } catch {
+                    // JSON parse failed — use folder name as fallback
+                }
+
+                // Try to fetch README.md from the same directory for body content
+                try {
+                    const readmePath = `${skillPath}/README.md`;
+                    readmeFullContent = await this.fetchRawContent(repo.owner, repo.repo, readmePath, repo.branch || 'main');
+                    // Parse frontmatter from README if present
+                    const readmeParsed = this.parseSkillMd(readmeFullContent);
+                    bodyContent = readmeParsed.body || readmeFullContent;
+                    // Use README frontmatter for name/description if JSON didn't provide them
+                    if (name === skillName && readmeParsed.metadata.name) { name = readmeParsed.metadata.name; }
+                    if (description === 'No description available' && readmeParsed.metadata.description) { description = readmeParsed.metadata.description; }
+                } catch {
+                    // No README.md, that's fine
+                }
+            } else {
+                // Parse markdown frontmatter (SKILL.md, POWER.md)
+                const parsed = this.parseSkillMd(content);
+                name = parsed.metadata.name || skillName;
+                description = parsed.metadata.description || description;
+                license = parsed.metadata.license;
+                compatibility = parsed.metadata.compatibility;
+                bodyContent = parsed.body;
+            }
+
             return {
-                name: parsed.metadata.name || skillName,
-                description: parsed.metadata.description || 'No description available',
-                license: parsed.metadata.license,
-                compatibility: parsed.metadata.compatibility,
+                name,
+                description,
+                license,
+                compatibility,
                 source: repo,
-                skillPath: skillPath,
-                fullContent: content,
-                bodyContent: parsed.body
+                skillPath,
+                area,
+                fullContent: readmeFullContent || content,
+                bodyContent
             };
         } catch (_error) {
-            console.warn(`No SKILL.md found for ${skillName}`);
+            console.warn(`No ${defFile} found for ${skillName}`);
             return null;
         }
     }
@@ -409,6 +394,219 @@ export class GitHubSkillsClient {
             data,
             timestamp: Date.now()
         });
+    }
+
+    /**
+     * Discover which content areas exist in a repository by scanning the tree.
+     * Returns an AreaPaths mapping each found area to its path.
+     * API calls: 1 (Git Trees, recursive — reuses cached tree)
+     */
+    async discoverAreas(owner: string, repo: string, branch: string): Promise<AreaPaths> {
+        const tree = await this.fetchRepoTree(owner, repo, branch);
+        const result: AreaPaths = {};
+
+        // Step 1: Check for top-level directories matching area names
+        // This is the strongest signal — a folder named "skills", "agents", etc.
+        const topLevelDirs = new Set(
+            tree.tree
+                .filter(item => item.type === 'tree' && !item.path.includes('/'))
+                .map(item => item.path)
+        );
+
+        // Map of conventional folder names to areas
+        // Areas with conventionalDir override use that; others use the area key itself
+        for (const area of ALL_CONTENT_AREAS) {
+            const def = AREA_DEFINITIONS[area];
+            const dirName = def.conventionalDir || area;
+            if (!topLevelDirs.has(dirName)) { continue; }
+
+            // If hooksGithub was already found for this dir, skip hooksKiro (they're mutually exclusive)
+            if (area === 'hooksKiro' && result['hooksGithub'] !== undefined) { continue; }
+
+            // Verify the directory actually contains matching content
+            if (def.kind === 'multiFile' && def.definitionFile) {
+                const hasContent = tree.tree.some(item =>
+                    item.type === 'blob' &&
+                    item.path.startsWith(dirName + '/') &&
+                    item.path.endsWith(`/${def.definitionFile}`)
+                );
+                if (hasContent) { result[area] = dirName; }
+            } else if (def.kind === 'singleFile' && def.fileSuffix) {
+                const hasContent = tree.tree.some(item =>
+                    item.type === 'blob' &&
+                    item.path.startsWith(dirName + '/') &&
+                    item.path.endsWith(def.fileSuffix!)
+                );
+                if (hasContent) { result[area] = dirName; }
+            }
+        }
+
+        // Step 2: For areas not found via conventional names, search the full tree
+        // but exclude files under already-discovered area paths
+        const discoveredPrefixes = Object.values(result)
+            .filter(p => p !== undefined && p !== '')
+            .map(p => p + '/');
+
+        for (const area of ALL_CONTENT_AREAS) {
+            if (result[area] !== undefined) { continue; } // Already found
+
+            const def = AREA_DEFINITIONS[area];
+            if (def.conventionalOnly) { continue; } // Only discoverable via conventional top-level dir name
+
+            if (def.kind === 'multiFile' && def.definitionFile) {
+                const defFiles = tree.tree.filter(item =>
+                    item.type === 'blob' &&
+                    item.path.endsWith(`/${def.definitionFile}`) &&
+                    !discoveredPrefixes.some(p => item.path.startsWith(p))
+                );
+                if (defFiles.length > 0) {
+                    const dirCounts = new Map<string, number>();
+                    for (const item of defFiles) {
+                        const skillDir = item.path.substring(0, item.path.lastIndexOf('/'));
+                        const parentDir = skillDir.includes('/')
+                            ? skillDir.substring(0, skillDir.lastIndexOf('/'))
+                            : skillDir;
+                        dirCounts.set(parentDir, (dirCounts.get(parentDir) || 0) + 1);
+                    }
+                    let bestDir = '';
+                    let bestCount = 0;
+                    for (const [dir, count] of dirCounts) {
+                        if (count > bestCount) { bestDir = dir; bestCount = count; }
+                    }
+                    result[area] = bestDir;
+                    if (bestDir) { discoveredPrefixes.push(bestDir + '/'); }
+                }
+            } else if (def.kind === 'singleFile' && def.fileSuffix) {
+                const matchingFiles = tree.tree.filter(item =>
+                    item.type === 'blob' &&
+                    item.path.endsWith(def.fileSuffix!) &&
+                    !discoveredPrefixes.some(p => item.path.startsWith(p))
+                );
+                if (matchingFiles.length > 0) {
+                    const dirCounts = new Map<string, number>();
+                    for (const item of matchingFiles) {
+                        const parts = item.path.split('/');
+                        const dir = parts.length > 1 ? parts[0] : '';
+                        dirCounts.set(dir, (dirCounts.get(dir) || 0) + 1);
+                    }
+                    let bestDir = '';
+                    let bestCount = 0;
+                    for (const [dir, count] of dirCounts) {
+                        if (count > bestCount) { bestDir = dir; bestCount = count; }
+                    }
+                    result[area] = bestDir;
+                    if (bestDir) { discoveredPrefixes.push(bestDir + '/'); }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Fetch all content from a repository across all discovered areas.
+     * Returns skills (multi-file items) and fileItems (single-file items).
+     * API calls: 1 for tree + N raw content fetches (no rate limit)
+     */
+    async fetchRepoContent(repo: SkillRepository, areaPaths: AreaPaths): Promise<RepoContent> {
+        const branch = repo.branch || 'main';
+        const tree = await this.fetchRepoTree(repo.owner, repo.repo, branch);
+        const paths = areaPaths;
+
+        const skills: Skill[] = [];
+        const fileItems: AreaFileItem[] = [];
+
+        // Build exclusion prefixes: all configured area paths except the current one
+        // This prevents e.g. a .prompt.md inside a plugin folder from appearing under Prompts
+        const allAreaPrefixes = new Map<ContentArea, string>();
+        for (const a of ALL_CONTENT_AREAS) {
+            const p = paths[a];
+            if (p !== undefined && p !== '') {
+                allAreaPrefixes.set(a, p + '/');
+            }
+        }
+
+        // Process each area that has a path configured
+        for (const area of ALL_CONTENT_AREAS) {
+            const areaPath = paths[area];
+            if (areaPath === undefined) { continue; }
+
+            const def = AREA_DEFINITIONS[area];
+
+            // Exclusion prefixes: other area paths that differ from this area's path
+            const currentPrefix = areaPath ? areaPath + '/' : '';
+            const otherPrefixes = [...allAreaPrefixes.entries()]
+                .filter(([a, prefix]) => a !== area && prefix !== currentPrefix)
+                .map(([, prefix]) => prefix);
+
+            if (def.kind === 'multiFile' && def.definitionFile) {
+                const prefix = areaPath ? areaPath + '/' : '';
+                const defFiles = tree.tree.filter(item =>
+                    item.type === 'blob' &&
+                    item.path.startsWith(prefix) &&
+                    item.path.endsWith(`/${def.definitionFile}`) &&
+                    !otherPrefixes.some(op => item.path.startsWith(op))
+                );
+
+                // Deduplicate: extract the immediate child folder under the area path as the item name
+                // e.g. "plugins/foo/.github/plugin/plugin.json" → "plugins/foo"
+                const seenItems = new Map<string, string>(); // itemDir → first defFile path
+                for (const item of defFiles) {
+                    const relativePath = item.path.substring(prefix.length);
+                    const firstSegment = relativePath.split('/')[0];
+                    const itemDir = prefix + firstSegment;
+                    if (!seenItems.has(itemDir)) {
+                        seenItems.set(itemDir, item.path);
+                    }
+                }
+
+                const items = await Promise.all(
+                    [...seenItems.entries()].map(async ([itemDir, defFilePath]) => {
+                        const skillName = itemDir.split('/').pop() || itemDir;
+                        // Use the actual definition file path's parent for metadata fetching
+                        const defParentDir = defFilePath.substring(0, defFilePath.lastIndexOf('/'));
+                        try {
+                            const skill = await this.fetchSkillMetadataRaw(repo, skillName, defParentDir, area);
+                            // Override skillPath to point to the item's root folder (not the nested def file location)
+                            if (skill) { skill.skillPath = itemDir; }
+                            return skill;
+                        } catch (error) {
+                            console.warn(`Failed to fetch ${area} at ${itemDir}:`, error);
+                            return null;
+                        }
+                    })
+                );
+                skills.push(...items.filter((s): s is Skill => s !== null));
+
+            } else if (def.kind === 'singleFile' && def.fileSuffix) {
+                const prefix = areaPath ? areaPath + '/' : '';
+                const matchingFiles = tree.tree.filter(item =>
+                    item.type === 'blob' &&
+                    (areaPath === '' ? item.path.endsWith(def.fileSuffix!) : item.path.startsWith(prefix) && item.path.endsWith(def.fileSuffix!)) &&
+                    !otherPrefixes.some(op => item.path.startsWith(op))
+                );
+
+                for (const item of matchingFiles) {
+                    const fileName = item.path.split('/').pop() || item.path;
+                    const name = fileName.substring(0, fileName.length - def.fileSuffix!.length);
+
+                    const relativePath = areaPath ? item.path.substring(prefix.length) : item.path;
+                    const folderPath = relativePath.includes('/')
+                        ? relativePath.substring(0, relativePath.lastIndexOf('/'))
+                        : '';
+
+                    fileItems.push({
+                        name,
+                        filePath: item.path,
+                        area,
+                        source: repo,
+                        folderPath,
+                    });
+                }
+            }
+        }
+
+        return { skills, fileItems };
     }
 
     /**

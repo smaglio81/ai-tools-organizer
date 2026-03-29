@@ -2,58 +2,92 @@
 
 ## Overview
 
-The Agent Organizer extension provides a VS Code interface for browsing, installing, and managing Agent Organizer — reusable instruction sets (defined by `SKILL.md` files) that AI coding agents such as GitHub Copilot and Claude can load as context.
+The Agent Organizer extension provides a VS Code interface for browsing, downloading, and managing reusable AI content — agents, hooks, instructions, plugins, prompts, and skills — from GitHub repositories.
 
-The extension adds an **Agent Organizer** activity bar container with two tree views:
+The extension adds an **Agent Organizer** activity bar container with 8 tree views:
 
-- **Marketplace** — Browse and install skills from configured GitHub repositories.
-- **Installed** — View and manage skills installed locally (in the workspace or user home directory).
+- **Marketplace** — Browse and download content from configured GitHub repositories across all content areas.
+- **Agents** — View and manage installed agent files (`*.agent.md`).
+- **Hooks - GitHub** — View and manage installed GitHub-style hooks (folders with `hooks.json`).
+- **Hooks - Kiro** — View and manage installed Kiro-style hooks (`*.json` files).
+- **Instructions** — View and manage installed instruction files (`*.instructions.md`).
+- **Plugins** — View and manage installed plugins (folders with `plugin.json`).
+- **Prompts** — View and manage installed prompt files (`*.prompt.md`).
+- **Skills** — View and manage installed skills (folders with `SKILL.md`). Has additional features: duplicate detection, move/copy, sync.
 
 ---
 
 ## VS Code Configuration
 
-Primary settings are under the `agentSkills` namespace. The Installed scan-location list is sourced from `chat.agentSkillsLocations` (provided by VS Code / another extension).
-
 | Setting | Type | Default | Description |
 |---|---|---|---|
-| `agentOrganizer.skillRepositories` | array | (6 defaults) | GitHub repositories to fetch marketplace skills from. Each entry has `owner`, `repo`, `path`, `branch`, and optional `singleSkill` flag. |
-| `agentOrganizer.installLocation` | string | `.github/skills` | Where newly installed skills are written. Must be one of the paths listed in `chat.agentSkillsLocations`. No longer restricted to a fixed enum. |
+| `agentOrganizer.skillRepositories` | array | (6 defaults) | GitHub repositories to fetch content from. Each entry has `owner`, `repo`, and `branch`. Rendered inline in the Settings UI. Read/written via `readRepositoriesConfig()` / `writeRepositoriesConfig()`. |
+| `agentOrganizer.installLocations` | object | `~/.copilot/{area}` per area | Per-area default download locations. Keys are area identifiers (`agents`, `hooksGithub`, `hooksKiro`, `instructions`, `plugins`, `prompts`, `skills`). Created automatically on first activation if not present. |
 | `agentOrganizer.githubToken` | string | `""` | Optional GitHub personal access token for higher API rate limits. |
 | `agentOrganizer.cacheTimeout` | number | `3600` | Seconds before cached marketplace data expires. |
 
-Related external setting: `chat.agentSkillsLocations` provides the location list used by Installed view scans and install-location validation.
+Each area's list of possible download locations is resolved from its `chat.*` configuration key (e.g., `chat.agentFilesLocations` for agents, `chat.pluginLocations` for plugins, `chat.agentSkillsLocations` for skills). If the config key is not set, a default list is generated from 6 template prefixes (`{.agents,.claude,.github,~/.agents,~/.claude,~/.copilot}/{area}`). Hooks - Kiro is fixed to `.kiro/hooks`.
 
-Paths starting with `~` are resolved to the user's home directory. All other paths are relative to the first open workspace folder.
+Related external setting: `chat.agentSkillsLocations` provides the base location list for skills. Each area view derives its scan paths by replacing the last segment (e.g., `~/.claude/skills` → `~/.claude/agents`), and also includes the area's configured default download location from `agentOrganizer.installLocations`.
 
 ---
 
-## Skill Format
+## Content Areas
 
-Each skill is a folder containing at minimum a `SKILL.md` file. The file uses YAML frontmatter for metadata:
+The extension recognizes 7 active content areas (Powers is excluded, still being planned):
 
-```markdown
+**Multi-file areas** (folder-based, with a definition file):
+- Skills — `SKILL.md` (YAML frontmatter)
+- Plugins — `plugin.json` (JSON)
+- Hooks - GitHub — `hooks.json` in `hooks/` subfolders, `conventionalOnly`
+
+**Single-file areas** (individual files matching a suffix):
+- Agents — `*.agent.md`
+- Instructions — `*.instructions.md`
+- Prompts — `*.prompt.md`
+- Hooks - Kiro — `*.json` in `hooks/` directory, `conventionalOnly`
+
+Each area has a unique icon design and color. Hooks - GitHub and Hooks - Kiro share the same icon (via `iconPrefix`) and conventional directory (`hooks/`) but are mutually exclusive per repository — if GitHub-style hooks are found, Kiro-style discovery is skipped.
+
 ---
-name: my-skill
-description: What this skill does
-license: MIT
----
-Skill body content...
-```
 
-The extension reads `name` and `description` from the frontmatter. Skills without a valid `SKILL.md` are ignored.
+## Installed Area Views
 
-When a skill is installed from the Marketplace, an `agent-skills-source` line is injected as the last entry in the SKILL.md frontmatter, recording the GitHub source URL (e.g., `agent-skills-source: https://github.com/owner/repo/tree/main/skills/my-skill`). If the frontmatter already contains this key it is replaced; if no frontmatter exists one is created.
+Each content area (except Skills, which has its own dedicated provider) uses the generic `InstalledAreaTreeDataProvider` (`src/views/installedAreaProvider.ts`). This provider:
+
+- Scans all `chat.agentSkillsLocations` paths, replacing the last segment with the area's conventional directory name
+- Also scans the area's configured default download location from `agentOrganizer.installLocations`
+- Groups items by install location under `AreaLocationTreeItem` nodes with colored folder icons
+- Multi-file items (`AreaInstalledItemTreeItem`) expand to show folder contents
+- Multi-file items use recursive definition file search (e.g., `plugin.json` may be nested within the item folder)
+- Single-file items open in the editor on double-click
+- Each view has its own Search, Clear Search, Refresh, Default Download Location, and Expand All toolbar commands
+- "Searching for installed {area}..." loading message with spinner during initial scan (see known issue in `areaViewLoading.design.md`)
+- Welcome messages ("No {area} found.") when empty after scan
+- File watchers auto-refresh when items are created or deleted (including watchers on the default download location)
+- View title displays the area-colored icon
+
+### Right-click menus (area views)
+
+| Node Type | Context Value | Actions |
+|---|---|---|
+| Location | `areaLocation` | Move to..., Copy to..., Delete, Reveal in File Explorer |
+| Multi-file item | `areaInstalledFolder` | Add File, Add Folder, Move to..., Copy to..., Show in Marketplace, Reveal in File Explorer, Delete (inline + menu), View Installed Item (inline) |
+| Single-file item | `areaInstalledFile` | Move to..., Copy to..., Show in Marketplace, Reveal in File Explorer, Delete (inline + menu), View Installed Item (inline) |
+| Subfolder | `areaItemFolder` | Add File, Add Folder, Delete, Reveal in File Explorer |
+| File | `areaItemFile` | Rename, Delete, Reveal in File Explorer |
+
+"Reveal in File Explorer" appears at the bottom of all right-click menus (group `9_reveal`), except on installed items (skills and area items) where it groups with "Show in Marketplace" (group `3_marketplace`).
 
 ---
 
 ## Marketplace View (summary)
 
-Fetches skills from the configured `agentOrganizer.skillRepositories` list using the GitHub Git Trees API (one API call per repository). Skills are grouped by source repository (`owner/repo`) and displayed in a collapsible tree. Loading is progressive per repository (each source appears immediately with a loading indicator, then resolves to loaded or failed state). Users can search, view details, install skills, add repositories by URL, and remove repositories from this view. Repositories that fail to load are still shown with a warning indicator and error tooltip. Repository and skill rows are alphabetically ordered. See `marketplace.design.md` for full details.
+Fetches content from configured repositories using the GitHub Git Trees API (one API call per repository). On every load/refresh, area discovery scans each repository's tree to find which content areas exist. Content is grouped by repository → area → items. Users can search, view details, download skills, add repositories by URL, and remove repositories. See `marketplace.design.md` for full details.
 
-## Installed View (summary)
+## Skills View (summary)
 
-Scans all known skill locations (workspace-relative and home-directory paths) for installed skills and displays them grouped by install location. Users can uninstall, move, and copy skills, open their folder, change the active install location, and expand/collapse location groups. Skills with the same name in multiple locations are detected and shown with color-coded icons indicating their relative freshness. See `installedSkills.design.md` for full details.
+The Skills view uses its own dedicated `InstalledSkillsTreeDataProvider` with additional features not available in other area views: duplicate detection with color-coded icons, move/copy between locations, sync/get-latest for duplicates, and marketplace integration (Show in Marketplace). See `installedSkills.design.md` for full details.
 
 ---
 
@@ -61,25 +95,30 @@ Scans all known skill locations (workspace-relative and home-directory paths) fo
 
 | Service | Responsibility |
 |---|---|
-| `GitHubSkillsClient` | Fetches skill listings and file content from GitHub. Uses Git Trees API for efficiency; falls back to `raw.githubusercontent.com` for file content (no rate limit). Also resolves repository default branches for URL-based repository adds. Caches results per `agentOrganizer.cacheTimeout`. |
-| `SkillPathService` | Resolves location strings (including `~` home paths) to `vscode.Uri` values. Provides the scan location list (read from `chat.agentSkillsLocations`, with a built-in default fallback) and the current install location. |
-| `SkillInstallationService` | Installs, deletes, moves, copies, syncs, and gets-latest for skills. Copies all files from GitHub into the resolved install target directory. Confirms overwrites with the user. Move and copy operations use a QuickPick to select the target scan location (current location marked); both normalize path separators and guard against selecting the same directory as the source. Delete sends the skill folder to trash without confirmation. Sync copies the newest skill to all other locations with older copies. Get-latest replaces an older copy with the newest version. Delete-all removes every skill under a location folder. |
+| `GitHubSkillsClient` | Fetches content from GitHub. Uses Git Trees API for efficiency; `raw.githubusercontent.com` for file content (no rate limit). Discovers content areas via `discoverAreas()`. Fetches all area content via `fetchRepoContent()`. Parses `plugin.json`/`hooks.json` as JSON and markdown files via YAML frontmatter. For JSON-based areas, also fetches `README.md` for detail panel body content. Caches results per `agentOrganizer.cacheTimeout`. |
+| `SkillPathService` | Resolves location strings (including `~` home paths) to `vscode.Uri` values. Provides scan locations, per-area default download locations (`getDefaultDownloadLocation(area)`), and install target resolution. Manages `agentOrganizer.installLocations` config (read, write, ensure defaults on activation). |
+| `SkillInstallationService` | Downloads, deletes, moves, copies, syncs skills. Uses area-specific download locations based on `skill.area`. Handles overwrite confirmation, progress notifications, and trash-based deletion. |
 
 ---
 
 ## Shared Utilities (`types.ts`)
 
-| Function | Description |
+| Item | Description |
 |---|---|
-| `isSameRepository(a, b)` | Compares two `SkillRepository` entries by owner, repo, path, branch, and singleSkill. Used by both the Marketplace provider and extension commands (add/remove repository). |
-| `normalizeSeparators(p)` | Replaces backslashes with forward slashes. Used throughout the codebase (installed provider, installation service) to ensure consistent path separators on all platforms. |
-| `normalizeRepository(r)` | Defaults `branch` to `'main'` and trims `path`. Applied at every `agentOrganizer.skillRepositories` config read site so downstream code always sees well-formed entries, even when users manually edit settings.json and omit optional fields. |
-| `buildGitHubUrl(owner, repo, branch, path)` | Builds a GitHub URL with `'main'` fallback for missing branch and URL-encodes all segments. Used by Open in Browser, Skill Detail panel, and source frontmatter injection. |
+| `ContentArea` | Union type of all area keys (agents, hooksGithub, hooksKiro, instructions, plugins, powers, prompts, skills). |
+| `ALL_CONTENT_AREAS` | Active areas array (excludes powers). |
+| `AREA_DEFINITIONS` | Metadata for each area: label, icon, kind, file suffix/definition file, conventionalOnly, iconPrefix, conventionalDir. |
+| `AreaPaths` | Partial record mapping areas to their discovered directory paths. |
+| `isSameRepository(a, b)` | Compares repositories by owner, repo, and branch. |
+| `normalizeSeparators(p)` | Replaces backslashes with forward slashes. |
+| `normalizeRepository(r)` | Defaults `branch` to `'main'`. |
+| `parseRepositoryEntry(e)` | Parses a config entry (string `owner/repo@branch` or object) into a `SkillRepository`. |
+| `readRepositoriesConfig()` | Reads `agentOrganizer.skillRepositories`, handling both string and object formats. |
+| `writeRepositoriesConfig(repos)` | Writes repositories as objects to `agentOrganizer.skillRepositories`. |
+| `buildGitHubUrl(...)` | Builds a GitHub tree URL with URL-encoded segments. |
 
 ---
 
 ## File Watchers
 
-The extension watches for `SKILL.md` creation and deletion events in workspace skill folders. Watcher patterns are derived from `pathService.getScanLocations()` (workspace-relative entries only) rather than being hardcoded, so user-configured scan locations are automatically covered.
-
-Additionally, file watchers are created for all scan locations (both workspace-relative and home directory paths) to monitor file changes within skill folders. When a file changes, the duplicate status is recomputed for the affected skill and all other skills sharing the same name. The `InstalledSkillsTreeDataProvider` implements `vscode.Disposable` and manages watchers internally via an `activeWatchers` array. The provider is registered in `context.subscriptions` so all watchers are cleaned up on extension deactivation. Watchers are recreated on every refresh and when `chat.agentSkillsLocations` changes, ensuring new location directories are automatically watched. File change events are debounced (500ms) to avoid excessive recomputation during rapid edits.
+The Skills view watches for `SKILL.md` creation/deletion events in workspace skill folders with debounced duplicate status recomputation. Each area view creates its own file watchers for its specific file patterns (e.g., `**/{areaDir}/*/{definitionFile}` for multi-file areas, `**/{areaDir}/**/*{suffix}` for single-file areas), including watchers on the area's configured default download location. Watchers are recreated on refresh.

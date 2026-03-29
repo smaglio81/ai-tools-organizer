@@ -15,10 +15,12 @@ export class SkillInstallationService {
     ) {}
 
     /**
-     * Install a skill to the configured location (workspace or user home directory)
+     * Install a skill to the configured location (workspace or user home directory).
+     * Uses the area-specific default download location based on the skill's content area.
      */
     async installSkill(skill: Skill): Promise<boolean> {
-        const installLocation = this.pathService.getInstallLocation();
+        const area = skill.area || 'skills';
+        const installLocation = this.pathService.getDefaultDownloadLocation(area);
         const workspaceFolder = this.pathService.getWorkspaceFolderForLocation(installLocation);
 
         if (this.pathService.requiresWorkspaceFolder(installLocation) && !workspaceFolder) {
@@ -26,10 +28,10 @@ export class SkillInstallationService {
             return false;
         }
 
-        const targetDir = this.pathService.resolveInstallTarget(skill.name, workspaceFolder);
+        const targetDir = this.pathService.resolveInstallTarget(skill.name, workspaceFolder, area);
 
         if (!targetDir) {
-            vscode.window.showErrorMessage('Failed to resolve install location for this skill.');
+            vscode.window.showErrorMessage(`Failed to resolve download location for "${skill.name}".`);
             return false;
         }
 
@@ -37,7 +39,7 @@ export class SkillInstallationService {
         try {
             await vscode.workspace.fs.stat(targetDir);
             const overwrite = await vscode.window.showWarningMessage(
-                `Skill "${skill.name}" is already installed. Overwrite?`,
+                `Skill "${skill.name}" is already downloaded. Overwrite?`,
                 { modal: true },
                 'Overwrite'
             );
@@ -52,7 +54,7 @@ export class SkillInstallationService {
 
         return vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
-            title: `Installing ${skill.name}...`,
+            title: `Downloading ${skill.name}...`,
             cancellable: true
         }, async (progress, token) => {
             try {
@@ -107,12 +109,12 @@ export class SkillInstallationService {
                     });
                 }
 
-                vscode.window.showInformationMessage(`Successfully installed skill "${skill.name}"`);
+                vscode.window.showInformationMessage(`Successfully downloaded "${skill.name}"`);
                 return true;
                 
             } catch (error) {
                 const message = error instanceof Error ? error.message : String(error);
-                vscode.window.showErrorMessage(`Failed to install skill: ${message}`);
+                vscode.window.showErrorMessage(`Failed to download: ${message}`);
                 
                 // Cleanup on error
                 try {

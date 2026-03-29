@@ -38,7 +38,7 @@
         {
           "id": "agent-organizer",
           "title": "Agent Organizer",
-          "icon": "resources/skills-icon.svg"
+          "icon": "resources/activity-bar-icon.svg"
         }
       ]
     },
@@ -46,11 +46,43 @@
       "agent-organizer": [
         {
           "id": "agentOrganizer.marketplace",
-          "name": "Marketplace"
+          "name": "Marketplace",
+          "icon": "resources/activity-bar-icon.svg"
+        },
+        {
+          "id": "agentOrganizer.agents",
+          "name": "Agents",
+          "icon": "resources/agents-icon.svg"
+        },
+        {
+          "id": "agentOrganizer.hooksGithub",
+          "name": "Hooks - GitHub",
+          "icon": "resources/hooks-icon.svg"
+        },
+        {
+          "id": "agentOrganizer.hooksKiro",
+          "name": "Hooks - Kiro",
+          "icon": "resources/hooks-icon.svg"
+        },
+        {
+          "id": "agentOrganizer.instructions",
+          "name": "Instructions",
+          "icon": "resources/instructions-icon.svg"
+        },
+        {
+          "id": "agentOrganizer.plugins",
+          "name": "Plugins",
+          "icon": "resources/plugins-icon.svg"
+        },
+        {
+          "id": "agentOrganizer.prompts",
+          "name": "Prompts",
+          "icon": "resources/prompts-icon.svg"
         },
         {
           "id": "agentOrganizer.skills",
-          "name": "Skills"
+          "name": "Skills",
+          "icon": "resources/skills-icon.svg"
         }
       ]
     },
@@ -64,12 +96,72 @@
         "view": "agentOrganizer.skills",
         "contents": "No skills installed yet.\n[Browse Marketplace](command:agentOrganizer.focusMarketplace)",
         "when": "agentOrganizer:initialScanComplete"
+      },
+      {
+        "view": "agentOrganizer.agents",
+        "contents": "Loading ...",
+        "when": "!agentOrganizer.agents:initialScanComplete"
+      },
+      {
+        "view": "agentOrganizer.agents",
+        "contents": "No agents found.",
+        "when": "agentOrganizer.agents:initialScanComplete"
+      },
+      {
+        "view": "agentOrganizer.hooksGithub",
+        "contents": "Loading ...",
+        "when": "!agentOrganizer.hooksGithub:initialScanComplete"
+      },
+      {
+        "view": "agentOrganizer.hooksGithub",
+        "contents": "No GitHub hooks found.",
+        "when": "agentOrganizer.hooksGithub:initialScanComplete"
+      },
+      {
+        "view": "agentOrganizer.hooksKiro",
+        "contents": "Loading ...",
+        "when": "!agentOrganizer.hooksKiro:initialScanComplete"
+      },
+      {
+        "view": "agentOrganizer.hooksKiro",
+        "contents": "No Kiro hooks found.",
+        "when": "agentOrganizer.hooksKiro:initialScanComplete"
+      },
+      {
+        "view": "agentOrganizer.instructions",
+        "contents": "Loading ...",
+        "when": "!agentOrganizer.instructions:initialScanComplete"
+      },
+      {
+        "view": "agentOrganizer.instructions",
+        "contents": "No instructions found.",
+        "when": "agentOrganizer.instructions:initialScanComplete"
+      },
+      {
+        "view": "agentOrganizer.plugins",
+        "contents": "Loading ...",
+        "when": "!agentOrganizer.plugins:initialScanComplete"
+      },
+      {
+        "view": "agentOrganizer.plugins",
+        "contents": "No plugins found.",
+        "when": "agentOrganizer.plugins:initialScanComplete"
+      },
+      {
+        "view": "agentOrganizer.prompts",
+        "contents": "Loading ...",
+        "when": "!agentOrganizer.prompts:initialScanComplete"
+      },
+      {
+        "view": "agentOrganizer.prompts",
+        "contents": "No prompts found.",
+        "when": "agentOrganizer.prompts:initialScanComplete"
       }
     ],
     "commands": [
       {
         "command": "agentOrganizer.install",
-        "title": "Install Skill",
+        "title": "Download",
         "icon": "$(cloud-download)"
       },
       {
@@ -89,7 +181,12 @@
       },
       {
         "command": "agentOrganizer.viewDetails",
-        "title": "View Skill Details",
+        "title": "View Details",
+        "icon": "$(info)"
+      },
+      {
+        "command": "agentOrganizer.viewFileDetails",
+        "title": "View Details",
         "icon": "$(info)"
       },
       {
@@ -114,7 +211,7 @@
       },
       {
         "command": "agentOrganizer.openSkillFolder",
-        "title": "Open Skill Folder",
+        "title": "View Installed Item",
         "icon": "$(folder-opened)"
       },
       {
@@ -161,12 +258,162 @@
         "icon": "$(close)"
       },
       {
+        "command": "agentOrganizer.agents.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "agentOrganizer.agents.search",
+        "title": "Search",
+        "icon": "$(search)"
+      },
+      {
+        "command": "agentOrganizer.agents.clearSearch",
+        "title": "Clear Search",
+        "icon": "$(close)"
+      },
+      {
+        "command": "agentOrganizer.hooksGithub.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "agentOrganizer.hooksGithub.search",
+        "title": "Search",
+        "icon": "$(search)"
+      },
+      {
+        "command": "agentOrganizer.hooksGithub.clearSearch",
+        "title": "Clear Search",
+        "icon": "$(close)"
+      },
+      {
+        "command": "agentOrganizer.hooksKiro.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "agentOrganizer.hooksKiro.search",
+        "title": "Search",
+        "icon": "$(search)"
+      },
+      {
+        "command": "agentOrganizer.hooksKiro.clearSearch",
+        "title": "Clear Search",
+        "icon": "$(close)"
+      },
+      {
+        "command": "agentOrganizer.instructions.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "agentOrganizer.instructions.search",
+        "title": "Search",
+        "icon": "$(search)"
+      },
+      {
+        "command": "agentOrganizer.instructions.clearSearch",
+        "title": "Clear Search",
+        "icon": "$(close)"
+      },
+      {
+        "command": "agentOrganizer.plugins.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "agentOrganizer.plugins.search",
+        "title": "Search",
+        "icon": "$(search)"
+      },
+      {
+        "command": "agentOrganizer.plugins.clearSearch",
+        "title": "Clear Search",
+        "icon": "$(close)"
+      },
+      {
+        "command": "agentOrganizer.prompts.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "agentOrganizer.prompts.search",
+        "title": "Search",
+        "icon": "$(search)"
+      },
+      {
+        "command": "agentOrganizer.prompts.clearSearch",
+        "title": "Clear Search",
+        "icon": "$(close)"
+      },
+      {
+        "command": "agentOrganizer.agents.expandAll",
+        "title": "Expand All",
+        "icon": "$(expand-all)"
+      },
+      {
+        "command": "agentOrganizer.hooksGithub.expandAll",
+        "title": "Expand All",
+        "icon": "$(expand-all)"
+      },
+      {
+        "command": "agentOrganizer.hooksKiro.expandAll",
+        "title": "Expand All",
+        "icon": "$(expand-all)"
+      },
+      {
+        "command": "agentOrganizer.instructions.expandAll",
+        "title": "Expand All",
+        "icon": "$(expand-all)"
+      },
+      {
+        "command": "agentOrganizer.plugins.expandAll",
+        "title": "Expand All",
+        "icon": "$(expand-all)"
+      },
+      {
+        "command": "agentOrganizer.prompts.expandAll",
+        "title": "Expand All",
+        "icon": "$(expand-all)"
+      },
+      {
+        "command": "agentOrganizer.agents.selectDefaultDownloadLocation",
+        "title": "Default Download Location",
+        "icon": "$(folder)"
+      },
+      {
+        "command": "agentOrganizer.hooksGithub.selectDefaultDownloadLocation",
+        "title": "Default Download Location",
+        "icon": "$(folder)"
+      },
+      {
+        "command": "agentOrganizer.hooksKiro.selectDefaultDownloadLocation",
+        "title": "Default Download Location",
+        "icon": "$(folder)"
+      },
+      {
+        "command": "agentOrganizer.instructions.selectDefaultDownloadLocation",
+        "title": "Default Download Location",
+        "icon": "$(folder)"
+      },
+      {
+        "command": "agentOrganizer.plugins.selectDefaultDownloadLocation",
+        "title": "Default Download Location",
+        "icon": "$(folder)"
+      },
+      {
+        "command": "agentOrganizer.prompts.selectDefaultDownloadLocation",
+        "title": "Default Download Location",
+        "icon": "$(folder)"
+      },
+      {
         "command": "agentOrganizer.focusMarketplace",
         "title": "Focus Marketplace View"
       },
       {
         "command": "agentOrganizer.selectInstallLocation",
-        "title": "Install Location",
+        "title": "Default Download Location",
         "icon": "$(folder)"
       },
       {
@@ -210,7 +457,7 @@
         {
           "command": "agentOrganizer.addRepository",
           "when": "view == agentOrganizer.marketplace",
-          "group": "navigation@0"
+          "group": "9_reveal@1"
         },
         {
           "command": "agentOrganizer.search",
@@ -256,6 +503,156 @@
           "command": "agentOrganizer.collapseAll",
           "when": "view == agentOrganizer.skills",
           "group": "navigation@5"
+        },
+        {
+          "command": "agentOrganizer.agents.search",
+          "when": "view == agentOrganizer.agents",
+          "group": "navigation@1"
+        },
+        {
+          "command": "agentOrganizer.agents.clearSearch",
+          "when": "view == agentOrganizer.agents && agentOrganizer.agents:searchActive",
+          "group": "navigation@1"
+        },
+        {
+          "command": "agentOrganizer.agents.refresh",
+          "when": "view == agentOrganizer.agents",
+          "group": "navigation@2"
+        },
+        {
+          "command": "agentOrganizer.agents.selectDefaultDownloadLocation",
+          "when": "view == agentOrganizer.agents",
+          "group": "navigation@3"
+        },
+        {
+          "command": "agentOrganizer.agents.expandAll",
+          "when": "view == agentOrganizer.agents",
+          "group": "navigation@4"
+        },
+        {
+          "command": "agentOrganizer.hooksGithub.search",
+          "when": "view == agentOrganizer.hooksGithub",
+          "group": "navigation@1"
+        },
+        {
+          "command": "agentOrganizer.hooksGithub.clearSearch",
+          "when": "view == agentOrganizer.hooksGithub && agentOrganizer.hooksGithub:searchActive",
+          "group": "navigation@1"
+        },
+        {
+          "command": "agentOrganizer.hooksGithub.refresh",
+          "when": "view == agentOrganizer.hooksGithub",
+          "group": "navigation@2"
+        },
+        {
+          "command": "agentOrganizer.hooksGithub.selectDefaultDownloadLocation",
+          "when": "view == agentOrganizer.hooksGithub",
+          "group": "navigation@3"
+        },
+        {
+          "command": "agentOrganizer.hooksGithub.expandAll",
+          "when": "view == agentOrganizer.hooksGithub",
+          "group": "navigation@4"
+        },
+        {
+          "command": "agentOrganizer.hooksKiro.search",
+          "when": "view == agentOrganizer.hooksKiro",
+          "group": "navigation@1"
+        },
+        {
+          "command": "agentOrganizer.hooksKiro.clearSearch",
+          "when": "view == agentOrganizer.hooksKiro && agentOrganizer.hooksKiro:searchActive",
+          "group": "navigation@1"
+        },
+        {
+          "command": "agentOrganizer.hooksKiro.refresh",
+          "when": "view == agentOrganizer.hooksKiro",
+          "group": "navigation@2"
+        },
+        {
+          "command": "agentOrganizer.hooksKiro.selectDefaultDownloadLocation",
+          "when": "view == agentOrganizer.hooksKiro",
+          "group": "navigation@3"
+        },
+        {
+          "command": "agentOrganizer.hooksKiro.expandAll",
+          "when": "view == agentOrganizer.hooksKiro",
+          "group": "navigation@4"
+        },
+        {
+          "command": "agentOrganizer.instructions.search",
+          "when": "view == agentOrganizer.instructions",
+          "group": "navigation@1"
+        },
+        {
+          "command": "agentOrganizer.instructions.clearSearch",
+          "when": "view == agentOrganizer.instructions && agentOrganizer.instructions:searchActive",
+          "group": "navigation@1"
+        },
+        {
+          "command": "agentOrganizer.instructions.refresh",
+          "when": "view == agentOrganizer.instructions",
+          "group": "navigation@2"
+        },
+        {
+          "command": "agentOrganizer.instructions.selectDefaultDownloadLocation",
+          "when": "view == agentOrganizer.instructions",
+          "group": "navigation@3"
+        },
+        {
+          "command": "agentOrganizer.instructions.expandAll",
+          "when": "view == agentOrganizer.instructions",
+          "group": "navigation@4"
+        },
+        {
+          "command": "agentOrganizer.plugins.search",
+          "when": "view == agentOrganizer.plugins",
+          "group": "navigation@1"
+        },
+        {
+          "command": "agentOrganizer.plugins.clearSearch",
+          "when": "view == agentOrganizer.plugins && agentOrganizer.plugins:searchActive",
+          "group": "navigation@1"
+        },
+        {
+          "command": "agentOrganizer.plugins.refresh",
+          "when": "view == agentOrganizer.plugins",
+          "group": "navigation@2"
+        },
+        {
+          "command": "agentOrganizer.plugins.selectDefaultDownloadLocation",
+          "when": "view == agentOrganizer.plugins",
+          "group": "navigation@3"
+        },
+        {
+          "command": "agentOrganizer.plugins.expandAll",
+          "when": "view == agentOrganizer.plugins",
+          "group": "navigation@4"
+        },
+        {
+          "command": "agentOrganizer.prompts.search",
+          "when": "view == agentOrganizer.prompts",
+          "group": "navigation@1"
+        },
+        {
+          "command": "agentOrganizer.prompts.clearSearch",
+          "when": "view == agentOrganizer.prompts && agentOrganizer.prompts:searchActive",
+          "group": "navigation@1"
+        },
+        {
+          "command": "agentOrganizer.prompts.refresh",
+          "when": "view == agentOrganizer.prompts",
+          "group": "navigation@2"
+        },
+        {
+          "command": "agentOrganizer.prompts.selectDefaultDownloadLocation",
+          "when": "view == agentOrganizer.prompts",
+          "group": "navigation@3"
+        },
+        {
+          "command": "agentOrganizer.prompts.expandAll",
+          "when": "view == agentOrganizer.prompts",
+          "group": "navigation@4"
         }
       ],
       "view/item/context": [
@@ -267,6 +664,16 @@
         {
           "command": "agentOrganizer.install",
           "when": "view == agentOrganizer.marketplace && viewItem == skill",
+          "group": "1_install@1"
+        },
+        {
+          "command": "agentOrganizer.install",
+          "when": "view == agentOrganizer.marketplace && viewItem == areaFile",
+          "group": "inline@1"
+        },
+        {
+          "command": "agentOrganizer.install",
+          "when": "view == agentOrganizer.marketplace && viewItem == areaFile",
           "group": "1_install@1"
         },
         {
@@ -287,6 +694,26 @@
         {
           "command": "agentOrganizer.openInBrowser",
           "when": "view == agentOrganizer.marketplace && viewItem == skill",
+          "group": "2_open@1"
+        },
+        {
+          "command": "agentOrganizer.openInBrowser",
+          "when": "view == agentOrganizer.marketplace && viewItem == skillsGroup",
+          "group": "0_open@1"
+        },
+        {
+          "command": "agentOrganizer.openInBrowser",
+          "when": "view == agentOrganizer.marketplace && viewItem == areaGroup",
+          "group": "0_open@1"
+        },
+        {
+          "command": "agentOrganizer.viewFileDetails",
+          "when": "view == agentOrganizer.marketplace && viewItem == areaFile",
+          "group": "inline@2"
+        },
+        {
+          "command": "agentOrganizer.openInBrowser",
+          "when": "view == agentOrganizer.marketplace && viewItem == areaFile",
           "group": "2_open@1"
         },
         {
@@ -367,22 +794,167 @@
         {
           "command": "agentOrganizer.revealInFileExplorer",
           "when": "view == agentOrganizer.skills && viewItem == location",
-          "group": "1_delete@2"
+          "group": "9_reveal@1"
+        },
+        {
+          "command": "agentOrganizer.moveSkill",
+          "when": "view == agentOrganizer.skills && viewItem == location",
+          "group": "0_move@1"
+        },
+        {
+          "command": "agentOrganizer.copySkill",
+          "when": "view == agentOrganizer.skills && viewItem == location",
+          "group": "0_move@2"
         },
         {
           "command": "agentOrganizer.revealInFileExplorer",
           "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
-          "group": "0_add@3"
+          "group": "3_marketplace@2"
         },
         {
           "command": "agentOrganizer.revealInFileExplorer",
           "when": "view == agentOrganizer.skills && viewItem == skillFolder",
-          "group": "0_add@3"
+          "group": "9_reveal@1"
         },
         {
           "command": "agentOrganizer.revealInFileExplorer",
           "when": "view == agentOrganizer.skills && viewItem == skillFile",
-          "group": "0_rename@2"
+          "group": "9_reveal@1"
+        },
+        {
+          "command": "agentOrganizer.revealInFileExplorer",
+          "when": "viewItem == areaLocation",
+          "group": "9_reveal@1"
+        },
+        {
+          "command": "agentOrganizer.deleteAllSkills",
+          "when": "viewItem == areaLocation",
+          "group": "1_delete@0"
+        },
+        {
+          "command": "agentOrganizer.moveSkill",
+          "when": "viewItem == areaLocation",
+          "group": "0_move@1"
+        },
+        {
+          "command": "agentOrganizer.copySkill",
+          "when": "viewItem == areaLocation",
+          "group": "0_move@2"
+        },
+        {
+          "command": "agentOrganizer.addFile",
+          "when": "viewItem == areaInstalledFolder",
+          "group": "0_add@1"
+        },
+        {
+          "command": "agentOrganizer.addFolder",
+          "when": "viewItem == areaInstalledFolder",
+          "group": "0_add@2"
+        },
+        {
+          "command": "agentOrganizer.revealInFileExplorer",
+          "when": "viewItem == areaInstalledFolder",
+          "group": "3_marketplace@2"
+        },
+        {
+          "command": "agentOrganizer.uninstall",
+          "when": "viewItem == areaInstalledFolder",
+          "group": "inline@1"
+        },
+        {
+          "command": "agentOrganizer.uninstall",
+          "when": "viewItem == areaInstalledFolder",
+          "group": "2_delete@1"
+        },
+        {
+          "command": "agentOrganizer.moveSkill",
+          "when": "viewItem == areaInstalledFolder",
+          "group": "1_move@1"
+        },
+        {
+          "command": "agentOrganizer.copySkill",
+          "when": "viewItem == areaInstalledFolder",
+          "group": "1_move@2"
+        },
+        {
+          "command": "agentOrganizer.showInMarketplace",
+          "when": "viewItem == areaInstalledFolder",
+          "group": "3_marketplace@1"
+        },
+        {
+          "command": "agentOrganizer.openSkillFolder",
+          "when": "viewItem == areaInstalledFolder",
+          "group": "inline@2"
+        },
+        {
+          "command": "agentOrganizer.revealInFileExplorer",
+          "when": "viewItem == areaInstalledFile",
+          "group": "3_marketplace@2"
+        },
+        {
+          "command": "agentOrganizer.uninstall",
+          "when": "viewItem == areaInstalledFile",
+          "group": "inline@1"
+        },
+        {
+          "command": "agentOrganizer.openSkillFolder",
+          "when": "viewItem == areaInstalledFile",
+          "group": "inline@2"
+        },
+        {
+          "command": "agentOrganizer.uninstall",
+          "when": "viewItem == areaInstalledFile",
+          "group": "2_delete@1"
+        },
+        {
+          "command": "agentOrganizer.moveSkill",
+          "when": "viewItem == areaInstalledFile",
+          "group": "1_move@1"
+        },
+        {
+          "command": "agentOrganizer.copySkill",
+          "when": "viewItem == areaInstalledFile",
+          "group": "1_move@2"
+        },
+        {
+          "command": "agentOrganizer.showInMarketplace",
+          "when": "viewItem == areaInstalledFile",
+          "group": "3_marketplace@1"
+        },
+        {
+          "command": "agentOrganizer.addFile",
+          "when": "viewItem == areaItemFolder",
+          "group": "0_add@1"
+        },
+        {
+          "command": "agentOrganizer.addFolder",
+          "when": "viewItem == areaItemFolder",
+          "group": "0_add@2"
+        },
+        {
+          "command": "agentOrganizer.revealInFileExplorer",
+          "when": "viewItem == areaItemFolder",
+          "group": "9_reveal@1"
+        },
+        {
+          "command": "agentOrganizer.deleteSkillFolder",
+          "when": "viewItem == areaItemFolder",
+          "group": "2_delete@1"
+        },
+        {
+          "command": "agentOrganizer.renameFile",
+          "when": "viewItem == areaItemFile",
+          "group": "0_rename@1"
+        },
+        {
+          "command": "agentOrganizer.revealInFileExplorer",
+          "when": "viewItem == areaItemFile",
+          "group": "9_reveal@1"
+        },
+        {
+          "command": "agentOrganizer.deleteSkillFile",
+          "when": "viewItem == areaItemFile",
+          "group": "2_delete@1"
         }
       ]
     },
@@ -395,42 +967,35 @@
             {
               "owner": "anthropics",
               "repo": "skills",
-              "path": "skills",
               "branch": "main"
             },
             {
               "owner": "github",
               "repo": "awesome-copilot",
-              "path": "skills",
               "branch": "main"
             },
             {
               "owner": "pytorch",
               "repo": "pytorch",
-              "path": ".claude/skills",
               "branch": "main"
             },
             {
               "owner": "openai",
               "repo": "skills",
-              "path": "skills/.curated",
               "branch": "main"
             },
             {
               "owner": "microsoftdocs",
               "repo": "mcp",
-              "path": "skills",
               "branch": "main"
             },
             {
               "owner": "formulahendry",
               "repo": "agent-skill-code-runner",
-              "path": ".github/skills/code-runner",
-              "branch": "main",
-              "singleSkill": true
+              "branch": "main"
             }
           ],
-          "description": "GitHub repositories to fetch skills from",
+          "markdownDescription": "GitHub repositories to fetch content from. Use the **Add Repository** button in the Marketplace view to add repos from a GitHub URL.",
           "items": {
             "type": "object",
             "properties": {
@@ -442,32 +1007,36 @@
                 "type": "string",
                 "description": "GitHub repository name"
               },
-              "path": {
-                "type": "string",
-                "description": "Path to skills directory within the repo"
-              },
               "branch": {
                 "type": "string",
                 "default": "main",
                 "description": "Branch name"
-              },
-              "singleSkill": {
-                "type": "boolean",
-                "default": false,
-                "description": "If true, the path points directly to a single skill folder"
               }
-            },
-            "required": [
-              "owner",
-              "repo",
-              "path"
-            ]
+            }
           }
         },
-        "agentOrganizer.installLocation": {
-          "type": "string",
-          "default": ".github/skills",
-          "description": "Where to install skills: in the current workspace or in the user's home directory (~/). It is recommended to use one of the locations defined in chat.agentSkillsLocations so that installed skills are detected correctly."
+        "agentOrganizer.installLocations": {
+          "type": "object",
+          "default": {
+            "agents": "~/.copilot/agents",
+            "hooksGithub": "~/.copilot/hooks",
+            "hooksKiro": ".kiro/hooks",
+            "instructions": "~/.copilot/instructions",
+            "plugins": "~/.copilot/plugins",
+            "prompts": "~/.copilot/prompts",
+            "skills": "~/.copilot/skills"
+          },
+          "description": "Per-area default download locations. Keys are area identifiers (agents, hooksGithub, hooksKiro, instructions, plugins, prompts, skills). Values are path strings.",
+          "properties": {
+            "agents": { "type": "string", "description": "Default download location for agents" },
+            "hooksGithub": { "type": "string", "description": "Default download location for GitHub hooks" },
+            "hooksKiro": { "type": "string", "description": "Default download location for Kiro hooks" },
+            "instructions": { "type": "string", "description": "Default download location for instructions" },
+            "plugins": { "type": "string", "description": "Default download location for plugins" },
+            "prompts": { "type": "string", "description": "Default download location for prompts" },
+            "skills": { "type": "string", "description": "Default download location for skills" }
+          },
+          "additionalProperties": false
         },
         "agentOrganizer.githubToken": {
           "type": "string",

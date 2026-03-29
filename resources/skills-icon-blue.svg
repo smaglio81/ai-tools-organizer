@@ -1,8 +1,11 @@
-<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Top layer - lighter blue -->
-  <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="#60A5FA33"/>
-  <!-- Bottom layer - deepest blue -->
-  <path d="M2 17L12 22L22 17" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <!-- Middle layer -->
-  <path d="M2 12L12 17L22 12" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 3D package/box icon -->
+  <!-- Top face -->
+  <path d="M8 1 L14 4.5 L8 8 L2 4.5 Z" stroke="#60A5FA" stroke-width="1" fill="none" stroke-linejoin="round"/>
+  <!-- Left face -->
+  <path d="M2 4.5 L8 8 L8 15 L2 11.5 Z" stroke="#2563EB" stroke-width="1" fill="none" stroke-linejoin="round"/>
+  <!-- Right face -->
+  <path d="M14 4.5 L8 8 L8 15 L14 11.5 Z" stroke="#2563EB" stroke-width="1" fill="none" stroke-linejoin="round"/>
+  <!-- Center vertical line -->
+  <line x1="8" y1="8" x2="8" y2="15" stroke="#2563EB" stroke-width="1"/>
 </svg>
