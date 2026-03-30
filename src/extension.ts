@@ -12,7 +12,7 @@ import { SkillDetailPanel } from './views/skillDetailPanel';
 import { SkillInstallationService } from './services/installationService';
 import { SkillPathService } from './services/skillPathService';
 import { Skill, InstalledSkill, SkillRepository, isSameRepository, normalizeSeparators, buildGitHubUrl, readRepositoriesConfig, writeRepositoriesConfig, AreaFileItem, ContentArea, AREA_DEFINITIONS } from './types';
-import { PLUGIN_SUBFOLDER_TO_AREA, PLUGIN_AREA_SUBFOLDERS, resolveInstalledItemUri, syncPluginItem } from './services/pluginSyncService';
+import { PLUGIN_SUBFOLDER_TO_AREA, PLUGIN_AREA_SUBFOLDERS, AREA_TO_PLUGIN_SUBFOLDER, resolveInstalledItemUri, syncPluginItem } from './services/pluginSyncService';
 
 /**
  * Validate a file or folder name: non-empty, no path separators, no traversal.
@@ -141,6 +141,25 @@ export function activate(context: vscode.ExtensionContext) {
         await Promise.all(
             Array.from(areaProviders.values()).map(p => p.refresh())
         );
+    }
+
+    /** Write sync results to the output channel and show a toast with optional "Show Details" button. */
+    async function showSyncResults(
+        title: string,
+        toastMessage: string,
+        results: { label: string; updated: boolean; reason?: string }[]
+    ): Promise<void> {
+        const updated = results.filter(r => r.updated).length;
+        outputChannel.appendLine('');
+        outputChannel.appendLine(`── ${title} ──`);
+        outputChannel.appendLine(`Updated ${updated} of ${results.length} item(s)\n`);
+        for (const r of results) {
+            const status = r.updated ? '✅' : (r.reason ? '❌' : '⏭️');
+            const note = !r.updated && r.reason ? ` — ${r.reason}` : '';
+            outputChannel.appendLine(`  ${status} ${r.label}${note}`);
+        }
+        const action = await vscode.window.showInformationMessage(toastMessage, 'Show Details');
+        if (action === 'Show Details') { outputChannel.show(); }
     }
 
     /** Move or copy an area item to a different scan location */
@@ -847,13 +866,6 @@ export function activate(context: vscode.ExtensionContext) {
         // Copy an item into a plugin's subfolder
         vscode.commands.registerCommand('agentOrganizer.copyToPlugin', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
             // Determine the source area and the target plugin subfolder
-            const pluginSubfolderMap: Partial<Record<ContentArea, string>> = {
-                agents: 'agents',
-                skills: 'skills',
-                prompts: 'commands',
-                hooksGithub: 'hooks',
-            };
-
             let sourceArea: ContentArea;
             let sourceUri: vscode.Uri;
             let itemName: string;
@@ -870,7 +882,7 @@ export function activate(context: vscode.ExtensionContext) {
                 return;
             }
 
-            const targetSubfolder = pluginSubfolderMap[sourceArea];
+            const targetSubfolder = AREA_TO_PLUGIN_SUBFOLDER[sourceArea];
             if (!targetSubfolder) {
                 vscode.window.showWarningMessage(`"Copy to Plugin" is not supported for ${AREA_DEFINITIONS[sourceArea].label} items.`);
                 return;
@@ -938,6 +950,85 @@ export function activate(context: vscode.ExtensionContext) {
             }
         }),
 
+        // Update all plugins that contain a copy of this item
+        vscode.commands.registerCommand('agentOrganizer.updatePlugins', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
+            let sourceArea: ContentArea;
+            let sourceUri: vscode.Uri;
+            let itemName: string;
+            let sourceBaseName: string;
+
+            if (item instanceof AreaInstalledItemTreeItem) {
+                sourceArea = item.area;
+                sourceUri = item.itemUri;
+                itemName = item.installedItem.name;
+                const sourceLoc = normalizeSeparators(item.installedItem.location);
+                sourceBaseName = sourceLoc.substring(sourceLoc.lastIndexOf('/') + 1);
+            } else if (item instanceof InstalledSkillTreeItem) {
+                sourceArea = 'skills';
+                sourceUri = item.skillUri;
+                itemName = item.installedSkill.name;
+                const sourceLoc = normalizeSeparators(item.installedSkill.location);
+                sourceBaseName = sourceLoc.substring(sourceLoc.lastIndexOf('/') + 1);
+            } else {
+                return;
+            }
+
+            const targetSubfolder = AREA_TO_PLUGIN_SUBFOLDER[sourceArea];
+            if (!targetSubfolder) {
+                vscode.window.showWarningMessage(`"Update Plugins" is not supported for ${AREA_DEFINITIONS[sourceArea].label} items.`);
+                return;
+            }
+
+            // Get all installed plugins
+            const pluginsProvider = areaProviders.get('agentOrganizer.plugins');
+            if (!pluginsProvider) { return; }
+            const plugins = pluginsProvider.getInstalledItems();
+
+            if (plugins.length === 0) {
+                vscode.window.showInformationMessage('No plugins installed.');
+                return;
+            }
+
+            let updatedCount = 0;
+            const results: { pluginName: string; updated: boolean; reason?: string }[] = [];
+
+            for (const plugin of plugins) {
+                const pluginLoc = normalizeSeparators(plugin.location);
+                const pluginWf = pathService.getWorkspaceFolderForLocation(pluginLoc);
+                const pluginUri = pathService.resolveLocationToUri(pluginLoc, pluginWf);
+                if (!pluginUri) { continue; }
+
+                const targetUri = vscode.Uri.joinPath(pluginUri, targetSubfolder, sourceBaseName);
+                try {
+                    await vscode.workspace.fs.stat(targetUri);
+                } catch {
+                    // Item doesn't exist in this plugin — skip
+                    continue;
+                }
+
+                try {
+                    await vscode.workspace.fs.delete(targetUri, { recursive: true, useTrash: true });
+                    await vscode.workspace.fs.copy(sourceUri, targetUri, { overwrite: true });
+                    updatedCount++;
+                    results.push({ pluginName: plugin.name, updated: true });
+                } catch (error) {
+                    const message = error instanceof Error ? error.message : String(error);
+                    results.push({ pluginName: plugin.name, updated: false, reason: message });
+                }
+            }
+
+            if (results.length === 0) {
+                vscode.window.showInformationMessage(`"${itemName}" was not found in any plugin.`);
+            } else {
+                await showSyncResults(
+                    `Update Plugins — "${itemName}"`,
+                    `Updated "${itemName}" in ${updatedCount} plugin(s).`,
+                    results.map(r => ({ label: r.pluginName, updated: r.updated, reason: r.reason }))
+                );
+            }
+            await syncInstalledStatus();
+        }),
+
         // Get latest copy of all AI tools in a plugin (agents, skills, commands, hooks)
         vscode.commands.registerCommand('agentOrganizer.pluginGetLatestAll', async (item: AreaInstalledItemTreeItem) => {
             if (!item || item.area !== 'plugins') { return; }
@@ -977,19 +1068,11 @@ export function activate(context: vscode.ExtensionContext) {
                 vscode.window.showInformationMessage(`No AI tool subfolders found in "${item.installedItem.name}".`);
             } else {
                 const updated = allResults.filter(r => r.updated).length;
-                outputChannel.clear();
-                outputChannel.appendLine(`Get Latest — "${item.installedItem.name}"`);
-                outputChannel.appendLine(`Updated ${updated} of ${allResults.length} item(s)\n`);
-                for (const r of allResults) {
-                    const status = r.updated ? '✅' : '⏭️';
-                    const note = !r.updated && r.reason ? ` — ${r.reason}` : '';
-                    outputChannel.appendLine(`  ${status} [${r.area}] ${r.name}${note}`);
-                }
-                const action = await vscode.window.showInformationMessage(
+                await showSyncResults(
+                    `Get Latest — "${item.installedItem.name}"`,
                     `Updated ${updated} of ${allResults.length} item(s) in "${item.installedItem.name}".`,
-                    'Show Details'
+                    allResults.map(r => ({ label: `[${r.area}] ${r.name}`, updated: r.updated, reason: r.reason }))
                 );
-                if (action === 'Show Details') { outputChannel.show(); }
             }
             await syncInstalledStatus();
         }),
@@ -1035,19 +1118,11 @@ export function activate(context: vscode.ExtensionContext) {
 
             const areaLabel = AREA_DEFINITIONS[area].label;
             const updated = results.filter(r => r.updated).length;
-            outputChannel.clear();
-            outputChannel.appendLine(`Get Latest — ${areaLabel}`);
-            outputChannel.appendLine(`Updated ${updated} of ${results.length} item(s)\n`);
-            for (const r of results) {
-                const status = r.updated ? '✅' : '⏭️';
-                const note = !r.updated && r.reason ? ` — ${r.reason}` : '';
-                outputChannel.appendLine(`  ${status} ${r.name}${note}`);
-            }
-            const action = await vscode.window.showInformationMessage(
+            await showSyncResults(
+                `Get Latest — ${areaLabel}`,
                 `${areaLabel}: Updated ${updated} of ${results.length} item(s).`,
-                'Show Details'
+                results.map(r => ({ label: r.name, updated: r.updated, reason: r.reason }))
             );
-            if (action === 'Show Details') { outputChannel.show(); }
             await syncInstalledStatus();
         }),
 

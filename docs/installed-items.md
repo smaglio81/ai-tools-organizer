@@ -51,6 +51,7 @@ Editing a file automatically triggers re-comparison. File watchers cover both wo
 | Move to... | Items and location folders | Moves the item to a different location via a quick pick selector |
 | Copy to... | Items and location folders | Copies the item to a different location, keeping the original |
 | Copy to Plugin... | Items (not in Plugins or Instructions views) | Copies the item into a selected plugin's area subfolder |
+| Update Plugins | Items (not in Plugins or Instructions views) | Updates all plugins that contain a copy of this item in their area subfolder |
 | Update older copies with latest | Newest (green) items only | Overwrites all other copies of this item with this version |
 | Get latest copy | Older (orange) items only | Replaces this copy with the newest version from another location |
 | Show in Marketplace | Items | Reveals and highlights the matching item in the Marketplace tree |

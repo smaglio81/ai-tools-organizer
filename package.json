@@ -2,7 +2,7 @@
   "name": "agent-organizer",
   "displayName": "Agent Organizer",
   "description": "Agent Organizer Marketplace and Toolkit",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "icon": "resources/logo.png",
   "publisher": "smaglio81",
   "engines": {
@@ -225,6 +225,10 @@
       {
         "command": "agentOrganizer.copyToPlugin",
         "title": "Copy to Plugin..."
+      },
+      {
+        "command": "agentOrganizer.updatePlugins",
+        "title": "Update Plugins"
       },
       {
         "command": "agentOrganizer.pluginGetLatestAll",
@@ -822,6 +826,11 @@
           "group": "1_move@3"
         },
         {
+          "command": "agentOrganizer.updatePlugins",
+          "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
+          "group": "1_move@4"
+        },
+        {
           "command": "agentOrganizer.syncSkill",
           "when": "view == agentOrganizer.skills && viewItem == installedSkill_newest",
           "group": "1_move@3"
@@ -947,6 +956,11 @@
           "group": "1_move@3"
         },
         {
+          "command": "agentOrganizer.updatePlugins",
+          "when": "viewItem =~ /^areaInstalledFolder/ && view != agentOrganizer.plugins && view != agentOrganizer.instructions",
+          "group": "1_move@4"
+        },
+        {
           "command": "agentOrganizer.showInMarketplace",
           "when": "viewItem =~ /^areaInstalledFolder/",
           "group": "3_marketplace@1"
@@ -1043,8 +1057,13 @@
         },
         {
           "command": "agentOrganizer.copyToPlugin",
-          "when": "viewItem =~ /^areaInstalledFile/ && view != agentOrganizer.instructions",
+          "when": "viewItem =~ /^areaInstalledFile/ && view != agentOrganizer.plugins && view != agentOrganizer.instructions",
           "group": "1_move@3"
+        },
+        {
+          "command": "agentOrganizer.updatePlugins",
+          "when": "viewItem =~ /^areaInstalledFile/ && view != agentOrganizer.plugins && view != agentOrganizer.instructions",
+          "group": "1_move@4"
         },
         {
           "command": "agentOrganizer.showInMarketplace",

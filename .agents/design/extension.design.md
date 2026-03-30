@@ -72,8 +72,8 @@ Each content area (except Skills, which has its own dedicated provider) uses the
 | Node Type | Context Value | Actions |
 |---|---|---|
 | Location | `areaLocation` | Move to..., Copy to..., Delete, Reveal in File Explorer |
-| Multi-file item | `areaInstalledFolder` | Add File, Add Folder, Move to..., Copy to..., Copy to Plugin... (not in Plugins view), Show in Marketplace, Reveal in File Explorer, Delete (inline + menu), View Installed Item (inline) |
-| Single-file item | `areaInstalledFile` | Move to..., Copy to..., Copy to Plugin..., Show in Marketplace, Reveal in File Explorer, Delete (inline + menu), View Installed Item (inline) |
+| Multi-file item | `areaInstalledFolder` | Add File, Add Folder, Move to..., Copy to..., Copy to Plugin... (not in Plugins view), Update Plugins (not in Plugins view), Show in Marketplace, Reveal in File Explorer, Delete (inline + menu), View Installed Item (inline) |
+| Single-file item | `areaInstalledFile` | Move to..., Copy to..., Copy to Plugin..., Update Plugins, Show in Marketplace, Reveal in File Explorer, Delete (inline + menu), View Installed Item (inline) |
 | Subfolder | `areaItemFolder` | Add File, Add Folder, Delete, Reveal in File Explorer |
 | File | `areaItemFile` | Rename, Delete, Reveal in File Explorer |
 
@@ -107,7 +107,7 @@ The Skills view uses its own dedicated `InstalledSkillsTreeDataProvider` with ad
 | `GitHubSkillsClient` | Fetches content from GitHub. Uses Git Trees API for efficiency; `raw.githubusercontent.com` for file content (no rate limit). Discovers content areas via `discoverAreas()`. Fetches all area content via `fetchRepoContent()`. Parses `plugin.json`/`hooks.json` as JSON and markdown files via YAML frontmatter. For JSON-based areas, also fetches `README.md` for detail panel body content. Caches results per `agentOrganizer.cacheTimeout`. |
 | `SkillPathService` | Resolves location strings (including `~` home paths) to `vscode.Uri` values. Provides scan locations, per-area default download locations (`getDefaultDownloadLocation(area)`), and install target resolution. Manages `agentOrganizer.installLocations` config (read, write, ensure defaults on activation). |
 | `SkillInstallationService` | Downloads, deletes, moves, copies, syncs skills. Uses area-specific download locations based on `skill.area`. Handles overwrite confirmation, progress notifications, and trash-based deletion. |
-| `PluginSyncService` | Handles "Get latest copy" and "Copy to area" operations for plugin subfolders. Maps plugin subfolder names to content areas (`agents→agents`, `skills→skills`, `commands→prompts`, `hooks→hooksGithub`). Provides `syncPluginItem()` with `SyncResult` including failure reasons. |
+| `PluginSyncService` | Handles "Get latest copy" and "Copy to area" operations for plugin subfolders. Maps plugin subfolder names to content areas (`agents→agents`, `skills→skills`, `commands→prompts`, `hooks→hooksGithub`). Provides `syncPluginItem()` with `SyncResult` including failure reasons. Also used by "Update Plugins" to push item changes to all plugins containing a copy. |
 
 ---
 
