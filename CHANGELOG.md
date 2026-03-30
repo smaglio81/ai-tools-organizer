@@ -4,6 +4,16 @@ All notable changes to the "agent-organizer" extension will be documented in thi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.0.6]
+
+### Added
+
+- "Update Plugins" right-click option on installed items in Agents, Skills, Prompts / Commands, and Hooks - GitHub views. Searches all installed plugins for a copy of the item in the plugin's corresponding area subfolder (`/agents`, `/skills`, `/commands`, `/hooks`) and overwrites it with the current version. Results shown via output channel with per-plugin ✅/❌ status; toast notification includes "Show Details" button.
+
+### Changed
+
+- Extension logo (`resources/logo.svg`, `resources/logo.png`) updated to use the activity bar icon design (three-book "AI" motif) in purple (`#B07FE0`) on a transparent background, replacing the previous gear-on-blue-circle design.
+
 ## [0.0.5]
 
 ### Added

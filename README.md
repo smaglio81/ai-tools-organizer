@@ -32,7 +32,7 @@ Each view shows what you have installed locally, grouped by location. The Market
 
 **Duplicate detection** — when the same item exists in multiple locations, color-coded icons show which copy is newest (green), older (orange), identical (blue), or unique (purple).
 
-**Plugin sync** — keep plugin subfolders (`/agents`, `/skills`, `/commands`, `/hooks`) in sync with your latest installed items using "Get latest copy" commands.
+**Plugin sync** — keep plugin subfolders (`/agents`, `/skills`, `/commands`, `/hooks`) in sync with your latest installed items. Use "Get latest copy" to pull updates into a plugin, or "Update Plugins" to push changes out to all plugins that contain a copy.
 
 **Flexible locations** — each area has its own configurable download location. Scans workspace folders and home directories automatically.
 

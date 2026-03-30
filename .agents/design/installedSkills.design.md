@@ -96,6 +96,8 @@ All actions appear in the `agentOrganizer.skills` view title bar.
 | Reveal in File Explorer | `agentOrganizer.revealInFileExplorer` | Always | Opens the skill folder in the system file explorer. |
 | Move to... | `agentOrganizer.moveSkill` | Always | Opens a QuickPick listing all scan locations (current location marked). Moves the skill folder to the selected location. |
 | Copy to... | `agentOrganizer.copySkill` | Always | Opens a QuickPick listing all scan locations (current location marked). Copies the skill folder to the selected location, keeping the original. |
+| Copy to Plugin... | `agentOrganizer.copyToPlugin` | Always | Opens a QuickPick listing all installed plugins. Copies the skill into the selected plugin's `skills/` subfolder. |
+| Update Plugins | `agentOrganizer.updatePlugins` | Always | Searches all installed plugins for a copy of this skill in their `skills/` subfolder and overwrites each found copy with the current version. Results shown via output channel. |
 | Update older skill copies with latest | `agentOrganizer.syncSkill` | Newest (green) only | Copies this skill to all other locations that have an older copy. |
 | Get latest copy of skill | `agentOrganizer.getLatestSkill` | Older (orange) only | Replaces this copy with the newest version from another location. |
 | Delete | `agentOrganizer.uninstall` | Always | Deletes the skill folder (moved to trash, no confirmation prompt). |

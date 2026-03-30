@@ -158,3 +158,7 @@ Currently, Skills has a view.
   * And the `agents` folder is actually filled with plugins.
   * Can this be detected and handled by the Plugins search?
 * If a plugin doesn't have a README.md file, can skillDetailPanel say `No README.MD found` instead of `No additional details avaliable.`
+* Items in the Agents, Skills, Commands, and Hooks area should have a right-click option `Update Plugins`
+  * The option should appear in the same group and below `Copy To Plugins...`
+  * The option should search through each plugin and see if that item exists in it's respective folder under a plugin.
+    * If it's found, then it should update the plugins copy.
