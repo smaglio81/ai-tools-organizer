@@ -1,0 +1,12 @@
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Robot/agent head -->
+  <rect x="3.5" y="4" width="9" height="8" rx="2" stroke="#60A5FA" stroke-width="1.2" fill="none"/>
+  <!-- Antenna -->
+  <line x1="8" y1="4" x2="8" y2="1.5" stroke="#60A5FA" stroke-width="1.2" stroke-linecap="round"/>
+  <circle cx="8" cy="1.5" r="1" fill="#2563EB"/>
+  <!-- Eyes -->
+  <circle cx="6" cy="8" r="1" fill="#2563EB"/>
+  <circle cx="10" cy="8" r="1" fill="#2563EB"/>
+  <!-- Mouth -->
+  <line x1="6" y1="10.5" x2="10" y2="10.5" stroke="#2563EB" stroke-width="0.8" stroke-linecap="round"/>
+</svg>

@@ -132,7 +132,7 @@ suite('Extension Test Suite', () => {
 	});
 
 	test('scanInstalledSkills expands ~ paths and skips missing directories before readDirectory', async () => {
-		const workspaceRoot = path.join(os.tmpdir(), 'agent-skills-test-workspace');
+		const workspaceRoot = path.join(os.tmpdir(), 'agent-organizer-test-workspace');
 		const workspaceUri = vscode.Uri.file(workspaceRoot);
 		const homeDir = os.homedir();
 		const normalizePath = (value: string) => path.normalize(value).replace(/[\\/]+$/, '').toLowerCase();
@@ -239,7 +239,7 @@ suite('Extension Test Suite', () => {
 		}
 
 		test('copySkill copies to target location and keeps source', async () => {
-			const tmpBase = path.join(os.tmpdir(), `agent-skills-copy-test-${Date.now()}`);
+			const tmpBase = path.join(os.tmpdir(), `agent-organizer-copy-test-${Date.now()}`);
 			const sourceBase = path.join(tmpBase, 'source-skills');
 			const targetBase = path.join(tmpBase, 'target-skills');
 
@@ -291,7 +291,7 @@ suite('Extension Test Suite', () => {
 		});
 
 		test('moveSkill copies to target and deletes source', async () => {
-			const tmpBase = path.join(os.tmpdir(), `agent-skills-move-test-${Date.now()}`);
+			const tmpBase = path.join(os.tmpdir(), `agent-organizer-move-test-${Date.now()}`);
 			const sourceBase = path.join(tmpBase, 'source-skills');
 			const targetBase = path.join(tmpBase, 'target-skills');
 
@@ -350,7 +350,6 @@ suite('Extension Test Suite', () => {
 		const testRepo: SkillRepository = {
 			owner: 'test-owner',
 			repo: 'test-repo',
-			path: 'skills',
 			branch: 'main'
 		};
 
@@ -358,13 +357,15 @@ suite('Extension Test Suite', () => {
 			name: 'test-skill',
 			description: 'A test skill',
 			source: testRepo,
-			skillPath: 'skills/test-skill'
+			skillPath: 'skills/test-skill',
+			area: 'skills'
 		};
 
 		test('addRepoToMarketplace adds skills from the repository', async () => {
 			// Create a mock GitHubSkillsClient that returns a known skill
 			const mockClient = {
-				fetchSkillsFromRepo: async () => [testSkill],
+				discoverAreas: async () => ({ skills: 'skills' }),
+				fetchRepoContent: async () => ({ skills: [testSkill], fileItems: [] }),
 				clearCache: () => {}
 			} as unknown as GitHubSkillsClient;
 
@@ -386,7 +387,6 @@ suite('Extension Test Suite', () => {
 			const otherRepo: SkillRepository = {
 				owner: 'other-owner',
 				repo: 'other-repo',
-				path: 'skills',
 				branch: 'main'
 			};
 
@@ -394,14 +394,16 @@ suite('Extension Test Suite', () => {
 				name: 'other-skill',
 				description: 'Another skill',
 				source: otherRepo,
-				skillPath: 'skills/other-skill'
+				skillPath: 'skills/other-skill',
+				area: 'skills'
 			};
 
 			// Add skills from two repos, then remove one
 			const mockClient = {
-				fetchSkillsFromRepo: async (repo: SkillRepository) => {
-					if (repo.owner === 'test-owner') { return [testSkill]; }
-					return [otherSkill];
+				discoverAreas: async () => ({ skills: 'skills' }),
+				fetchRepoContent: async (_repo: SkillRepository, _areas: Record<string, string>) => {
+					if (_repo.owner === 'test-owner') { return { skills: [testSkill], fileItems: [] }; }
+					return { skills: [otherSkill], fileItems: [] };
 				},
 				clearCache: () => {}
 			} as unknown as GitHubSkillsClient;
@@ -425,7 +427,7 @@ suite('Extension Test Suite', () => {
 
 	suite('Skill File and Folder Operations', () => {
 		test('add and delete a file inside a skill folder', async () => {
-			const tmpBase = path.join(os.tmpdir(), `agent-skills-file-test-${Date.now()}`);
+			const tmpBase = path.join(os.tmpdir(), `agent-organizer-file-test-${Date.now()}`);
 			const skillDir = vscode.Uri.file(path.join(tmpBase, 'my-skill'));
 			await vscode.workspace.fs.createDirectory(skillDir);
 
@@ -447,7 +449,7 @@ suite('Extension Test Suite', () => {
 		});
 
 		test('add and delete a folder inside a skill folder', async () => {
-			const tmpBase = path.join(os.tmpdir(), `agent-skills-folder-test-${Date.now()}`);
+			const tmpBase = path.join(os.tmpdir(), `agent-organizer-folder-test-${Date.now()}`);
 			const skillDir = vscode.Uri.file(path.join(tmpBase, 'my-skill'));
 			await vscode.workspace.fs.createDirectory(skillDir);
 
@@ -474,52 +476,52 @@ suite('Extension Test Suite', () => {
 
 		test('parses bare owner/repo URL', () => {
 			const result = parseGitHubUrl('https://github.com/owner/repo');
-			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined, path: undefined });
+			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined });
 		});
 
 		test('parses owner/repo with trailing slash', () => {
 			const result = parseGitHubUrl('https://github.com/owner/repo/');
-			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined, path: undefined });
+			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined });
 		});
 
 		test('strips .git suffix from repo name', () => {
 			const result = parseGitHubUrl('https://github.com/owner/repo.git');
-			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined, path: undefined });
+			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined });
 		});
 
 		test('parses /tree/branch URL', () => {
 			const result = parseGitHubUrl('https://github.com/owner/repo/tree/main');
-			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: 'main', path: undefined });
+			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: 'main' });
 		});
 
 		test('parses /tree/branch/path URL', () => {
 			const result = parseGitHubUrl('https://github.com/owner/repo/tree/main/skills');
-			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: 'main', path: 'skills' });
+			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: 'main' });
 		});
 
 		test('parses /tree/branch with deep path', () => {
 			const result = parseGitHubUrl('https://github.com/owner/repo/tree/develop/path/to/skills');
-			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: 'develop', path: 'path/to/skills' });
+			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: 'develop' });
 		});
 
 		test('strips query string and fragment', () => {
 			const result = parseGitHubUrl('https://github.com/owner/repo?tab=readme#section');
-			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined, path: undefined });
+			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined });
 		});
 
 		test('handles http:// protocol', () => {
 			const result = parseGitHubUrl('http://github.com/owner/repo');
-			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined, path: undefined });
+			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined });
 		});
 
 		test('handles www. prefix', () => {
 			const result = parseGitHubUrl('https://www.github.com/owner/repo');
-			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined, path: undefined });
+			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined });
 		});
 
 		test('trims whitespace', () => {
 			const result = parseGitHubUrl('  https://github.com/owner/repo  ');
-			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined, path: undefined });
+			assert.deepStrictEqual(result, { owner: 'owner', repo: 'repo', branch: undefined });
 		});
 
 		// --- Invalid URLs ---

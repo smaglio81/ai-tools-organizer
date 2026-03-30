@@ -5,11 +5,11 @@
 
 import * as vscode from 'vscode';
 import MarkdownIt from 'markdown-it';
-import { Skill, buildGitHubUrl } from '../types';
+import { Skill, buildGitHubUrl, AREA_DEFINITIONS } from '../types';
 import { InstalledSkillsTreeDataProvider } from './installedProvider';
 
 export class SkillDetailPanel {
-    public static readonly viewType = 'agentSkills.skillDetail';
+    public static readonly viewType = 'agentOrganizer.skillDetail';
     
     private static panels: Map<string, SkillDetailPanel> = new Map();
     
@@ -18,6 +18,11 @@ export class SkillDetailPanel {
     private readonly _extensionUri: vscode.Uri;
     private readonly _installedProvider: InstalledSkillsTreeDataProvider;
     private _disposables: vscode.Disposable[] = [];
+
+    private get _areaLabel(): string {
+        const area = this._skill.area || 'skills';
+        return AREA_DEFINITIONS[area]?.label || 'Skill';
+    }
 
     private constructor(
         panel: vscode.WebviewPanel,
@@ -46,10 +51,10 @@ export class SkillDetailPanel {
             async (message) => {
                 switch (message.command) {
                     case 'install':
-                        await vscode.commands.executeCommand('agentSkills.install', this._skill);
+                        await vscode.commands.executeCommand('agentOrganizer.install', this._skill);
                         break;
                     case 'uninstall':
-                        await vscode.commands.executeCommand('agentSkills.uninstall', this._skill);
+                        await vscode.commands.executeCommand('agentOrganizer.uninstall', this._skill);
                         break;
                     case 'openExternal':
                         if (message.url) {
@@ -85,7 +90,7 @@ export class SkillDetailPanel {
         // Create a new panel
         const panel = vscode.window.createWebviewPanel(
             SkillDetailPanel.viewType,
-            `Skill: ${skill.name}`,
+            `${(AREA_DEFINITIONS[skill.area || 'skills']?.label || 'Skill')}: ${skill.name}`,
             column || vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -104,7 +109,7 @@ export class SkillDetailPanel {
      * Update the webview content
      */
     private _update(): void {
-        this._panel.title = `Skill: ${this._skill.name}`;
+        this._panel.title = `${this._areaLabel}: ${this._skill.name}`;
         this._panel.webview.html = this._getHtmlForWebview();
     }
 
@@ -123,7 +128,13 @@ export class SkillDetailPanel {
         const isInstalled = this._installedProvider.isSkillInstalled(skill.name);
         
         // Convert markdown body to HTML
-        const bodyHtml = this._markdownToHtml(skill.bodyContent || '');
+        const def = AREA_DEFINITIONS[skill.area];
+        const emptyMessage = def?.definitionFile?.endsWith('.json')
+            ? '<p><em>No README.md found.</em></p>'
+            : '<p><em>No additional details available.</em></p>';
+        const bodyHtml = skill.bodyContent
+            ? this._markdownToHtml(skill.bodyContent)
+            : emptyMessage;
         
         const nonce = this._getNonce();
 
@@ -133,7 +144,7 @@ export class SkillDetailPanel {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';">
-    <title>Skill: ${this._escapeHtml(skill.name)}</title>
+    <title>${this._escapeHtml(this._areaLabel)}: ${this._escapeHtml(skill.name)}</title>
     <style>
         ${this._getStyles()}
     </style>
@@ -158,7 +169,7 @@ export class SkillDetailPanel {
                             <span class="icon">🗑️</span> Uninstall
                         </button>`
                         : `<button class="btn primary" id="installBtn">
-                            <span class="icon">⬇️</span> Install
+                            <span class="icon">⬇️</span> Download
                         </button>`
                     }
                     <button class="btn secondary" id="sourceBtn">
@@ -177,7 +188,8 @@ export class SkillDetailPanel {
         
         <div class="tabs">
             <button class="tab active" data-tab="readme">README</button>
-            <button class="tab" data-tab="raw">Raw SKILL.md</button>
+            <button class="tab" data-tab="raw">Raw Source</button>
+            ${skill.definitionContent ? `<button class="tab" data-tab="definition">${this._escapeHtml(AREA_DEFINITIONS[skill.area]?.definitionFile || 'Definition')}</button>` : ''}
         </div>
         
         <div id="readme" class="tab-content active">
@@ -189,6 +201,10 @@ export class SkillDetailPanel {
         <div id="raw" class="tab-content">
             <pre class="raw-content"><code>${this._escapeHtml(skill.fullContent || '')}</code></pre>
         </div>
+        
+        ${skill.definitionContent ? `<div id="definition" class="tab-content">
+            <pre class="raw-content"><code>${this._escapeHtml(skill.definitionContent)}</code></pre>
+        </div>` : ''}
     </div>
     
     <script nonce="${nonce}">

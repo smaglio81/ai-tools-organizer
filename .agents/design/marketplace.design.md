@@ -2,196 +2,192 @@
 
 ## Purpose
 
-The Marketplace view (`agentSkills.marketplace`) lets users browse skills available from configured GitHub repositories, search them by name or description, view their details, and install them into the local workspace or user home directory.
+The Marketplace view (`agentOrganizer.marketplace`) lets users browse content from configured GitHub repositories across multiple content areas (agents, hooks, instructions, plugins, prompts, skills), search by name or description, view details, and download items.
+
+---
+
+## Content Areas
+
+The extension recognizes 8 content areas, each with its own detection pattern and icon:
+
+| Area | Kind | Detection | Definition File / Suffix | Icon |
+|---|---|---|---|---|
+| Agents | singleFile | `*.agent.md` | `.agent.md` | Teal robot |
+| Hooks - GitHub | multiFile | Folders with `hooks.json` in `hooks/` | `hooks.json` | Amber hook |
+| Hooks - Kiro | singleFile | `*.json` in `hooks/` | `.json` | Amber hook |
+| Instructions | singleFile | `*.instructions.md` | `.instructions.md` | Slate clipboard |
+| Plugins | multiFile | Folders with `plugin.json` | `plugin.json` (JSON) | Cyan plug |
+| Prompts / Commands | singleFile | `*.prompt.md` | `.prompt.md` | Pink chat bubble |
+| Skills | multiFile | Folders with `SKILL.md` | `SKILL.md` | Purple star-document |
+
+Hooks - GitHub and Hooks - Kiro are mutually exclusive per repository: if GitHub-style hooks are found, Kiro-style discovery is skipped.
 
 ---
 
 ## Tree Structure
 
-Skills are grouped by their source repository and displayed in a two-level collapsible tree:
+Content is displayed in a multi-level tree: repositories → area groups → items.
 
 ```
-anthropics/skills                 ← SourceTreeItem (github icon, starts collapsed)
-├── code-review                   ← SkillTreeItem (extensions or check icon)
-└── test-generator
-github/awesome-copilot
-└── pr-summary
-broken-owner/missing-repo          ← FailedSourceTreeItem (warning icon)
-loading-owner/new-repo             ← LoadingSourceTreeItem (spinning icon)
+github/awesome-copilot            ← SourceTreeItem (github icon, collapsed)
+├── Agents 183                    ← AreaGroupTreeItem (teal, collapsed)
+│   ├── subfolder                 ← AreaFolderTreeItem
+│   │   └── my-agent             ← AreaFileTreeItem
+│   └── other-agent              ← AreaFileTreeItem
+├── Hooks - GitHub 6              ← SkillsGroupTreeItem (amber, collapsed)
+│   └── dependency-checker        ← SkillTreeItem
+├── Instructions 174              ← AreaGroupTreeItem (slate, collapsed)
+├── Plugins 54                    ← SkillsGroupTreeItem (cyan, collapsed)
+│   └── polyglot-test-agent       ← SkillTreeItem
+└── Skills 254                    ← SkillsGroupTreeItem (purple, collapsed)
+    └── automate-this             ← SkillTreeItem
 ```
 
-### SourceTreeItem
+### Node Types
 
-- Label: `owner/repo` (e.g., `anthropics/skills`)
-- Description: `N skill(s)`
-- Icon: github
-- Collapsible: yes — **starts collapsed by default**
-- `contextValue`: `source`
-
-### SkillTreeItem
-
-- Label: skill name
-- Description: skill description (truncated to 60 characters)
-- Icon: green `check` if the skill is installed, `extensions` otherwise
-- Collapsible: none (leaf node)
-- Tooltip (markdown): name, full description, license (if present), source repo
-- `contextValue`: `skill`
-- Click action: opens the Skill Detail panel (`agentSkills.viewDetails`)
-
-### LoadingSourceTreeItem
-
-- Label: `owner/repo:path@branch` (path and branch included when present, via `repoLabel()` helper)
-- Description: `Loading...`
-- Icon: spinning loading icon
-- Collapsible: none (leaf node)
-- `contextValue`: `sourceLoading`
-
-### FailedSourceTreeItem
-
-- Label: `owner/repo:path@branch` (path and branch included when present, via `repoLabel()` helper)
-- Description: `Failed to load`
-- Icon: warning (yellow theme color)
-- Collapsible: none (leaf node)
-- Tooltip: markdown message with the exact repository load error
-- `contextValue`: `failedSource`
+| Node | Description | Context Value |
+|---|---|---|
+| `SourceTreeItem` | Repository root. Label: `owner/repo`. Icon: github. Description: total item count. | `source` |
+| `SkillsGroupTreeItem` | Area group for multi-file items. Shows area label and count. Uses area-colored icon. | `skillsGroup` |
+| `AreaGroupTreeItem` | Area group for single-file items. Shows area label and count. Uses area-colored icon. | `areaGroup` |
+| `SkillTreeItem` | Individual multi-file item (skill, plugin, power, hook). Click opens detail panel. | `skill` |
+| `AreaFileTreeItem` | Individual single-file item (agent, instruction, prompt). Click opens detail panel. | `areaFile` |
+| `AreaFolderTreeItem` | Subfolder within a single-file area. | `areaFolder` |
+| `FailedSourceTreeItem` | Repository that failed to load. Warning icon with error tooltip. | `failedSource` |
+| `LoadingSourceTreeItem` | Repository currently loading. Spinning icon. | `sourceLoading` |
 
 ---
 
 ## Data Sources
 
-Skill repositories are configured via `agentSkills.skillRepositories`. Each entry specifies:
+Repositories are configured via `agentOrganizer.skillRepositories`. Each entry specifies:
 
 | Field | Description |
 |---|---|
 | `owner` | GitHub organization or user |
 | `repo` | Repository name |
-| `path` | Path within the repo where skills are stored |
 | `branch` | Branch to read from (default: `main`) |
-| `singleSkill` | If `true`, `path` points directly to a single skill folder rather than a directory of skills |
 
-Default repositories include skills from `anthropics`, `github/awesome-copilot`, `pytorch`, `openai`, and `microsoftdocs`.
+Entries are rendered inline in the VS Code Settings UI with editable fields. The config supports both object format (`{ owner, repo, branch }`) and compact string format (`owner/repo@branch`). All read/write operations go through `readRepositoriesConfig()` / `writeRepositoriesConfig()` in `types.ts`.
 
-Repository entries are normalized via `normalizeRepository()` when read from config: `branch` defaults to `'main'` if omitted and `path` is trimmed. This ensures consistent behavior whether repositories are added via the Add Repository command or manually edited in `settings.json`.
+Area paths are discovered automatically on every load/refresh — they are not stored in config.
+
+---
+
+## Area Discovery
+
+On load/refresh, each repository's tree is scanned via the Git Trees API (1 API call, cached).
+
+**Step 1 — Conventional names:** Check for top-level directories matching area names (`agents/`, `hooks/`, `instructions/`, `plugins/`, `prompts/`, `skills/`). Verify each contains matching content before registering.
+
+**Step 2 — Fallback search:** For areas not found in step 1 (excluding `conventionalOnly` areas like hooks), search the full tree for matching files, excluding paths under already-discovered areas.
+
+**Exclusion logic:** When fetching content for an area, files under other areas' paths are excluded. Areas sharing the same directory (e.g., Hooks - GitHub and Hooks - Kiro both use `hooks/`) do not exclude each other.
 
 ---
 
 ## GitHub API Strategy
 
-Skills are fetched using the **Git Trees API** (one API call per repository), then `SKILL.md` files are read via `raw.githubusercontent.com` (no rate limit applies). This minimizes GitHub API usage regardless of how many skills a repository contains.
+Content is fetched using the Git Trees API (1 call per repo, recursive) + `raw.githubusercontent.com` for file content (no rate limit). Definition files (`SKILL.md`, `POWER.md`, `plugin.json`, `README.md`) are fetched via raw URLs to extract names and descriptions. `plugin.json` files are parsed as JSON; all others use YAML frontmatter parsing.
 
-Results are cached in memory per `agentSkills.cacheTimeout` seconds. An optional `agentSkills.githubToken` can be configured for higher rate limits.
+Results are cached in memory per `agentOrganizer.cacheTimeout` seconds.
 
 ---
 
 ## Toolbar Actions
 
-All actions appear in the `agentSkills.marketplace` view title bar.
-
 | Button | Command | Description |
 |---|---|---|
-| Add Repository (add icon) | `agentSkills.addRepository` | Prompts for a GitHub URL and adds a new entry to `agentSkills.skillRepositories`. |
-| Search (search icon) | `agentSkills.search` | Opens an input box; filters displayed skills by name or description (case-insensitive). |
-| Clear Search (close icon) | `agentSkills.clearSearch` | Clears the active search filter. Only shown when a search is active (`agentSkills:searchActive` context key). |
-| Refresh (refresh icon) | `agentSkills.refresh` | Clears the cache and re-fetches all skills from GitHub. Also syncs installed skill indicators. |
-| Collapse All | Built-in VS Code | Collapses all source groups. Provided automatically via `showCollapseAll: true` on the TreeView. |
+| Add Repository (add icon) | `agentOrganizer.addRepository` | Prompts for a GitHub URL and adds a new entry to `agentOrganizer.skillRepositories`. |
+| Search (search icon) | `agentOrganizer.search` | Opens an input box; filters displayed items by name or description (case-insensitive). |
+| Clear Search (close icon) | `agentOrganizer.clearSearch` | Clears the active search filter. Only shown when a search is active. |
+| Refresh (refresh icon) | `agentOrganizer.refresh` | Clears the cache and re-fetches all content from GitHub. |
+| Collapse All | Built-in VS Code | Collapses all groups. |
 
 ---
 
 ## Item Context Menu / Inline Actions
 
-### SkillTreeItem Inline Buttons
+### SkillTreeItem (multi-file items)
 
-| Button | Command | Description |
-|---|---|---|
-| Install (cloud-download icon) | `agentSkills.install` | Downloads and writes the skill's files to the directory defined by `agentSkills.installLocation`. Shows a progress notification. Prompts before overwriting an existing install. |
-| View Details (info icon) | `agentSkills.viewDetails` | Opens the Skill Detail webview panel in the editor area, showing full `SKILL.md` content rendered as markdown. |
+| Action | Type | Command | Description |
+|---|---|---|---|
+| Download | inline + menu | `agentOrganizer.install` | Downloads the item to the configured install location. |
+| View Details | inline | `agentOrganizer.viewDetails` | Opens the detail webview panel. |
+| Open in Browser | menu | `agentOrganizer.openInBrowser` | Opens the item's GitHub folder. |
 
-### SkillTreeItem Right-Click Context Menu
+### AreaFileTreeItem (single-file items)
 
-| Menu Item | Command | Description |
-|---|---|---|
-| Install | `agentSkills.install` | Same as the inline Install button. |
+| Action | Type | Command | Description |
+|---|---|---|---|
+| Download | inline + menu | `agentOrganizer.install` | Fetches the file from GitHub and writes it to the area's default download location. |
+| View Details | inline + click | `agentOrganizer.viewFileDetails` | Fetches file content and opens the detail panel. |
+| Open in Browser | menu | `agentOrganizer.openInBrowser` | Opens the file on GitHub (blob URL). |
 
-### SourceTreeItem / FailedSourceTreeItem Inline Buttons
+### SkillsGroupTreeItem / AreaGroupTreeItem (area groups)
 
-| Button | Command | Description |
-|---|---|---|
-| Delete (trash icon) | `agentSkills.removeRepository` | Removes a source entry from `agentSkills.skillRepositories` immediately (no confirmation prompt). |
+| Action | Type | Command | Description |
+|---|---|---|---|
+| Open in Browser | menu | `agentOrganizer.openInBrowser` | Opens the area's directory on GitHub. |
 
-### SourceTreeItem / FailedSourceTreeItem Right-Click Context Menu
+### SourceTreeItem / FailedSourceTreeItem (repositories)
 
-| Menu Item | Command | Description |
-|---|---|---|
-| Open in Browser | `agentSkills.openInBrowser` | Opens the repository on GitHub in the system default browser. Appears first in the menu (group `0_open@1`). |
-| Delete | `agentSkills.removeRepository` | Removes a source entry from `agentSkills.skillRepositories` immediately (no confirmation prompt). |
+| Action | Type | Command | Description |
+|---|---|---|---|
+| Delete | inline | `agentOrganizer.removeRepository` | Removes the repository from config. |
+| Open in Browser | menu | `agentOrganizer.openInBrowser` | Opens the repository on GitHub. |
 
 ---
 
 ## Add Repository Flow
 
-`agentSkills.addRepository` workflow:
-
 1. Prompt user for a GitHub URL.
-2. Parse URL into `{ owner, repo, branch?, path? }`.
-3. If branch is missing, fetch repository default branch from GitHub API.
-4. If path is missing, prompt user for path (default: `skills`). Input is validated as non-empty and normalized (trimmed, leading/trailing slashes stripped).
-5. If path was extracted from the URL, it is also normalized (trimmed, leading/trailing slashes stripped).
-6. Build and append a `SkillRepository` entry to `agentSkills.skillRepositories` (global config).
-7. Incrementally fetch only that repository and append its node/skills into the Marketplace tree.
-
-If the repository load fails, a `FailedSourceTreeItem` is inserted instead of dropping the entry.
+2. Parse URL into `{ owner, repo, branch? }`.
+3. If branch is missing, fetch default branch from GitHub API.
+4. Save `{ owner, repo, branch }` to `agentOrganizer.skillRepositories`.
+5. Area discovery and content fetching happen automatically on load.
 
 ---
 
-## Search Behavior
+## Detail Panel
 
-- Filtering is applied to `name` and `description` fields (case-insensitive substring match).
-- Source groups containing no matching skills are hidden entirely.
-- When no results match, a "No results for '…'" placeholder is shown.
-- The `agentSkills:searchActive` VS Code context key is set to `true` when a query is active, enabling the Clear Search button.
-- Failed repository entries are hidden while search is active.
-- Loading repository entries are hidden while search is active.
+Clicking a multi-file item (skill, plugin, hook) or single-file item (agent, instruction, prompt) opens a `SkillDetailPanel` webview. The panel title reflects the area type (e.g., "Hooks - GitHub: Dependency License Checker").
 
----
-
-## Ordering
-
-- Repository groups are sorted alphabetically by `owner/repo`.
-- Skills within each repository group are sorted alphabetically by skill name.
-- Failed and loading repository rows are also sorted alphabetically by `owner/repo`.
+- For markdown-based areas (Skills, single-file areas): the README tab shows the rendered markdown body; Raw Source shows the full file content.
+- For JSON-based multi-file areas (Hooks - GitHub, Plugins): the panel fetches `README.md` from the item's folder (also checks the item root if the definition file is nested). The README tab shows the rendered README markdown; Raw Source shows the raw README content. A third tab shows the raw definition file (e.g. `plugin.json`, `hooks.json`). Name and description are taken from the JSON definition file, with README frontmatter as fallback.
+- When no README.md is found for JSON-based areas, the README tab shows "No README.md found." instead of the generic "No additional details available."
+- For single-file items, the file content is fetched on demand via `agentOrganizer.viewFileDetails`.
 
 ---
 
-## Incremental Updates
+## Icons
 
-- `agentSkills.addRepository`: updates config, then fetches and inserts only the new repository entry.
-- `agentSkills.removeRepository`: updates config, then removes only the matching repository node and related skill/failure items from the tree.
-- Full refresh is still used for manual/external edits to `agentSkills.skillRepositories` and for explicit `agentSkills.refresh`.
+Each area has a unique icon design in its own color for group nodes and view titles:
 
----
+| Area | Icon | Color |
+|---|---|---|
+| Agents | Robot | Teal |
+| Hooks | Hook/branch | Amber |
+| Instructions | Clipboard | Slate |
+| Plugins | Plug | Cyan |
+| Prompts / Commands | Chat bubble | Pink |
+| Skills | 3D Package/box | Purple |
 
-## Installed Skill Indicators
+Individual items use the same icon shape in 4 status colors:
+- Area color (default) — unique item
+- Green — newest duplicate
+- Orange — older duplicate
+- Blue — identical copies
 
-The Marketplace is kept in sync with the Installed view. After any install, uninstall, or refresh of the Installed view, the set of installed skill names is pushed to the Marketplace provider. Skills whose name matches an installed skill display a checkmark icon instead of the default extensions icon.
-
----
-
-## Reveal from Installed View
-
-The Installed view's "Show in Marketplace" command calls `revealSkillByName()` on the Marketplace provider. This clears any active search, refreshes the tree, expands the parent source group, then selects and focuses the matching `SkillTreeItem` so it is highlighted. The provider implements `getParent()` and caches source/skill tree items to support `TreeView.reveal()`. Cache keys include the full repository identity (`owner/repo/path@branch/skillPath`) to avoid collisions when the same repo is configured with different branches or paths. Caches (`cachedSourceItems`, `cachedSkillItems`) are cleared at the start of every root-level `getChildren()` call and during `loadRepositoriesProgressively()` to prevent stale entries.
-
----
-
-## Loading and Empty States
-
-| State | Display |
-|---|---|
-| Loading | One `LoadingSourceTreeItem` per configured repository; each row resolves independently to loaded source or failed source |
-| No skills and no repositories configured | "No skills available — Click refresh to load skills" |
-| Search active, no matches | `No results for "<query>"` |
+Areas sharing the same icon (Hooks - GitHub and Hooks - Kiro) use the `iconPrefix` override.
 
 ---
 
-## Skill Detail Panel
+## Installed Status Indicators
 
-Clicking a skill (or the View Details inline button) opens a `SkillDetailPanel` webview. The panel renders the full `SKILL.md` body content as markdown inside a VS Code webview. Install and Uninstall actions are available from within the panel.
+Items that exist locally (downloaded or manually placed) display a green check icon (`testing.iconPassed` theme color) instead of their default area icon. This applies to all content areas:
+
+- `SkillTreeItem` (multi-file items): checks against both `installedSkillNames` and `installedItemNames`.
+- `AreaFileTreeItem` (single-file items): checks against `installedItemNames`.
+
+The installed name sets are updated via `setInstalledSkills()` (skills only) and `setInstalledItemNames()` (all areas combined). Both are called from `syncInstalledStatus()` after every install, uninstall, move, copy, or delete operation.

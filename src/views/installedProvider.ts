@@ -6,11 +6,12 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { InstalledSkill, SkillMetadata, normalizeSeparators } from '../types';
 import { SkillPathService } from '../services/skillPathService';
+import { DuplicateStatus, collectFileInfos, compareFiles, computeAllDuplicateStatuses, createLocationWatchers, FileInfo } from '../services/duplicateService';
 
 type TreeNode = LocationTreeItem | InstalledSkillTreeItem | SkillFolderTreeItem | SkillFileTreeItem;
 
 /** Duplicate status for a skill relative to other copies with the same name */
-export type SkillDuplicateStatus = 'unique' | 'newest' | 'older' | 'same';
+export type SkillDuplicateStatus = DuplicateStatus;
 
 let folderIconUri: vscode.Uri | undefined;
 // Icon URIs keyed by duplicate status
@@ -114,22 +115,8 @@ export class SkillFileTreeItem extends vscode.TreeItem {
     }
 }
 
-/** File info collected for duplicate comparison */
-interface FileInfo {
-    relativePath: string;
-    mtime: number;
-    /** Text content for text-based files; undefined for binary files */
-    content?: string;
-}
-
-/** Extensions considered text-based for content comparison */
-const TEXT_EXTENSIONS = new Set([
-    '.md', '.txt', '.json', '.yaml', '.yml', '.toml', '.xml', '.html', '.htm',
-    '.css', '.scss', '.less', '.js', '.ts', '.jsx', '.tsx', '.py', '.rb', '.rs',
-    '.go', '.java', '.c', '.cpp', '.h', '.hpp', '.cs', '.sh', '.bash', '.zsh',
-    '.ps1', '.psm1', '.psd1', '.bat', '.cmd', '.cfg', '.ini', '.conf', '.env',
-    '.gitignore', '.editorconfig', '.prettierrc', '.eslintrc', '.svg', '.csv',
-]);
+/** File info collected for duplicate comparison — re-exported from shared service */
+export type { FileInfo } from '../services/duplicateService';
 
 export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<TreeNode>, vscode.Disposable {
     private _onDidChangeTreeData = new vscode.EventEmitter<TreeNode | undefined | null | void>();
@@ -140,7 +127,7 @@ export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<
     private duplicateStatusMap: Map<string, SkillDuplicateStatus> = new Map();
     private readonly pathService: SkillPathService;
     private collapsedLocations: Set<string>;
-    private readonly COLLAPSED_STATE_KEY = 'agentSkills.collapsedLocations';
+    private readonly COLLAPSED_STATE_KEY = 'agentOrganizer.collapsedLocations';
     private treeView?: vscode.TreeView<TreeNode>;
     private locationItems: Map<string, LocationTreeItem> = new Map();
     /** Active file watchers for duplicate status; disposed and recreated on refresh */
@@ -168,7 +155,7 @@ export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<
             this.initialLoading = false;
             // Signal that the initial scan is done so the welcome message switches
             // from "Loading ..." to "No skills installed yet"
-            vscode.commands.executeCommand('setContext', 'agentSkills:initialScanComplete', true);
+            vscode.commands.executeCommand('setContext', 'agentOrganizer:initialScanComplete', true);
             await this.computeDuplicateStatuses();
             this._onDidChangeTreeData.fire();
         });
@@ -297,7 +284,7 @@ export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<
      * Update the context key for search active state
      */
     private updateSearchContext(): void {
-        vscode.commands.executeCommand('setContext', 'agentSkills:installedSearchActive', this.searchQuery.length > 0);
+        vscode.commands.executeCommand('setContext', 'agentOrganizer:installedSearchActive', this.searchQuery.length > 0);
     }
 
     /**
@@ -336,194 +323,28 @@ export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<
     }
 
     /**
-     * Collect all file modification times for a skill directory recursively.
-     * Returns files sorted with SKILL.md first, then alphabetically by relative path.
+     * Collect all file info for a skill directory (delegates to shared service).
      */
     private async collectFileInfos(skillUri: vscode.Uri): Promise<FileInfo[]> {
-        const fs = this.pathService.getFileSystem();
-        const results: FileInfo[] = [];
-
-        const walk = async (dir: vscode.Uri, prefix: string) => {
-            try {
-                const entries = await fs.readDirectory(dir);
-                for (const [name, type] of entries) {
-                    const childUri = vscode.Uri.joinPath(dir, name);
-                    const relativePath = prefix ? `${prefix}/${name}` : name;
-                    if ((type & vscode.FileType.Directory) !== 0) {
-                        await walk(childUri, relativePath);
-                    } else {
-                        const stat = await fs.stat(childUri);
-                        const info: FileInfo = { relativePath, mtime: stat.mtime };
-
-                        // Read content for text-based files
-                        const ext = name.includes('.') ? name.substring(name.lastIndexOf('.')).toLowerCase() : '';
-                        if (TEXT_EXTENSIONS.has(ext) || name.startsWith('.')) {
-                            try {
-                                const bytes = await fs.readFile(childUri);
-                                info.content = new TextDecoder().decode(bytes);
-                            } catch {
-                                // couldn't read, fall back to mtime only
-                            }
-                        }
-
-                        results.push(info);
-                    }
-                }
-            } catch {
-                // skip unreadable dirs
-            }
-        };
-
-        await walk(skillUri, '');
-
-        // Sort: SKILL.md first, then alphabetically
-        results.sort((a, b) => {
-            if (a.relativePath === 'SKILL.md') { return -1; }
-            if (b.relativePath === 'SKILL.md') { return 1; }
-            return a.relativePath.localeCompare(b.relativePath);
-        });
-
-        return results;
+        return collectFileInfos(skillUri, this.pathService.getFileSystem(), 'SKILL.md');
     }
 
     /**
-     * Compare two skill copies by file content and modification dates.
-     * Returns: 1 if skillA is newer, -1 if skillB is newer, 0 if same.
-     *
-     * Comparison order per shared file:
-     *  1. If both have text content and it matches, the file is equivalent (skip date check)
-     *  2. Otherwise compare by mtime
-     *  3. If all shared files are equivalent, the copy with extra files is newer
+     * Compare two skill copies by file content and modification dates (delegates to shared service).
      */
     private compareSkillFiles(filesA: FileInfo[], filesB: FileInfo[]): number {
-        const mapA = new Map(filesA.map(f => [f.relativePath, f]));
-        const mapB = new Map(filesB.map(f => [f.relativePath, f]));
-
-        // Build union of paths in sorted order (SKILL.md first)
-        const allPaths = new Set<string>();
-        for (const f of filesA) { allPaths.add(f.relativePath); }
-        for (const f of filesB) { allPaths.add(f.relativePath); }
-        const sorted = [...allPaths].sort((a, b) => {
-            if (a === 'SKILL.md') { return -1; }
-            if (b === 'SKILL.md') { return 1; }
-            return a.localeCompare(b);
-        });
-
-        // Track files unique to each side
-        let extraA = 0;
-        let extraB = 0;
-
-        for (const p of sorted) {
-            const fileA = mapA.get(p);
-            const fileB = mapB.get(p);
-
-            if (fileA && fileB) {
-                // If both have text content and it's identical, skip this file
-                if (fileA.content !== undefined && fileB.content !== undefined
-                    && fileA.content === fileB.content) {
-                    continue;
-                }
-                // Fall back to mtime comparison
-                if (fileA.mtime > fileB.mtime) { return 1; }
-                if (fileA.mtime < fileB.mtime) { return -1; }
-            } else if (fileA && !fileB) {
-                // File exists only in A — A has extra content
-                extraA++;
-            } else {
-                // File exists only in B — B has extra content
-                extraB++;
-            }
-        }
-
-        // All shared files are equivalent — use extra-file counts as tie-break
-        if (extraA > extraB) { return 1; }
-        if (extraA < extraB) { return -1; }
-
-        // Same shared content and same extra count but different file sets
-        // means the copies aren't truly identical — use path-set comparison
-        // as a deterministic tie-break so they aren't misclassified as "same"
-        if (extraA > 0 || extraB > 0) {
-            const pathsA = [...mapA.keys()].sort().join('\0');
-            const pathsB = [...mapB.keys()].sort().join('\0');
-            const cmp = pathsA.localeCompare(pathsB);
-            if (cmp !== 0) { return cmp > 0 ? 1 : -1; }
-        }
-
-        return 0;
+        return compareFiles(filesA, filesB);
     }
 
     /**
-     * Compute duplicate status for every installed skill.
-     * Groups skills by name; for groups with >1 member, compares file dates.
+     * Compute duplicate status for every installed skill (delegates to shared service).
      */
     private async computeDuplicateStatuses(): Promise<void> {
-        this.duplicateStatusMap.clear();
-
-        // Group by skill name
-        const byName = new Map<string, InstalledSkill[]>();
-        for (const skill of this.installedSkills) {
-            const list = byName.get(skill.name) || [];
-            list.push(skill);
-            byName.set(skill.name, list);
-        }
-
-        for (const [, skills] of byName) {
-            if (skills.length === 1) {
-                // Only one copy — unique (purple)
-                this.duplicateStatusMap.set(skills[0].location, 'unique');
-                continue;
-            }
-
-            // Collect file infos for each copy
-            const fileInfos: { skill: InstalledSkill; files: FileInfo[] }[] = [];
-            for (const skill of skills) {
-                const uri = this.resolveSkillUri(skill);
-                if (uri) {
-                    fileInfos.push({ skill, files: await this.collectFileInfos(uri) });
-                }
-            }
-
-            if (fileInfos.length < 2) {
-                // Couldn't resolve enough copies, mark all unique
-                for (const skill of skills) {
-                    this.duplicateStatusMap.set(skill.location, 'unique');
-                }
-                continue;
-            }
-
-            // Pairwise compare to find the newest copy
-            // First check if all copies are the same
-            let allSame = true;
-            for (let i = 1; i < fileInfos.length; i++) {
-                if (this.compareSkillFiles(fileInfos[0].files, fileInfos[i].files) !== 0) {
-                    allSame = false;
-                    break;
-                }
-            }
-
-            if (allSame) {
-                // All copies identical — blue
-                for (const { skill } of fileInfos) {
-                    this.duplicateStatusMap.set(skill.location, 'same');
-                }
-            } else {
-                // Find the newest: compare each pair, track wins
-                let newestIdx = 0;
-                for (let i = 1; i < fileInfos.length; i++) {
-                    if (this.compareSkillFiles(fileInfos[i].files, fileInfos[newestIdx].files) > 0) {
-                        newestIdx = i;
-                    }
-                }
-
-                for (let i = 0; i < fileInfos.length; i++) {
-                    if (i === newestIdx) {
-                        this.duplicateStatusMap.set(fileInfos[i].skill.location, 'newest');
-                    } else {
-                        this.duplicateStatusMap.set(fileInfos[i].skill.location, 'older');
-                    }
-                }
-            }
-        }
+        this.duplicateStatusMap = await computeAllDuplicateStatuses(
+            this.installedSkills,
+            (skill) => this.resolveSkillUri(skill),
+            (uri) => this.collectFileInfos(uri)
+        );
     }
 
     /**
@@ -544,7 +365,6 @@ export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<
     async refreshDuplicateStatusForSkillName(skillName: string): Promise<void> {
         const matching = this.installedSkills.filter(s => s.name === skillName);
         if (matching.length <= 1) {
-            // Single or no copy — mark unique, refresh tree
             for (const skill of matching) {
                 this.duplicateStatusMap.set(skill.location, 'unique');
             }
@@ -552,49 +372,14 @@ export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<
             return;
         }
 
-        // Collect file infos for each copy
-        const fileInfos: { skill: InstalledSkill; files: FileInfo[] }[] = [];
-        for (const skill of matching) {
-            const uri = this.resolveSkillUri(skill);
-            if (uri) {
-                fileInfos.push({ skill, files: await this.collectFileInfos(uri) });
-            }
-        }
-
-        if (fileInfos.length < 2) {
-            for (const skill of matching) {
-                this.duplicateStatusMap.set(skill.location, 'unique');
-            }
-            this._onDidChangeTreeData.fire();
-            return;
-        }
-
-        // Check if all copies are the same
-        let allSame = true;
-        for (let i = 1; i < fileInfos.length; i++) {
-            if (this.compareSkillFiles(fileInfos[0].files, fileInfos[i].files) !== 0) {
-                allSame = false;
-                break;
-            }
-        }
-
-        if (allSame) {
-            for (const { skill } of fileInfos) {
-                this.duplicateStatusMap.set(skill.location, 'same');
-            }
-        } else {
-            let newestIdx = 0;
-            for (let i = 1; i < fileInfos.length; i++) {
-                if (this.compareSkillFiles(fileInfos[i].files, fileInfos[newestIdx].files) > 0) {
-                    newestIdx = i;
-                }
-            }
-            for (let i = 0; i < fileInfos.length; i++) {
-                this.duplicateStatusMap.set(
-                    fileInfos[i].skill.location,
-                    i === newestIdx ? 'newest' : 'older'
-                );
-            }
+        // Use the shared service for the subset
+        const subMap = await computeAllDuplicateStatuses(
+            matching,
+            (skill) => this.resolveSkillUri(skill),
+            (uri) => this.collectFileInfos(uri)
+        );
+        for (const [loc, status] of subMap) {
+            this.duplicateStatusMap.set(loc, status);
         }
 
         this._onDidChangeTreeData.fire();
@@ -622,38 +407,14 @@ export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<
     }
 
     /**
-     * Create file system watchers for all scan locations.
-     * Watchers are tracked internally via activeWatchers and disposed
-     * by recreateFileWatchers() on refresh or dispose() on deactivation.
+     * Create file system watchers for all scan locations (delegates to shared service).
      */
     createFileWatchers(): void {
-        const watchers: vscode.Disposable[] = [];
         const locations = this.pathService.getScanLocations();
-
-        for (const location of locations) {
-            if (this.pathService.isHomeLocation(location)) {
-                // Home directory locations: watch using absolute path URI
-                const uri = this.pathService.resolveLocationToUri(location);
-                if (uri) {
-                    const pattern = new vscode.RelativePattern(uri, '**/*');
-                    const watcher = vscode.workspace.createFileSystemWatcher(pattern);
-                    watcher.onDidChange(fileUri => this.onSkillFileChanged(fileUri));
-                    watcher.onDidCreate(fileUri => this.onSkillFileChanged(fileUri));
-                    watcher.onDidDelete(fileUri => this.onSkillFileChanged(fileUri));
-                    watchers.push(watcher);
-                }
-            } else {
-                // Workspace-relative locations: normalize backslashes for glob compatibility
-                const normalizedLoc = normalizeSeparators(location);
-                const watcher = vscode.workspace.createFileSystemWatcher(`**/${normalizedLoc}/**/*`);
-                watcher.onDidChange(fileUri => this.onSkillFileChanged(fileUri));
-                watcher.onDidCreate(fileUri => this.onSkillFileChanged(fileUri));
-                watcher.onDidDelete(fileUri => this.onSkillFileChanged(fileUri));
-                watchers.push(watcher);
-            }
-        }
-
-        this.activeWatchers = watchers;
+        this.activeWatchers = createLocationWatchers(
+            locations, this.pathService, '**/*',
+            (fileUri) => this.onSkillFileChanged(fileUri)
+        );
     }
 
     /**

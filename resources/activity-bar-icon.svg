@@ -1,0 +1,8 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Book 1 (left, leaning right to form left side of A) -->
+  <rect x="1.5" y="4" width="4" height="16" rx="0.5" stroke="currentColor" stroke-width="1.5" fill="none" transform="rotate(12 3.5 20)"/>
+  <!-- Book 2 (right side of A, leaning left, tops just touching) -->
+  <rect x="12" y="4" width="4" height="16" rx="0.5" stroke="currentColor" stroke-width="1.5" fill="none" transform="rotate(-12 14 20)"/>
+  <!-- Book 3 (straight up, barely touching Book 2's lower right) -->
+  <rect x="17.5" y="4" width="4" height="16" rx="0.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+</svg>

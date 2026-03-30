@@ -1,0 +1,8 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Top layer - lighter blue -->
+  <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="#60A5FA33"/>
+  <!-- Bottom layer - deepest blue -->
+  <path d="M2 17L12 22L22 17" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Middle layer -->
+  <path d="M2 12L12 17L22 12" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

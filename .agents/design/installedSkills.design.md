@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Installed Skills view (`agentSkills.installed`) shows all skills currently installed on the machine — both in workspace-relative folders and in user home directory folders. It is the primary interface for managing locally installed skills.
+The Installed Skills view (`agentOrganizer.skills`) shows all skills currently installed on the machine — both in workspace-relative folders and in user home directory folders. It is the primary interface for managing locally installed skills.
 
 ---
 
@@ -63,16 +63,16 @@ Each location is scanned for immediate subdirectories. A subdirectory is conside
 
 ## Toolbar Actions
 
-All actions appear in the `agentSkills.installed` view title bar.
+All actions appear in the `agentOrganizer.skills` view title bar.
 
 | Button | Command | Description |
 |---|---|---|
-| Search (search icon) | `agentSkills.searchInstalled` | Opens an input box; filters displayed skills by name or description (case-insensitive). |
-| Clear Search (close icon) | `agentSkills.clearSearchInstalled` | Clears the active search filter. Only shown when a search is active (`agentSkills:installedSearchActive` context key). |
-| Refresh | `agentSkills.refreshInstalled` | Re-scans all skill locations and refreshes the tree. Also syncs installed skill names back to the Marketplace view. |
-| Install Location (folder icon) | `agentSkills.selectInstallLocation` | Opens a QuickPick to change `agentSkills.installLocation`. Selecting "Custom..." opens `settings.json` with the cursor on the setting. |
-| Expand All | `agentSkills.expandAll` | Expands all location groups. Uses `TreeView.reveal()` (requires `getParent()` implementation). |
-| Collapse All | `agentSkills.collapseAll` | Collapses all location groups. Delegates to the built-in `workbench.actions.treeView.agentSkills.installed.collapseAll` command. |
+| Search (search icon) | `agentOrganizer.searchInstalled` | Opens an input box; filters displayed skills by name or description (case-insensitive). |
+| Clear Search (close icon) | `agentOrganizer.clearSearchInstalled` | Clears the active search filter. Only shown when a search is active (`agentOrganizer:installedSearchActive` context key). |
+| Refresh | `agentOrganizer.refreshInstalled` | Re-scans all skill locations and refreshes the tree. Also syncs installed skill names back to the Marketplace view. |
+| Default Download Location (folder icon) | `agentOrganizer.selectInstallLocation` | Opens a QuickPick to change the skills download location in `agentOrganizer.installLocations`. Selecting "Custom..." opens the VS Code Settings UI filtered to `agentOrganizer.installLocations`. |
+| Expand All | `agentOrganizer.expandAll` | Expands all location groups. Uses `TreeView.reveal()` (requires `getParent()` implementation). |
+| Collapse All | `agentOrganizer.collapseAll` | Collapses all location groups. Delegates to the built-in `workbench.actions.treeView.agentOrganizer.skills.collapseAll` command. |
 
 ---
 
@@ -81,7 +81,7 @@ All actions appear in the `agentSkills.installed` view title bar.
 - Filtering is applied to `name` and `description` fields (case-insensitive substring match).
 - Location groups containing no matching skills are hidden entirely.
 - When no results match, a "No results for '…'" placeholder is shown.
-- The `agentSkills:installedSearchActive` VS Code context key is set to `true` when a query is active, enabling the Clear Search button.
+- The `agentOrganizer:installedSearchActive` VS Code context key is set to `true` when a query is active, enabling the Clear Search button.
 
 ---
 
@@ -91,48 +91,52 @@ All actions appear in the `agentSkills.installed` view title bar.
 
 | Menu Item | Command | Visibility | Description |
 |---|---|---|---|
-| Add File | `agentSkills.addFile` | Always | Prompts for a file name, creates an empty file inside the skill folder, and opens it in the editor. |
-| Add Folder | `agentSkills.addFolder` | Always | Prompts for a folder name and creates a new subfolder inside the skill folder. |
-| Move to... | `agentSkills.moveSkill` | Always | Opens a QuickPick listing all scan locations (current location marked). Moves the skill folder to the selected location. |
-| Copy to... | `agentSkills.copySkill` | Always | Opens a QuickPick listing all scan locations (current location marked). Copies the skill folder to the selected location, keeping the original. |
-| Update older skill copies with latest | `agentSkills.syncSkill` | Newest (green) only | Copies this skill to all other locations that have an older copy. |
-| Get latest copy of skill | `agentSkills.getLatestSkill` | Older (orange) only | Replaces this copy with the newest version from another location. |
-| Delete | `agentSkills.uninstall` | Always | Deletes the skill folder (moved to trash, no confirmation prompt). |
-| Show in Marketplace | `agentSkills.showInMarketplace` | Always | Reveals and highlights the matching skill in the Marketplace tree view. |
+| Add File | `agentOrganizer.addFile` | Always | Prompts for a file name, creates an empty file inside the skill folder, and opens it in the editor. |
+| Add Folder | `agentOrganizer.addFolder` | Always | Prompts for a folder name and creates a new subfolder inside the skill folder. |
+| Reveal in File Explorer | `agentOrganizer.revealInFileExplorer` | Always | Opens the skill folder in the system file explorer. |
+| Move to... | `agentOrganizer.moveSkill` | Always | Opens a QuickPick listing all scan locations (current location marked). Moves the skill folder to the selected location. |
+| Copy to... | `agentOrganizer.copySkill` | Always | Opens a QuickPick listing all scan locations (current location marked). Copies the skill folder to the selected location, keeping the original. |
+| Update older skill copies with latest | `agentOrganizer.syncSkill` | Newest (green) only | Copies this skill to all other locations that have an older copy. |
+| Get latest copy of skill | `agentOrganizer.getLatestSkill` | Older (orange) only | Replaces this copy with the newest version from another location. |
+| Delete | `agentOrganizer.uninstall` | Always | Deletes the skill folder (moved to trash, no confirmation prompt). |
+| Show in Marketplace | `agentOrganizer.showInMarketplace` | Always | Reveals and highlights the matching skill in the Marketplace tree view. |
 
 ### InstalledSkillTreeItem Inline Buttons
 
 | Button | Command | Description |
 |---|---|---|
-| Delete (trash icon) | `agentSkills.uninstall` | Deletes the skill folder immediately (moved to trash, no confirmation prompt). |
-| Open Skill Folder (folder-opened icon) | `agentSkills.openSkillFolder` | Reveals the skill folder in the Explorer and opens `SKILL.md` in the editor. |
+| Delete (trash icon) | `agentOrganizer.uninstall` | Deletes the skill folder immediately (moved to trash, no confirmation prompt). |
+| Open Skill Folder (folder-opened icon) | `agentOrganizer.openSkillFolder` | Reveals the skill folder in the Explorer and opens `SKILL.md` in the editor. |
 
 ### LocationTreeItem Right-Click Context Menu
 
 | Menu Item | Command | Description |
 |---|---|---|
-| Delete | `agentSkills.deleteAllSkills` | Deletes all skills under this location folder (moved to trash). |
+| Delete | `agentOrganizer.deleteAllSkills` | Deletes all skills under this location folder (moved to trash). |
+| Reveal in File Explorer | `agentOrganizer.revealInFileExplorer` | Opens the location folder in the system file explorer. |
 
 ### SkillFolderTreeItem Right-Click Context Menu
 
 | Menu Item | Command | Description |
 |---|---|---|
-| Add File | `agentSkills.addFile` | Prompts for a file name, creates an empty file inside the subfolder, and opens it in the editor. |
-| Add Folder | `agentSkills.addFolder` | Prompts for a folder name and creates a new subfolder. |
-| Delete | `agentSkills.deleteSkillFolder` | Deletes the folder and its contents (moved to trash). |
+| Add File | `agentOrganizer.addFile` | Prompts for a file name, creates an empty file inside the subfolder, and opens it in the editor. |
+| Add Folder | `agentOrganizer.addFolder` | Prompts for a folder name and creates a new subfolder. |
+| Reveal in File Explorer | `agentOrganizer.revealInFileExplorer` | Opens the subfolder in the system file explorer. |
+| Delete | `agentOrganizer.deleteSkillFolder` | Deletes the folder and its contents (moved to trash). |
 
 ### SkillFileTreeItem Right-Click Context Menu
 
 | Menu Item | Command | Description |
 |---|---|---|
-| Rename | `agentSkills.renameFile` | Prompts for a new file name and renames the file. |
-| Delete | `agentSkills.deleteSkillFile` | Deletes the file (moved to trash). |
+| Rename | `agentOrganizer.renameFile` | Prompts for a new file name and renames the file. |
+| Reveal in File Explorer | `agentOrganizer.revealInFileExplorer` | Opens the file's location in the system file explorer. |
+| Delete | `agentOrganizer.deleteSkillFile` | Deletes the file (moved to trash). |
 
 ---
 
 ## Expand/Collapse State Persistence
 
-The collapsed/expanded state of each location group is persisted in `workspaceState` under the key `agentSkills.collapsedLocations` (stored as a `string[]` of collapsed location paths).
+The collapsed/expanded state of each location group is persisted in `workspaceState` under the key `agentOrganizer.collapsedLocations` (stored as a `string[]` of collapsed location paths).
 
 - State is loaded on extension activation and applied when the tree is first rendered.
 - State is updated whenever the user manually expands or collapses a group (`onDidExpandElement` / `onDidCollapseElement` events).
@@ -142,7 +146,13 @@ The collapsed/expanded state of each location group is persisted in `workspaceSt
 
 ## Marketplace Sync
 
-After any refresh or install/uninstall operation, the set of installed skill names is pushed to the Marketplace view via `marketplaceProvider.setInstalledSkills()`. This allows the Marketplace to show a checkmark icon on already-installed skills.
+After any refresh, install, uninstall, move, copy, or delete operation, `syncInstalledStatus()` is called. This:
+
+1. Refreshes the Skills provider and all area providers (awaited).
+2. Collects installed names from the Skills provider and all area providers into a combined set.
+3. Pushes skill names to the Marketplace via `setInstalledSkills()` and all installed names via `setInstalledItemNames()`.
+
+The Marketplace shows a green check icon on items whose name appears in the installed set. This works for all content areas (skills, agents, hooks, instructions, plugins, prompts/commands).
 
 ---
 
