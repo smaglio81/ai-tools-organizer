@@ -2,7 +2,7 @@
   "name": "agent-organizer",
   "displayName": "Agent Organizer",
   "description": "AI Tool Organizer and Marketplace",
-  "version": "0.0.8",
+  "version": "0.1.0",
   "icon": "resources/logo.png",
   "publisher": "smaglio81",
   "engines": {
@@ -568,6 +568,11 @@
         "icon": "$(clippy)"
       },
       {
+        "command": "agentOrganizer.copyItemPath",
+        "title": "Copy #path",
+        "icon": "$(symbol-file)"
+      },
+      {
         "command": "agentOrganizer.addFile",
         "title": "Add File",
         "icon": "$(new-file)"
@@ -913,6 +918,21 @@
           "group": "0_rename@1"
         },
         {
+          "command": "agentOrganizer.copyItemPath",
+          "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
+          "group": "0_path@1"
+        },
+        {
+          "command": "agentOrganizer.copyItemPath",
+          "when": "view == agentOrganizer.skills && viewItem == skillFolder",
+          "group": "0_path@1"
+        },
+        {
+          "command": "agentOrganizer.copyItemPath",
+          "when": "view == agentOrganizer.skills && viewItem == skillFile",
+          "group": "0_path@1"
+        },
+        {
           "command": "agentOrganizer.deleteSkillFile",
           "when": "view == agentOrganizer.skills && viewItem == skillFile",
           "group": "2_delete@1"
@@ -1123,6 +1143,11 @@
           "group": "0_rename@1"
         },
         {
+          "command": "agentOrganizer.copyItemPath",
+          "when": "viewItem =~ /^areaInstalledFolder/",
+          "group": "0_path@1"
+        },
+        {
           "command": "agentOrganizer.copyItemName",
           "when": "viewItem =~ /^areaInstalledFolder/",
           "group": "0_rename@2"
@@ -1238,6 +1263,11 @@
           "group": "0_rename@1"
         },
         {
+          "command": "agentOrganizer.copyItemPath",
+          "when": "viewItem =~ /^areaInstalledFile/",
+          "group": "0_path@1"
+        },
+        {
           "command": "agentOrganizer.copyItemName",
           "when": "viewItem =~ /^areaInstalledFile/",
           "group": "0_rename@2"
@@ -1256,6 +1286,11 @@
           "command": "agentOrganizer.addFolder",
           "when": "viewItem == areaItemFolder",
           "group": "0_add@2"
+        },
+        {
+          "command": "agentOrganizer.copyItemPath",
+          "when": "viewItem == areaItemFolder",
+          "group": "0_path@1"
         },
         {
           "command": "agentOrganizer.revealInFileExplorer",
@@ -1281,6 +1316,11 @@
           "command": "agentOrganizer.renameFile",
           "when": "viewItem == areaItemFile",
           "group": "0_rename@1"
+        },
+        {
+          "command": "agentOrganizer.copyItemPath",
+          "when": "viewItem == areaItemFile",
+          "group": "0_path@1"
         },
         {
           "command": "agentOrganizer.revealInFileExplorer",

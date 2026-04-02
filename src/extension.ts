@@ -61,6 +61,70 @@ function resolveParentUri(item: InstalledSkillTreeItem | SkillFolderTreeItem | A
     return item.folderUri;
 }
 
+type PathReferenceTreeItem = InstalledSkillTreeItem | SkillFolderTreeItem | SkillFileTreeItem | AreaInstalledItemTreeItem | AreaItemFolderTreeItem | AreaItemFileTreeItem;
+
+function joinLogicalPath(basePath: string, relativePath?: string): string {
+    const normalizedBase = normalizeSeparators(basePath).replace(/\/+$/, '');
+    const normalizedRelative = normalizeSeparators(relativePath || '').replace(/^\/+/, '');
+    return normalizedRelative ? `${normalizedBase}/${normalizedRelative}` : normalizedBase;
+}
+
+function getRelativeUriPath(baseUri: vscode.Uri, targetUri: vscode.Uri): string | undefined {
+    const normalizedBase = normalizeSeparators(baseUri.path).replace(/\/+$/, '');
+    const normalizedTarget = normalizeSeparators(targetUri.path).replace(/\/+$/, '');
+
+    if (normalizedTarget === normalizedBase) {
+        return '';
+    }
+
+    const prefix = `${normalizedBase}/`;
+    if (!normalizedTarget.startsWith(prefix)) {
+        return undefined;
+    }
+
+    return normalizedTarget.slice(prefix.length);
+}
+
+function resolveSkillRootItem(item: SkillFolderTreeItem | SkillFileTreeItem): InstalledSkillTreeItem | undefined {
+    let current: InstalledSkillTreeItem | SkillFolderTreeItem | SkillFileTreeItem = item;
+    while (current instanceof SkillFolderTreeItem || current instanceof SkillFileTreeItem) {
+        current = current instanceof SkillFileTreeItem ? current.parentFolder : current.parentItem;
+    }
+    return current instanceof InstalledSkillTreeItem ? current : undefined;
+}
+
+function resolveAreaRootItem(item: AreaItemFolderTreeItem | AreaItemFileTreeItem): AreaInstalledItemTreeItem | undefined {
+    let current: AreaInstalledItemTreeItem | AreaItemFolderTreeItem | AreaItemFileTreeItem = item;
+    while (current instanceof AreaItemFolderTreeItem || current instanceof AreaItemFileTreeItem) {
+        current = current instanceof AreaItemFileTreeItem ? current.parentFolder : current.parentItem;
+    }
+    return current instanceof AreaInstalledItemTreeItem ? current : undefined;
+}
+
+export function buildItemPathReference(item: PathReferenceTreeItem): string | undefined {
+    if (item instanceof InstalledSkillTreeItem) {
+        return normalizeSeparators(item.installedSkill.location);
+    }
+
+    if (item instanceof AreaInstalledItemTreeItem) {
+        return normalizeSeparators(item.installedItem.location);
+    }
+
+    if (item instanceof SkillFolderTreeItem || item instanceof SkillFileTreeItem) {
+        const rootItem = resolveSkillRootItem(item);
+        const itemUri = item instanceof SkillFolderTreeItem ? item.folderUri : item.fileUri;
+        if (!rootItem) { return undefined; }
+        const relativePath = getRelativeUriPath(rootItem.skillUri, itemUri);
+        return joinLogicalPath(rootItem.installedSkill.location, relativePath);
+    }
+
+    const rootItem = resolveAreaRootItem(item);
+    const itemUri = item instanceof AreaItemFolderTreeItem ? item.folderUri : item.fileUri;
+    if (!rootItem) { return undefined; }
+    const relativePath = getRelativeUriPath(rootItem.itemUri, itemUri);
+    return joinLogicalPath(rootItem.installedItem.location, relativePath);
+}
+
 /**
  * Parse a GitHub URL into its SkillRepository components.
  * Handles these forms:
@@ -1105,6 +1169,19 @@ export function activate(context: vscode.ExtensionContext) {
                 : item.installedItem.name;
             await vscode.env.clipboard.writeText(name);
             vscode.window.showInformationMessage(`Copied "${name}" to clipboard.`);
+        }),
+
+        // Copy the item's logical #path reference to the clipboard
+        vscode.commands.registerCommand('agentOrganizer.copyItemPath', async (item: PathReferenceTreeItem) => {
+            const pathReference = item ? buildItemPathReference(item) : undefined;
+            if (!pathReference) {
+                vscode.window.showErrorMessage('Unable to determine a path for this item.');
+                return;
+            }
+
+            const chatReference = `#${pathReference}`;
+            await vscode.env.clipboard.writeText(chatReference);
+            vscode.window.showInformationMessage(`Copied "${chatReference}" to clipboard.`);
         }),
 
         // Rename an installed area item or skill

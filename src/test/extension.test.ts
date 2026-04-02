@@ -11,11 +11,68 @@ import { SkillInstallationService } from '../services/installationService';
 import { SkillPathService } from '../services/skillPathService';
 import { Skill, SkillRepository, InstalledSkill } from '../types';
 import { GitHubSkillsClient } from '../github/skillsClient';
-import { parseGitHubUrl } from '../extension';
+import { buildItemPathReference, parseGitHubUrl } from '../extension';
+import { AreaInstalledItemTreeItem, AreaItemFileTreeItem, AreaItemFolderTreeItem } from '../views/installedAreaProvider';
+import { InstalledSkillTreeItem, SkillFileTreeItem, SkillFolderTreeItem } from '../views/installedProvider';
 // import * as myExtension from '../../extension';
 
 suite('Extension Test Suite', () => {
 	vscode.window.showInformationMessage('Start all tests.');
+
+	suite('buildItemPathReference', () => {
+		test('returns the logical path for a top-level installed skill', () => {
+			const installedSkill: InstalledSkill = {
+				name: 'my-skill',
+				description: 'Test skill',
+				location: '~/.copilot/skills/my-skill',
+				installedAt: new Date().toISOString()
+			};
+			const item = new InstalledSkillTreeItem(installedSkill, vscode.Uri.file('/home/test/.copilot/skills/my-skill'));
+
+			assert.strictEqual(buildItemPathReference(item), '~/.copilot/skills/my-skill');
+		});
+
+		test('returns the logical path for a nested file inside an installed skill', () => {
+			const installedSkill: InstalledSkill = {
+				name: 'my-skill',
+				description: 'Test skill',
+				location: '~/.copilot/skills/my-skill',
+				installedAt: new Date().toISOString()
+			};
+			const root = new InstalledSkillTreeItem(installedSkill, vscode.Uri.file('/home/test/.copilot/skills/my-skill'));
+			const docs = new SkillFolderTreeItem(vscode.Uri.file('/home/test/.copilot/skills/my-skill/docs'), 'docs', root);
+			const file = new SkillFileTreeItem(vscode.Uri.file('/home/test/.copilot/skills/my-skill/docs/guide.md'), 'guide.md', docs);
+
+			assert.strictEqual(buildItemPathReference(file), '~/.copilot/skills/my-skill/docs/guide.md');
+		});
+
+		test('returns the logical path for a top-level installed area item', () => {
+			const installedItem: InstalledSkill = {
+				name: 'my-agent',
+				description: 'Test agent',
+				location: '~/.copilot/agents/my-agent.agent.md',
+				installedAt: new Date().toISOString()
+			};
+			const item = new AreaInstalledItemTreeItem(installedItem, vscode.Uri.file('/home/test/.copilot/agents/my-agent.agent.md'), 'agents', true);
+
+			assert.strictEqual(buildItemPathReference(item), '~/.copilot/agents/my-agent.agent.md');
+		});
+
+		test('returns the logical path for nested files inside an installed area folder', () => {
+			const installedItem: InstalledSkill = {
+				name: 'my-plugin',
+				description: 'Test plugin',
+				location: '~/.copilot/plugins/my-plugin',
+				installedAt: new Date().toISOString()
+			};
+			const root = new AreaInstalledItemTreeItem(installedItem, vscode.Uri.file('/home/test/.copilot/plugins/my-plugin'), 'plugins', false);
+			const folder = new AreaItemFolderTreeItem(vscode.Uri.file('/home/test/.copilot/plugins/my-plugin/agents'), 'agents', root);
+			const file = new AreaItemFileTreeItem(vscode.Uri.file('/home/test/.copilot/plugins/my-plugin/agents/helper.agent.md'), 'helper.agent.md', folder);
+
+			assert.strictEqual(buildItemPathReference(folder), '~/.copilot/plugins/my-plugin/agents');
+			assert.strictEqual(buildItemPathReference(file), '~/.copilot/plugins/my-plugin/agents/helper.agent.md');
+		});
+	});
 
 	suite('SkillPathService.resolveInstallTarget path traversal validation', () => {
 		class TestSkillPathService extends SkillPathService {
