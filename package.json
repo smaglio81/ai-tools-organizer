@@ -1,7 +1,7 @@
 {
   "name": "agent-organizer",
   "displayName": "Agent Organizer",
-  "description": "Agent Organizer Marketplace and Toolkit",
+  "description": "AI Tool Organizer and Marketplace",
   "version": "0.0.8",
   "icon": "resources/logo.png",
   "publisher": "smaglio81",
@@ -558,14 +558,14 @@
         "icon": "$(add)"
       },
       {
-        "command": "agentOrganizer.copyItemName",
-        "title": "Copy Name",
-        "icon": "$(clippy)"
-      },
-      {
         "command": "agentOrganizer.renameItem",
         "title": "Rename",
         "icon": "$(edit)"
+      },
+      {
+        "command": "agentOrganizer.copyItemName",
+        "title": "Copy Name",
+        "icon": "$(clippy)"
       },
       {
         "command": "agentOrganizer.addFile",
@@ -943,14 +943,14 @@
           "group": "1_move@4"
         },
         {
-          "command": "agentOrganizer.copyItemName",
-          "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
-          "group": "1_move@7"
-        },
-        {
           "command": "agentOrganizer.renameItem",
           "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
-          "group": "1_move@0"
+          "group": "0_rename@1"
+        },
+        {
+          "command": "agentOrganizer.copyItemName",
+          "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
+          "group": "0_rename@2"
         },
         {
           "command": "agentOrganizer.syncSkill",
@@ -1118,14 +1118,14 @@
           "group": "1_move@4"
         },
         {
-          "command": "agentOrganizer.copyItemName",
-          "when": "viewItem =~ /^areaInstalledFolder/",
-          "group": "1_move@7"
-        },
-        {
           "command": "agentOrganizer.renameItem",
           "when": "viewItem =~ /^areaInstalledFolder/",
-          "group": "1_move@0"
+          "group": "0_rename@1"
+        },
+        {
+          "command": "agentOrganizer.copyItemName",
+          "when": "viewItem =~ /^areaInstalledFolder/",
+          "group": "0_rename@2"
         },
         {
           "command": "agentOrganizer.showInMarketplace",
@@ -1233,14 +1233,14 @@
           "group": "1_move@4"
         },
         {
-          "command": "agentOrganizer.copyItemName",
-          "when": "viewItem =~ /^areaInstalledFile/",
-          "group": "1_move@7"
-        },
-        {
           "command": "agentOrganizer.renameItem",
           "when": "viewItem =~ /^areaInstalledFile/",
-          "group": "1_move@0"
+          "group": "0_rename@1"
+        },
+        {
+          "command": "agentOrganizer.copyItemName",
+          "when": "viewItem =~ /^areaInstalledFile/",
+          "group": "0_rename@2"
         },
         {
           "command": "agentOrganizer.showInMarketplace",
@@ -1406,14 +1406,7 @@
           "description": "Cache timeout for marketplace data in seconds"
         }
       }
-    },
-    "keybindings": [
-      {
-        "command": "agentOrganizer.renameItem",
-        "key": "f2",
-        "when": "focusedView =~ /^agentOrganizer\\./"
-      }
-    ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",

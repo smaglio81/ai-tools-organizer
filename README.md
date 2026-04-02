@@ -30,6 +30,8 @@ Each view shows what you have installed locally, grouped by location. The Market
 
 **Create from scratch** — use the "Add" button in any view's toolbar to scaffold a new item with the right file structure for that area.
 
+**Rename and copy name** — right-click any item to rename it (updates the folder/file and definition file) or copy its name to the clipboard.
+
 **Download from GitHub** — browse multiple repositories, view README documentation, and download any item to your configured location.
 
 **Duplicate detection** — when the same item exists in multiple locations, color-coded icons show which copy is newest (green), older (orange), identical (blue), or unique (purple).

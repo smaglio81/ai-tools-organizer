@@ -257,8 +257,8 @@ Currently, Skills has a view.
 
 ## Adding `Copy Name` and `Rename`
 
-* All Area Items should have a right-click option for `Copy Name`, that will copy the name to the clipboard
-  * This option should be in the same group and below `Update Plugins`
 * All Area Items should have a right-click option for `Rename`
   * This options should be in the same group and above `Move To...`
   * When an Area Item is selected, can F2 initiate rename?
+* All Area Items should have a right-click option for `Copy Name`, that will copy the name to the clipboard
+  * This option should be in the same group and below `Rename`

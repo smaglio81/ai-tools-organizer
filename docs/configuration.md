@@ -38,8 +38,8 @@ When the setting isn't configured, these default locations are scanned:
 
 | Scope | Locations |
 |---|---|
-| Workspace | `.agents/{area}`, `.claude/{area}`, `.github/{area}` |
-| Home | `~/.agents/{area}`, `~/.claude/{area}`, `~/.copilot/{area}` |
+| Workspace | `.agents/{area}`, `.claude/{area}`, `.github/{area}`, `.kiro/{area}` |
+| Home | `~/.agents/{area}`, `~/.claude/{area}`, `~/.copilot/{area}`, `~/.kiro/{area}` |
 
 The configured download location from `agentOrganizer.installLocations` is also always included in the scan.
 

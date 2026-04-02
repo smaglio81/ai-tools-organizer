@@ -4,6 +4,19 @@ All notable changes to the "agent-organizer" extension will be documented in thi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.0.8]
+
+### Added
+
+- "Rename" right-click option on all installed area items and skills. Renames the folder (multi-file) or file (single-file) on disk and updates the `name` field in the definition file (YAML frontmatter or JSON).
+- "Copy Name" right-click option on all installed area items and skills. Copies the item name to the clipboard.
+- `.kiro/{area}` and `~/.kiro/{area}` added to default location template prefixes (now 8 prefixes total).
+
+### Changed
+
+- Rename and Copy Name appear in their own menu group (`0_rename`) above Move to... / Copy to..., in the order: Rename, Copy Name.
+- `install:vsix` / `uninstall:vsix` scripts updated to use `code-insiders`. Added `install:vsix:kiro`, `uninstall:vsix:kiro`, `reinstall:vsix`, and `reinstall:vsix:kiro` convenience scripts.
+
 ## [0.0.7]
 
 ### Added

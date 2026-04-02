@@ -51,11 +51,13 @@ The view scans the locations defined by the `chat.agentSkillsLocations` VS Code 
 | Location | Scope |
 |---|---|
 | `.agents/skills` | Current workspace |
-| `.github/skills` | Current workspace |
 | `.claude/skills` | Current workspace |
+| `.github/skills` | Current workspace |
+| `.kiro/skills` | Current workspace |
 | `~/.agents/skills` | User home directory |
-| `~/.copilot/skills` | User home directory |
 | `~/.claude/skills` | User home directory |
+| `~/.copilot/skills` | User home directory |
+| `~/.kiro/skills` | User home directory |
 
 Each location is scanned for immediate subdirectories. A subdirectory is considered a valid skill if it contains a `SKILL.md` file. Locations that don't exist are silently skipped. Skill locations are normalized to forward slashes at scan time (via `normalizeSeparators()`) so all downstream path comparisons work consistently across platforms.
 
@@ -100,7 +102,7 @@ All actions appear in the `agentOrganizer.skills` view title bar.
 | Copy to Plugin... | `agentOrganizer.copyToPlugin` | Always | Opens a QuickPick listing all installed plugins. Copies the skill into the selected plugin's `skills/` subfolder. |
 | Update Plugins | `agentOrganizer.updatePlugins` | Always | Searches all installed plugins for a copy of this skill in their `skills/` subfolder and overwrites each found copy with the current version. Results shown via output channel. |
 | Copy Name | `agentOrganizer.copyItemName` | Always | Copies the skill name to the clipboard. |
-| Rename | `agentOrganizer.renameItem` | Always | Prompts for a new name and renames the skill folder. Also triggered by F2. |
+| Rename | `agentOrganizer.renameItem` | Always | Prompts for a new name, renames the skill folder on disk, and updates the `name` field in `SKILL.md` frontmatter. |
 | Update older skill copies with latest | `agentOrganizer.syncSkill` | Newest (green) only | Copies this skill to all other locations that have an older copy. |
 | Get latest copy of skill | `agentOrganizer.getLatestSkill` | Older (orange) only | Replaces this copy with the newest version from another location. |
 | Delete | `agentOrganizer.uninstall` | Always | Deletes the skill folder (moved to trash, no confirmation prompt). |

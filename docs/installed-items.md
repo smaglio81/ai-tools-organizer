@@ -50,6 +50,8 @@ Editing a file automatically triggers re-comparison. File watchers cover both wo
 | Action | Available on | What it does |
 |---|---|---|
 | Add {Area} | Location folders | Creates a new item with area-specific scaffolding at that location |
+| Rename | Items | Prompts for a new name and renames the item on disk, updating the name in its definition file |
+| Copy Name | Items | Copies the item name to the clipboard |
 | Move to... | Items and location folders | Moves the item to a different location via a quick pick selector |
 | Copy to... | Items and location folders | Copies the item to a different location, keeping the original |
 | Copy to Plugin... | Items (not in Plugins or Instructions views) | Copies the item into a selected plugin's area subfolder |

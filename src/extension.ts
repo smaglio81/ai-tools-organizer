@@ -127,6 +127,36 @@ export function todayStamp(): string {
     return `${yyyy}.${mm}.${dd}`;
 }
 
+/**
+ * Update the `name` field in a YAML frontmatter file (e.g. SKILL.md, *.agent.md).
+ * Replaces the first `name: ...` line in the frontmatter block.
+ */
+async function updateFrontmatterName(fileUri: vscode.Uri, newName: string): Promise<void> {
+    const raw = new TextDecoder().decode(await vscode.workspace.fs.readFile(fileUri));
+    if (!raw.startsWith('---')) { return; }
+    const endIdx = raw.indexOf('---', 3);
+    if (endIdx < 0) { return; }
+    const frontmatter = raw.substring(0, endIdx + 3);
+    const updated = frontmatter.replace(/^(name:\s*).+$/m, `$1${newName}`);
+    if (updated === frontmatter) { return; }
+    const result = updated + raw.substring(endIdx + 3);
+    await vscode.workspace.fs.writeFile(fileUri, new TextEncoder().encode(result));
+}
+
+/**
+ * Update the `name` field in a JSON definition file (e.g. plugin.json, hooks.json).
+ */
+async function updateJsonDefinitionName(fileUri: vscode.Uri, newName: string): Promise<void> {
+    const raw = new TextDecoder().decode(await vscode.workspace.fs.readFile(fileUri));
+    try {
+        const obj = JSON.parse(raw);
+        if (typeof obj.name === 'string') {
+            obj.name = newName;
+            await vscode.workspace.fs.writeFile(fileUri, new TextEncoder().encode(JSON.stringify(obj, null, 2) + '\n'));
+        }
+    } catch { /* not valid JSON, skip */ }
+}
+
 export function activate(context: vscode.ExtensionContext) {
     console.log('Agent Organizer extension is now active!');
 
@@ -1084,6 +1114,7 @@ export function activate(context: vscode.ExtensionContext) {
             const oldName = isSkill ? item.installedSkill.name : item.installedItem.name;
             const itemUri = isSkill ? item.skillUri : item.itemUri;
             const isSingleFile = !isSkill && item.isSingleFile;
+            const area: ContentArea | undefined = isSkill ? 'skills' : (item as AreaInstalledItemTreeItem).area;
 
             const newName = await vscode.window.showInputBox({
                 prompt: `Rename "${oldName}"`,
@@ -1098,31 +1129,52 @@ export function activate(context: vscode.ExtensionContext) {
             });
             if (!newName || newName.trim() === oldName) { return; }
             const trimmed = newName.trim();
+            const normalized = normalizeName(trimmed);
 
-            if (isSingleFile) {
-                // Single-file item: rename the file, preserving its extension
-                const oldBaseName = itemUri.path.split('/').pop() || '';
-                const dotIdx = oldBaseName.indexOf('.');
-                const extension = dotIdx >= 0 ? oldBaseName.substring(dotIdx) : '';
-                const normalized = normalizeName(trimmed);
-                const newFileName = normalized + extension;
-                const parentUri = itemUri.with({ path: itemUri.path.replace(/\/[^/]+$/, '') });
-                const newUri = vscode.Uri.joinPath(parentUri, newFileName);
-                await vscode.workspace.fs.rename(itemUri, newUri);
-            } else {
-                // Multi-file item (folder-based): rename the folder
-                const parentUri = itemUri.with({ path: itemUri.path.replace(/\/[^/]+$/, '') });
-                const normalized = normalizeName(trimmed);
-                const newUri = vscode.Uri.joinPath(parentUri, normalized);
-                await vscode.workspace.fs.rename(itemUri, newUri);
-            }
+            try {
+                if (isSingleFile) {
+                    // Single-file item: rename the file, preserving its extension
+                    const oldBaseName = itemUri.path.split('/').pop() || '';
+                    const dotIdx = oldBaseName.indexOf('.');
+                    const extension = dotIdx >= 0 ? oldBaseName.substring(dotIdx) : '';
+                    const newFileName = normalized + extension;
+                    const parentUri = vscode.Uri.joinPath(itemUri, '..');
+                    const newUri = vscode.Uri.joinPath(parentUri, newFileName);
+                    await vscode.workspace.fs.rename(itemUri, newUri);
+                    // Update frontmatter name in the renamed file
+                    await updateFrontmatterName(newUri, normalized);
+                } else {
+                    // Multi-file item (folder-based): rename the folder
+                    const parentUri = vscode.Uri.joinPath(itemUri, '..');
+                    const newUri = vscode.Uri.joinPath(parentUri, normalized);
+                    await vscode.workspace.fs.rename(itemUri, newUri);
+                    // Update the name in the definition file
+                    const def = area ? AREA_DEFINITIONS[area] : undefined;
+                    if (def) {
+                        const defFileName = def.definitionFile;
+                        if (defFileName) {
+                            const defUri = await findDefinitionFile(newUri, defFileName);
+                            if (defUri) {
+                                if (defFileName.endsWith('.json')) {
+                                    await updateJsonDefinitionName(defUri, normalized);
+                                } else {
+                                    await updateFrontmatterName(defUri, normalized);
+                                }
+                            }
+                        }
+                    }
+                }
 
-            if (isSkill) {
-                await installedProvider.refresh();
-            } else {
-                refreshAreaProviders();
+                if (isSkill) {
+                    await installedProvider.refresh();
+                } else {
+                    refreshAreaProviders();
+                }
+                await syncInstalledStatus();
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                vscode.window.showErrorMessage(`Failed to rename "${oldName}": ${message}`);
             }
-            await syncInstalledStatus();
         }),
 
         // Move skill to a different location
