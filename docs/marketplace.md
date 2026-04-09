@@ -13,7 +13,7 @@ Click any item to view its details in a panel with:
 - Download and View Source buttons
 
 &nbsp;
-![Marketplace](../resources/agent-organizer-marketplace.png)
+![Marketplace](../resources/docs/agent-organizer-marketplace.png)
 
 ## Downloading
 

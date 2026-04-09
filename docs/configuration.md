@@ -8,7 +8,7 @@ Open VS Code Settings (`Ctrl+,` / `Cmd+,`) and search for "Agent Organizer".
 
 An array of GitHub repositories to browse in the Marketplace. Each entry has `owner`, `repo`, and `branch` fields. You can edit these directly in the Settings UI or add repositories using the **+** button in the Marketplace toolbar.
 
-![User Settings (JSON) - Skill Repositories](../resources/user-settings-skill-repositories.png)
+![User Settings (JSON) - Skill Repositories](../resources/docs/user-settings-skill-repositories.png)
 
 ## Download locations
 
@@ -18,7 +18,7 @@ An object with a download path for each content area. Defaults to `~/.copilot/{a
 
 You can also change the download location from each view's toolbar using the folder icon button. Selecting "Custom..." opens the Settings UI.
 
-![User Settings - Install Locations](../resources/user-settings-install-locations.png)
+![User Settings - Install Locations](../resources/docs/user-settings-install-locations.png)
 
 ### How locations are scanned
 

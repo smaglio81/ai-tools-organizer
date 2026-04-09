@@ -1,7 +1,7 @@
 {
   "name": "agent-organizer",
-  "displayName": "Agent Organizer",
-  "description": "AI Tool Organizer and Marketplace",
+  "displayName": "AI Tools Organizer",
+  "description": "AI Tools Organizer and Marketplace",
   "version": "0.1.0",
   "icon": "resources/logo.png",
   "publisher": "smaglio81",
@@ -12,11 +12,17 @@
     "AI"
   ],
   "keywords": [
-    "agent",
+    "agents",
+    "organizer",
     "skills",
+    "plugins",
+    "instructions",
+    "prompts",
     "marketplace",
     "ai",
-    "claude"
+    "copilot",
+    "claude",
+    "kiro"
   ],
   "bugs": {
     "url": "https://github.com/smaglio81/agent-organizer/issues",
@@ -568,9 +574,19 @@
         "icon": "$(clippy)"
       },
       {
+        "command": "agentOrganizer.duplicateItem",
+        "title": "Duplicate",
+        "icon": "$(copy)"
+      },
+      {
         "command": "agentOrganizer.copyItemPath",
-        "title": "Copy #path",
+        "title": "Copy #{path}",
         "icon": "$(symbol-file)"
+      },
+      {
+        "command": "agentOrganizer.copyAbsolutePath",
+        "title": "Copy Absolute Path",
+        "icon": "$(file-symlink-file)"
       },
       {
         "command": "agentOrganizer.addFile",
@@ -923,14 +939,29 @@
           "group": "0_path@1"
         },
         {
+          "command": "agentOrganizer.copyAbsolutePath",
+          "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
+          "group": "0_path@2"
+        },
+        {
           "command": "agentOrganizer.copyItemPath",
           "when": "view == agentOrganizer.skills && viewItem == skillFolder",
           "group": "0_path@1"
         },
         {
+          "command": "agentOrganizer.copyAbsolutePath",
+          "when": "view == agentOrganizer.skills && viewItem == skillFolder",
+          "group": "0_path@2"
+        },
+        {
           "command": "agentOrganizer.copyItemPath",
           "when": "view == agentOrganizer.skills && viewItem == skillFile",
           "group": "0_path@1"
+        },
+        {
+          "command": "agentOrganizer.copyAbsolutePath",
+          "when": "view == agentOrganizer.skills && viewItem == skillFile",
+          "group": "0_path@2"
         },
         {
           "command": "agentOrganizer.deleteSkillFile",
@@ -971,6 +1002,11 @@
           "command": "agentOrganizer.copyItemName",
           "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
           "group": "0_rename@2"
+        },
+        {
+          "command": "agentOrganizer.duplicateItem",
+          "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
+          "group": "0_rename@3"
         },
         {
           "command": "agentOrganizer.syncSkill",
@@ -1148,9 +1184,19 @@
           "group": "0_path@1"
         },
         {
+          "command": "agentOrganizer.copyAbsolutePath",
+          "when": "viewItem =~ /^areaInstalledFolder/",
+          "group": "0_path@2"
+        },
+        {
           "command": "agentOrganizer.copyItemName",
           "when": "viewItem =~ /^areaInstalledFolder/",
           "group": "0_rename@2"
+        },
+        {
+          "command": "agentOrganizer.duplicateItem",
+          "when": "viewItem =~ /^areaInstalledFolder/",
+          "group": "0_rename@3"
         },
         {
           "command": "agentOrganizer.showInMarketplace",
@@ -1268,9 +1314,19 @@
           "group": "0_path@1"
         },
         {
+          "command": "agentOrganizer.copyAbsolutePath",
+          "when": "viewItem =~ /^areaInstalledFile/",
+          "group": "0_path@2"
+        },
+        {
           "command": "agentOrganizer.copyItemName",
           "when": "viewItem =~ /^areaInstalledFile/",
           "group": "0_rename@2"
+        },
+        {
+          "command": "agentOrganizer.duplicateItem",
+          "when": "viewItem =~ /^areaInstalledFile/",
+          "group": "0_rename@3"
         },
         {
           "command": "agentOrganizer.showInMarketplace",
@@ -1291,6 +1347,11 @@
           "command": "agentOrganizer.copyItemPath",
           "when": "viewItem == areaItemFolder",
           "group": "0_path@1"
+        },
+        {
+          "command": "agentOrganizer.copyAbsolutePath",
+          "when": "viewItem == areaItemFolder",
+          "group": "0_path@2"
         },
         {
           "command": "agentOrganizer.revealInFileExplorer",
@@ -1321,6 +1382,11 @@
           "command": "agentOrganizer.copyItemPath",
           "when": "viewItem == areaItemFile",
           "group": "0_path@1"
+        },
+        {
+          "command": "agentOrganizer.copyAbsolutePath",
+          "when": "viewItem == areaItemFile",
+          "group": "0_path@2"
         },
         {
           "command": "agentOrganizer.revealInFileExplorer",
@@ -1456,12 +1522,15 @@
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
     "package": "npm run check-types && npm run lint && node esbuild.js --production",
     "package:vsix": "npx vsce package",
-    "install:vsix": "npx vsce package && node -e \"const fs=require('fs'); const files=fs.readdirSync('.').filter(f=>f.startsWith('agent-organizer-')&&f.endsWith('.vsix')).sort(); if(files.length) require('child_process').execSync('code-insiders --install-extension '+files[files.length-1], {stdio:'inherit'});\"",
+    "install:vsix": "npx vsce package && npm run install:vsix:only",
+    "install:vsix:only": "npx vsce package && node -e \"const fs=require('fs'); const files=fs.readdirSync('.').filter(f=>f.startsWith('agent-organizer-')&&f.endsWith('.vsix')).sort(); if(files.length) require('child_process').execSync('code-insiders --install-extension '+files[files.length-1], {stdio:'inherit'});\"",
     "uninstall:vsix": "code-insiders --uninstall-extension smaglio81.agent-organizer",
-    "install:vsix:kiro": "npx vsce package && node -e \"const fs=require('fs'); const files=fs.readdirSync('.').filter(f=>f.startsWith('agent-organizer-')&&f.endsWith('.vsix')).sort(); if(files.length) require('child_process').execSync('kiro --install-extension '+files[files.length-1], {stdio:'inherit'});\"",
+    "install:vsix:kiro": "npx vsce package && npm run install:vsix:kiro:only",
+    "install:vsix:kiro:only": "node -e \"const fs=require('fs'); const files=fs.readdirSync('.').filter(f=>f.startsWith('agent-organizer-')&&f.endsWith('.vsix')).sort(); if(files.length) require('child_process').execSync('kiro --install-extension '+files[files.length-1], {stdio:'inherit'});\"",
     "uninstall:vsix:kiro": "kiro --uninstall-extension smaglio81.agent-organizer",
     "reinstall:vsix": "npm run uninstall:vsix && npm run install:vsix",
     "reinstall:vsix:kiro": "npm run uninstall:vsix:kiro && npm run install:vsix:kiro",
+    "reinstall:vsix:both": "npx vsce package && npm run uninstall:vsix && npm run uninstall:vsix:kiro && npm run install:vsix:only && npm run install:vsix:kiro:only",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",

@@ -72,10 +72,10 @@ Each content area (except Skills, which has its own dedicated provider) uses the
 | Node Type | Context Value | Actions |
 |---|---|---|
 | Location | `areaLocation` | Add {Area}, Move to..., Copy to..., Delete, Reveal in File Explorer |
-| Multi-file item | `areaInstalledFolder` | Add File, Add Folder, Rename, Move to..., Copy to..., Copy to Plugin... (not in Plugins view), Update Plugins (not in Plugins view), Copy Name, Show in Marketplace, Reveal in File Explorer, Delete (inline + menu), View Installed Item (inline) |
-| Single-file item | `areaInstalledFile` | Rename, Move to..., Copy to..., Copy to Plugin..., Update Plugins, Copy Name, Show in Marketplace, Reveal in File Explorer, Delete (inline + menu), View Installed Item (inline) |
-| Subfolder | `areaItemFolder` | Add File, Add Folder, Delete, Reveal in File Explorer |
-| File | `areaItemFile` | Rename, Delete, Reveal in File Explorer |
+| Multi-file item | `areaInstalledFolder` | Add File, Add Folder, Copy #{path}, Copy Absolute Path, Rename, Move to..., Copy to..., Copy to Plugin... (not in Plugins view), Update Plugins (not in Plugins view), Copy Name, Show in Marketplace, Reveal in File Explorer, Delete (inline + menu), View Installed Item (inline) |
+| Single-file item | `areaInstalledFile` | Copy #{path}, Copy Absolute Path, Rename, Move to..., Copy to..., Copy to Plugin..., Update Plugins, Copy Name, Show in Marketplace, Reveal in File Explorer, Delete (inline + menu), View Installed Item (inline) |
+| Subfolder | `areaItemFolder` | Add File, Add Folder, Copy #{path}, Copy Absolute Path, Delete, Reveal in File Explorer |
+| File | `areaItemFile` | Copy #{path}, Copy Absolute Path, Rename, Delete, Reveal in File Explorer |
 
 Additional Plugins view commands:
 
@@ -87,6 +87,8 @@ Additional Plugins view commands:
 | Folder in subfolder | `areaItemFolder` | Get latest copy (delegates to folder or item sync based on folder name) |
 
 "Reveal in File Explorer" appears at the bottom of all right-click menus (group `9_reveal`), except on installed items (skills and area items) where it groups with "Show in Marketplace" (group `3_marketplace`).
+
+"Copy #{path}" appears in its own context group (`0_path`) between Add actions and Rename actions, and copies a logical path reference prefixed with `#`. "Copy Absolute Path" appears directly below it in the same group and copies the fully resolved filesystem path.
 
 ---
 

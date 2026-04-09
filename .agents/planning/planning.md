@@ -258,15 +258,21 @@ Currently, Skills has a view.
 ## Adding `Copy Name` and `Rename`
 
 * All Area Items should have a right-click option for `Rename`
-  * This options should be in the same group and above `Move To...`
+  * This options should be in the same group and above `Move To...` 
   * When an Area Item is selected, can F2 initiate rename?
 * All Area Items should have a right-click option for `Copy Name`, that will copy the name to the clipboard
   * This option should be in the same group and below `Rename`
 
-## Adding `Copy #path`
+## Adding `Copy #{path}`
 
-* Add Area Items should have a right-click option for `Copy #path`
+* Add Area Items should have a right-click option for `Copy #{path}`
   * This option should copy to clipboard `#{path-to-item}`
   * This option should be a in a group between `Add Folder` and `Rename`
 * If it's possible to directly add the Area Item to the current Chat, then also create a right-click option for `Add to Chat`
-  * This option should be in the same group as `Copy #path` and first in that group
+  * This option should be in the same group as `Copy #{path}` and first in that group
+
+## Adding `Duplicate`
+
+* Area Items should have a right-click option for `Duplicate`
+  * This option should create a copy of the item (and all it's files) with a new name
+  * This option should be in the same group and below `Copy Name`

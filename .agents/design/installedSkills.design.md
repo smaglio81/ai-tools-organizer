@@ -96,6 +96,8 @@ All actions appear in the `agentOrganizer.skills` view title bar.
 |---|---|---|---|
 | Add File | `agentOrganizer.addFile` | Always | Prompts for a file name, creates an empty file inside the skill folder, and opens it in the editor. |
 | Add Folder | `agentOrganizer.addFolder` | Always | Prompts for a folder name and creates a new subfolder inside the skill folder. |
+| Copy #{path} | `agentOrganizer.copyItemPath` | Always | Copies a chat-ready path reference like `#~/.copilot/skills/my-skill` (or nested file/folder path) to the clipboard. |
+| Copy Absolute Path | `agentOrganizer.copyAbsolutePath` | Always | Copies the fully resolved filesystem path to the clipboard. |
 | Reveal in File Explorer | `agentOrganizer.revealInFileExplorer` | Always | Opens the skill folder in the system file explorer. |
 | Move to... | `agentOrganizer.moveSkill` | Always | Opens a QuickPick listing all scan locations (current location marked). Moves the skill folder to the selected location. |
 | Copy to... | `agentOrganizer.copySkill` | Always | Opens a QuickPick listing all scan locations (current location marked). Copies the skill folder to the selected location, keeping the original. |
@@ -129,6 +131,8 @@ All actions appear in the `agentOrganizer.skills` view title bar.
 |---|---|---|
 | Add File | `agentOrganizer.addFile` | Prompts for a file name, creates an empty file inside the subfolder, and opens it in the editor. |
 | Add Folder | `agentOrganizer.addFolder` | Prompts for a folder name and creates a new subfolder. |
+| Copy #{path} | `agentOrganizer.copyItemPath` | Copies a chat-ready path reference for the folder to the clipboard. |
+| Copy Absolute Path | `agentOrganizer.copyAbsolutePath` | Copies the fully resolved filesystem path for the folder to the clipboard. |
 | Reveal in File Explorer | `agentOrganizer.revealInFileExplorer` | Opens the subfolder in the system file explorer. |
 | Delete | `agentOrganizer.deleteSkillFolder` | Deletes the folder and its contents (moved to trash). |
 
@@ -136,6 +140,8 @@ All actions appear in the `agentOrganizer.skills` view title bar.
 
 | Menu Item | Command | Description |
 |---|---|---|
+| Copy #{path} | `agentOrganizer.copyItemPath` | Copies a chat-ready path reference for the file to the clipboard. |
+| Copy Absolute Path | `agentOrganizer.copyAbsolutePath` | Copies the fully resolved filesystem path for the file to the clipboard. |
 | Rename | `agentOrganizer.renameFile` | Prompts for a new file name and renames the file. |
 | Reveal in File Explorer | `agentOrganizer.revealInFileExplorer` | Opens the file's location in the system file explorer. |
 | Delete | `agentOrganizer.deleteSkillFile` | Deletes the file (moved to trash). |

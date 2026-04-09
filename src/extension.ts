@@ -1171,7 +1171,71 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.window.showInformationMessage(`Copied "${name}" to clipboard.`);
         }),
 
-        // Copy the item's logical #path reference to the clipboard
+        // Duplicate an installed area item or skill with a new name
+        vscode.commands.registerCommand('agentOrganizer.duplicateItem', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
+            if (!item) { return; }
+            const isSkill = item instanceof InstalledSkillTreeItem;
+            const oldName = isSkill ? item.installedSkill.name : item.installedItem.name;
+            const itemUri = isSkill ? item.skillUri : item.itemUri;
+            const isSingleFile = !isSkill && item.isSingleFile;
+            const area: ContentArea | undefined = isSkill ? 'skills' : (item as AreaInstalledItemTreeItem).area;
+
+            const newName = await vscode.window.showInputBox({
+                prompt: `Duplicate "${oldName}" as`,
+                value: `${oldName}-copy`,
+                validateInput: value => {
+                    if (!value?.trim()) { return 'Name is required'; }
+                    if (/[/\\]/.test(value)) { return 'Name cannot contain path separators'; }
+                    if (value.trim() === '.' || value.trim() === '..') { return "Name cannot be '.' or '..'"; }
+                    if (/\.\./.test(value.trim())) { return "Name cannot contain '..'"; }
+                    return undefined;
+                }
+            });
+            if (!newName) { return; }
+            const normalized = normalizeName(newName.trim());
+
+            try {
+                const parentUri = vscode.Uri.joinPath(itemUri, '..');
+                if (isSingleFile) {
+                    // Single-file: copy with new filename preserving extension
+                    const oldBaseName = itemUri.path.split('/').pop() || '';
+                    const dotIdx = oldBaseName.indexOf('.');
+                    const extension = dotIdx >= 0 ? oldBaseName.substring(dotIdx) : '';
+                    const newUri = vscode.Uri.joinPath(parentUri, normalized + extension);
+                    await vscode.workspace.fs.copy(itemUri, newUri);
+                    await updateFrontmatterName(newUri, normalized);
+                } else {
+                    // Multi-file: copy the entire folder
+                    const newUri = vscode.Uri.joinPath(parentUri, normalized);
+                    await vscode.workspace.fs.copy(itemUri, newUri);
+                    // Update name in the definition file of the copy
+                    const def = area ? AREA_DEFINITIONS[area] : undefined;
+                    if (def?.definitionFile) {
+                        const defUri = await findDefinitionFile(newUri, def.definitionFile);
+                        if (defUri) {
+                            if (def.definitionFile.endsWith('.json')) {
+                                await updateJsonDefinitionName(defUri, normalized);
+                            } else {
+                                await updateFrontmatterName(defUri, normalized);
+                            }
+                        }
+                    }
+                }
+
+                vscode.window.showInformationMessage(`Duplicated "${oldName}" as "${normalized}".`);
+                if (isSkill) {
+                    await installedProvider.refresh();
+                } else {
+                    refreshAreaProviders();
+                }
+                await syncInstalledStatus();
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                vscode.window.showErrorMessage(`Failed to duplicate "${oldName}": ${message}`);
+            }
+        }),
+
+        // Copy the item's logical #{path} reference to the clipboard
         vscode.commands.registerCommand('agentOrganizer.copyItemPath', async (item: PathReferenceTreeItem) => {
             const pathReference = item ? buildItemPathReference(item) : undefined;
             if (!pathReference) {
@@ -1181,7 +1245,31 @@ export function activate(context: vscode.ExtensionContext) {
 
             const chatReference = `#${pathReference}`;
             await vscode.env.clipboard.writeText(chatReference);
-            vscode.window.showInformationMessage(`Copied "${chatReference}" to clipboard.`);
+        }),
+
+        // Copy the item's absolute filesystem path to the clipboard
+        vscode.commands.registerCommand('agentOrganizer.copyAbsolutePath', async (item: PathReferenceTreeItem) => {
+            if (!item) {
+                vscode.window.showErrorMessage('Unable to determine a path for this item.');
+                return;
+            }
+            let uri: vscode.Uri | undefined;
+            if (item instanceof InstalledSkillTreeItem) { uri = item.skillUri; }
+            else if (item instanceof AreaInstalledItemTreeItem) { uri = item.itemUri; }
+            else if (item instanceof SkillFolderTreeItem) { uri = item.folderUri; }
+            else if (item instanceof SkillFileTreeItem) { uri = item.fileUri; }
+            else if (item instanceof AreaItemFolderTreeItem) { uri = item.folderUri; }
+            else if (item instanceof AreaItemFileTreeItem) { uri = item.fileUri; }
+            if (!uri) {
+                vscode.window.showErrorMessage('Unable to determine a path for this item.');
+                return;
+            }
+            let absPath = normalizeSeparators(uri.fsPath);
+            // Capitalize Windows drive letter (e.g. c:/ → C:/)
+            if (/^[a-z]:\//.test(absPath)) {
+                absPath = absPath[0].toUpperCase() + absPath.slice(1);
+            }
+            await vscode.env.clipboard.writeText(absPath);
         }),
 
         // Rename an installed area item or skill
@@ -2050,14 +2138,15 @@ export function activate(context: vscode.ExtensionContext) {
     // Ensure per-area install locations are persisted in settings
     pathService.ensureInstallLocations();
 
-    // Initial load - load installed skills, preload area providers, and marketplace in parallel.
-    // preload() populates item data for green checks without clearing the loading state,
-    // so area views still show the spinner when first expanded.
-    Promise.all([
+    // Initial load — local scans and marketplace fetch run independently.
+    // Green check icons are applied once both groups finish.
+    const localScanPromise = Promise.all([
         installedProvider.refresh(),
         ...Array.from(areaProviders.values()).map(p => p.preload()),
-        marketplaceProvider.loadSkills()
-    ]).then(() => {
+    ]);
+    const marketplacePromise = marketplaceProvider.loadSkills();
+
+    Promise.all([localScanPromise, marketplacePromise]).then(() => {
         // Collect all installed names across skills and area providers
         const allNames = new Set(installedProvider.getInstalledSkillNames());
         for (const provider of areaProviders.values()) {

@@ -17,7 +17,7 @@ Agent Organizer adds a sidebar panel to VS Code with views for each type of AI t
 
 Each view shows what you have installed locally, grouped by location. The Marketplace lets you browse repositories and download items with one click.
 
-![Agent Organizer](resources/agent-organizer.png)
+![Agent Organizer](resources/docs/agent-organizer.png)
 
 ## Getting started
 
@@ -31,6 +31,8 @@ Each view shows what you have installed locally, grouped by location. The Market
 **Create from scratch** — use the "Add" button in any view's toolbar to scaffold a new item with the right file structure for that area.
 
 **Rename and copy name** — right-click any item to rename it (updates the folder/file and definition file) or copy its name to the clipboard.
+
+**Copy #{path} for chat** — right-click an installed item, folder, or file and choose **Copy #{path}** to copy a chat-ready reference you can paste into conversation prompts. **Copy Absolute Path** is also available for the full filesystem path.
 
 **Download from GitHub** — browse multiple repositories, view README documentation, and download any item to your configured location.
 

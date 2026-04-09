@@ -4,6 +4,21 @@ All notable changes to the "agent-organizer" extension will be documented in thi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.1.0]
+
+### Added
+
+- "Copy #{path}" right-click option on installed items in Skills and all area views.
+- "Copy #{path}" right-click option on subfolders/files inside installed multi-file items.
+- "Copy Absolute Path" right-click option on all items, subfolders, and files. Copies the fully resolved filesystem path (with capitalized drive letter on Windows).
+- Path references are copied in chat-ready format (for example: `#~/.copilot/skills/my-skill/docs/guide.md`).
+- Unit tests for path-reference building across installed skill and area tree nodes.
+
+### Changed
+
+- Prompt workflow files moved under `.github/prompts/`.
+- Version bumped from `0.0.8` to `0.1.0`.
+
 ## [0.0.8]
 
 ### Added
