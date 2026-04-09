@@ -345,9 +345,11 @@ export class MarketplaceTreeDataProvider implements vscode.TreeDataProvider<Mark
         const queue = [...repositories];
         const workers = Array.from({ length: Math.min(concurrency, queue.length) }, async () => {
             while (queue.length > 0) {
+                if (generation !== this.loadGeneration) { return; }
                 const repo = queue.shift()!;
                 try {
                     const discovered = await this.githubClient.discoverAreas(repo.owner, repo.repo, repo.branch || 'main');
+                    if (generation !== this.loadGeneration) { return; }
 
                     if (Object.keys(discovered).length > 0) {
                         const content = await this.githubClient.fetchRepoContent(repo, discovered);
