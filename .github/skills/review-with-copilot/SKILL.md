@@ -46,3 +46,21 @@ Use the issue comments endpoint to post a general reply on the PR:
 ```bash
 gh pr comment {pr_number} --body "Your response here"
 ```
+
+## How to Check if Conversations are Resolved
+
+The REST API does not expose the resolved state. Use GraphQL:
+
+```bash
+gh api graphql -f query='{ repository(owner: "{owner}", name: "{repo}") { pullRequest(number: {pr_number}) { reviewThreads(first: 50) { nodes { id isResolved comments(first: 1) { nodes { databaseId body } } } } } } }'
+```
+
+Each thread has `isResolved` (boolean) and an `id` (node ID needed for resolving).
+
+## How to Resolve a Conversation Thread
+
+Use the GraphQL `resolveReviewThread` mutation with the thread's node ID:
+
+```bash
+gh api graphql -f query='mutation { resolveReviewThread(input: {threadId: "{thread_node_id}"}) { thread { isResolved } } }'
+```
