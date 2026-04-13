@@ -10,7 +10,8 @@ metadata:
 ## Workflow
 
 1. Determine the PR number from the current branch (use `gh pr list --head {branch} --state open`).
-2. Load the `.env` file to set `GH_TOKEN` before every `gh` command.
+2. If there is a `.env` file with a GH_TOKEN:
+   a. Load the `.env` file to set `GH_TOKEN` before every `gh` command.
 3. Fetch all review threads using GraphQL (see below). Filter to only **unresolved** threads.
 4. For each unresolved thread:
    a. Read the comment body, file path, and line range.

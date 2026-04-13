@@ -252,21 +252,16 @@ async function migrateSettings(context: vscode.ExtensionContext): Promise<void> 
 
     for (const key of keysToMigrate) {
         const inspected = oldConfig.inspect(key);
+        const newInspected = newConfig.inspect(key);
         // Migrate user-level (global) settings
-        if (inspected?.globalValue !== undefined) {
-            const newInspected = newConfig.inspect(key);
-            if (newInspected?.globalValue === undefined) {
-                await newConfig.update(key, inspected.globalValue, vscode.ConfigurationTarget.Global);
-                migrated = true;
-            }
+        if (inspected?.globalValue !== undefined && newInspected?.globalValue === undefined) {
+            await newConfig.update(key, inspected.globalValue, vscode.ConfigurationTarget.Global);
+            migrated = true;
         }
         // Migrate workspace-level settings
-        if (inspected?.workspaceValue !== undefined) {
-            const newInspected = newConfig.inspect(key);
-            if (newInspected?.workspaceValue === undefined) {
-                await newConfig.update(key, inspected.workspaceValue, vscode.ConfigurationTarget.Workspace);
-                migrated = true;
-            }
+        if (inspected?.workspaceValue !== undefined && newInspected?.workspaceValue === undefined) {
+            await newConfig.update(key, inspected.workspaceValue, vscode.ConfigurationTarget.Workspace);
+            migrated = true;
         }
     }
 
@@ -277,11 +272,15 @@ async function migrateSettings(context: vscode.ExtensionContext): Promise<void> 
     await context.globalState.update(MIGRATION_KEY, true);
 }
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
     console.log('AI Tools Organizer extension is now active!');
 
     // Migrate settings from old prefix before anything else
-    migrateSettings(context);
+    try {
+        await migrateSettings(context);
+    } catch (err) {
+        console.error('AI Tools Organizer: settings migration failed', err);
+    }
 
     // ─── Section 1: Service initialization ───────────────────────────────
     const githubClient = new GitHubSkillsClient(context);
