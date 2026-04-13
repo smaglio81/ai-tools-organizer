@@ -1,5 +1,5 @@
 /**
- * GitHub API client for fetching Agent Organizer from repositories
+ * GitHub API client for fetching AI Tools Organizer from repositories
  * 
  * OPTIMIZATION: Uses Git Trees API (1 call per repo) + raw.githubusercontent.com 
  * (no rate limit) to minimize GitHub API usage.
@@ -337,7 +337,7 @@ export class GitHubSkillsClient {
      * Fetch with GitHub authentication if token is configured
      */
     private async fetchWithAuth(url: string, additionalHeaders?: Record<string, string>): Promise<Response> {
-        const config = vscode.workspace.getConfiguration('agentOrganizer');
+        const config = vscode.workspace.getConfiguration('AIToolsOrganizer');
         const token = config.get<string>('githubToken', '');
         
         const headers: Record<string, string> = {
@@ -377,7 +377,7 @@ export class GitHubSkillsClient {
             return null;
         }
         
-        const config = vscode.workspace.getConfiguration('agentOrganizer');
+        const config = vscode.workspace.getConfiguration('AIToolsOrganizer');
         const timeout = config.get<number>('cacheTimeout', 3600) * 1000;
         
         if (Date.now() - entry.timestamp > timeout) {

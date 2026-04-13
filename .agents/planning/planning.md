@@ -17,7 +17,7 @@ agreeing on reusable patterns:
 
 I would like each repository to have a node for that area, if a folder with the matching name exists in the repository.
 
-* The repository paths for each of these areas should be stored in `agentOrganizer.skillRepositories`. The `path` property should be updated to a `paths` object and should have a property for each area.
+* The repository paths for each of these areas should be stored in `AIToolsOrganizer.skillRepositories`. The `path` property should be updated to a `paths` object and should have a property for each area.
 * When loading the marketplace and when refreshing the marketplace, the repository should be searched to see if any new areas have been added.
 * Each of these areas will need a unique icon.
   * The icon should be generated in the 4 colors: blue, green, orange, and purple.
@@ -90,9 +90,9 @@ Currently, Skills has a view.
   * Right-click should not contain `Add File` or `Add Folder`
   * Double-clicking should open the file for editing
 
-### Refactor `agentOrganizer.skillRepositories`
+### Refactor `AIToolsOrganizer.skillRepositories`
 
-* Refactor the setting `agentOrganizer.skillRepositories` to exists in the User Settings as opposed to the User Settings (JSON).
+* Refactor the setting `AIToolsOrganizer.skillRepositories` to exists in the User Settings as opposed to the User Settings (JSON).
 * The display should only one contain properties for `owner`, `repo`, and `branch`.
 * If an add button appears in User Settings, then button should take a github url and scan it for the correct values.
 
@@ -128,12 +128,12 @@ Currently, Skills has a view.
     * plugins
     * prompts
     * skills
-* The setting `agentOrganizer.installLocation` currently only stores the location of the default download location for skills.
-  * This setting should be refactored into an array `agentOrganizer.installLocations` which properties for each area.
+* The setting `AIToolsOrganizer.installLocation` currently only stores the location of the default download location for skills.
+  * This setting should be refactored into an array `AIToolsOrganizer.installLocations` which properties for each area.
   * The code should be updated to reflect these changes, including package.json.
-  * If `agentOrganizer.installLocations` is not defined in settings, then the setting should be created.
+  * If `AIToolsOrganizer.installLocations` is not defined in settings, then the setting should be created.
     * When the settings are being created this way, the default value of each setting should be `~/.copilot/{area}`
-  * The `Custom Location` option in the QuickPick location menus should take you to the `agentOrganizer.installLocations` setting in User Settings (instead of the User Settings JSON file).
+  * The `Custom Location` option in the QuickPick location menus should take you to the `AIToolsOrganizer.installLocations` setting in User Settings (instead of the User Settings JSON file).
 
 ## Adding `Copy To Plugin ...`
 

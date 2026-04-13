@@ -133,7 +133,7 @@ suite('Area Views Test Suite', () => {
         test('discovers all agent files including nested subfolders', async () => {
             const mockFs = buildMockFs('agents', MOCK_AGENTS_DIR);
             const pathService = createTestPathService(mockFs, 'agents');
-            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'agents', 'agentOrganizer.agents');
+            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'agents', 'AIToolsOrganizer.agents');
             const items = await provider.scanInstalledItems();
             assertItemsMatch(items, EXPECTED_AGENTS);
         });
@@ -143,7 +143,7 @@ suite('Area Views Test Suite', () => {
         test('discovers hook folders with hooks.json', async () => {
             const mockFs = buildMockFs('hooksGithub', MOCK_HOOKS_GITHUB_DIR);
             const pathService = createTestPathService(mockFs, 'hooksGithub');
-            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'hooksGithub', 'agentOrganizer.hooksGithub');
+            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'hooksGithub', 'AIToolsOrganizer.hooksGithub');
             const items = await provider.scanInstalledItems();
             assertItemsMatch(items, EXPECTED_HOOKS_GITHUB);
         });
@@ -153,7 +153,7 @@ suite('Area Views Test Suite', () => {
         test('discovers JSON files in .kiro/hooks', async () => {
             const mockFs = buildMockFs('hooksKiro', MOCK_HOOKS_KIRO_DIR);
             const pathService = createTestPathService(mockFs, 'hooksKiro');
-            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'hooksKiro', 'agentOrganizer.hooksKiro');
+            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'hooksKiro', 'AIToolsOrganizer.hooksKiro');
             const items = await provider.scanInstalledItems();
             assertItemsMatch(items, EXPECTED_HOOKS_KIRO);
         });
@@ -163,7 +163,7 @@ suite('Area Views Test Suite', () => {
         test('discovers instruction files', async () => {
             const mockFs = buildMockFs('instructions', MOCK_INSTRUCTIONS_DIR);
             const pathService = createTestPathService(mockFs, 'instructions');
-            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'instructions', 'agentOrganizer.instructions');
+            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'instructions', 'AIToolsOrganizer.instructions');
             const items = await provider.scanInstalledItems();
             assertItemsMatch(items, EXPECTED_INSTRUCTIONS);
         });
@@ -173,7 +173,7 @@ suite('Area Views Test Suite', () => {
         test('discovers plugins with nested and root-level plugin.json', async () => {
             const mockFs = buildMockFs('plugins', MOCK_PLUGINS_DIR);
             const pathService = createTestPathService(mockFs, 'plugins');
-            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'plugins', 'agentOrganizer.plugins');
+            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'plugins', 'AIToolsOrganizer.plugins');
             const items = await provider.scanInstalledItems();
             assertItemsMatch(items, EXPECTED_PLUGINS);
         });
@@ -183,7 +183,7 @@ suite('Area Views Test Suite', () => {
         test('discovers prompt files including nested subfolders', async () => {
             const mockFs = buildMockFs('prompts', MOCK_PROMPTS_DIR);
             const pathService = createTestPathService(mockFs, 'prompts');
-            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'prompts', 'agentOrganizer.prompts');
+            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'prompts', 'AIToolsOrganizer.prompts');
             const items = await provider.scanInstalledItems();
             assertItemsMatch(items, EXPECTED_PROMPTS);
         });
@@ -205,7 +205,7 @@ suite('Area Views Test Suite', () => {
             const emptyDir = { type: 'directory' as const, children: {} };
             const mockFs = buildMockFs('agents', emptyDir);
             const pathService = createTestPathService(mockFs, 'agents');
-            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'agents', 'agentOrganizer.agents');
+            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'agents', 'AIToolsOrganizer.agents');
             const items = await provider.scanInstalledItems();
             assert.strictEqual(items.length, 0, 'Expected no items in empty directory');
         });
@@ -222,7 +222,7 @@ suite('Area Views Test Suite', () => {
                 }}
             });
             const pathService = createTestPathService(mockFs, 'agents');
-            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'agents', 'agentOrganizer.agents');
+            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'agents', 'AIToolsOrganizer.agents');
             const items = await provider.scanInstalledItems();
             assert.strictEqual(items.length, 0, 'Expected no items when directory missing');
         });
@@ -236,7 +236,7 @@ suite('Area Views Test Suite', () => {
             // Start with empty agents directory
             const mockFs = buildMockFs('agents', { type: 'directory', children: {} });
             const pathService = createTestPathService(mockFs, 'agents');
-            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'agents', 'agentOrganizer.agents');
+            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'agents', 'AIToolsOrganizer.agents');
 
             // Verify empty before install
             let items = await provider.scanInstalledItems();
@@ -271,7 +271,7 @@ suite('Area Views Test Suite', () => {
         test('installing a multi-file plugin with nested plugin.json makes it discoverable', async () => {
             const mockFs = buildMockFs('plugins', { type: 'directory', children: {} });
             const pathService = createTestPathService(mockFs, 'plugins');
-            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'plugins', 'agentOrganizer.plugins');
+            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'plugins', 'AIToolsOrganizer.plugins');
 
             // Verify empty before install
             let items = await provider.scanInstalledItems();
@@ -306,7 +306,7 @@ suite('Area Views Test Suite', () => {
         test('installing a GitHub hook makes it discoverable', async () => {
             const mockFs = buildMockFs('hooksGithub', { type: 'directory', children: {} });
             const pathService = createTestPathService(mockFs, 'hooksGithub');
-            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'hooksGithub', 'agentOrganizer.hooksGithub');
+            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'hooksGithub', 'AIToolsOrganizer.hooksGithub');
 
             let items = await provider.scanInstalledItems();
             assert.strictEqual(items.length, 0);
@@ -338,7 +338,7 @@ suite('Area Views Test Suite', () => {
                 }
             });
             const pathService = createTestPathService(mockFs, 'agents');
-            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'agents', 'agentOrganizer.agents');
+            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'agents', 'AIToolsOrganizer.agents');
 
             let items = await provider.scanInstalledItems();
             assert.strictEqual(items.length, 1, 'Should find 1 agent before delete');
@@ -411,7 +411,7 @@ suite('Area Views Test Suite', () => {
             }
 
             const pathService = new DualLocationPathService();
-            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'agents', 'agentOrganizer.agents');
+            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'agents', 'AIToolsOrganizer.agents');
 
             // Initial scan: 1 agent, should be unique (purple)
             await provider.refresh();

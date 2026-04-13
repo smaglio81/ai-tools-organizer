@@ -13,7 +13,7 @@ Click any item to view its details in a panel with:
 - Download and View Source buttons
 
 &nbsp;
-![Marketplace](../resources/docs/agent-organizer-marketplace.png)
+![Marketplace](../resources/docs/ai-tools-organizer-marketplace.png)
 
 ## Downloading
 
@@ -27,7 +27,7 @@ Downloaded items appear in the corresponding area view and get a green check in 
 
 Click the **+** button in the Marketplace toolbar and paste a GitHub URL. The extension parses the URL and resolves the default branch automatically.
 
-You can also add repositories in Settings under `agentOrganizer.skillRepositories`.
+You can also add repositories in Settings under `AIToolsOrganizer.skillRepositories`.
 
 ## Searching
 

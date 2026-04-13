@@ -5,7 +5,7 @@ metadata:
   version: "2026.04.01"
 ---
 
-# Agent Organizer Pull Request
+# AI Tools Organizer Pull Request
 
 ## Instructions
 

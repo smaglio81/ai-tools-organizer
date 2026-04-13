@@ -1,6 +1,6 @@
 # Change Log
 
-All notable changes to the "agent-organizer" extension will be documented in this file.
+All notable changes to the "ai-tools-organizer" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
@@ -78,7 +78,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Unique color-coded icons for each area (7 area shapes × 4 status colors + 7 area-colored group icons).
 - Area group nodes under each repository in the Marketplace tree, each with its own icon and item count.
 - Single-file area items (Agents, Instructions, Prompts) support click-to-view-details, inline "View Details" button, and right-click "Open in Browser".
-- `agentOrganizer.viewFileDetails` command: fetches single-file content from GitHub and opens the detail panel.
+- `AIToolsOrganizer.viewFileDetails` command: fetches single-file content from GitHub and opens the detail panel.
 - "Open in Browser" right-click menu on area group nodes (opens the area's directory on GitHub).
 - `plugin.json` files are parsed as JSON to extract `name` and `description` for Plugins.
 - New Activity Bar icon (books/library design using `currentColor`).
@@ -98,12 +98,12 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - "Move to..." and "Copy to..." added to top-level location folders in all views (Skills and area views)
 - View title icons: each view displays its area-colored icon in the title
 - For JSON-based multi-file areas (Hooks - GitHub, Plugins), the detail panel now fetches and renders `README.md` from the item's folder. The README tab shows rendered markdown; Raw Source shows the raw README content. Name and description fall back to README frontmatter if not provided by the JSON definition file.
-- Per-area "Default Download Location" button in all view title bars (Skills and all area views). Each area can have its own configured download location via `agentOrganizer.installLocations`.
-- `agentOrganizer.installLocations` setting: an object with per-area default download locations. Defaults to `~/.copilot/{area}` for each area (hooksKiro defaults to `.kiro/hooks`). Created automatically in user settings on first activation if not present.
+- Per-area "Default Download Location" button in all view title bars (Skills and all area views). Each area can have its own configured download location via `AIToolsOrganizer.installLocations`.
+- `AIToolsOrganizer.installLocations` setting: an object with per-area default download locations. Defaults to `~/.copilot/{area}` for each area (hooksKiro defaults to `.kiro/hooks`). Created automatically in user settings on first activation if not present.
 - Each area resolves its list of possible download locations from its `chat.*` configuration key (e.g., `chat.agentFilesLocations` for agents, `chat.pluginLocations` for plugins). Falls back to a generated default list using 8 template prefixes (`{.agents,.claude,.github,.kiro,~/.agents,~/.claude,~/.copilot,~/.kiro}/{area}`).
 - "Show in Marketplace" right-click menu on all area view items (both single-file and multi-file). Uses `revealItemByName()` which searches both skills and area file items in the marketplace tree.
 - Green check icon on marketplace items that are installed locally — now works for all content areas, not just skills. Installed names are collected from both the Skills provider and all area providers on every sync.
-- Area-specific download: the install command now uses the area-specific default download location (from `agentOrganizer.installLocations`) instead of always using the skills location.
+- Area-specific download: the install command now uses the area-specific default download location (from `AIToolsOrganizer.installLocations`) instead of always using the skills location.
 - Installed area scan now includes the configured default download location for each area, ensuring downloaded items are always found even if the location doesn't match a derived scan path.
 - Recursive definition file search for multi-file areas: the installed scan now searches recursively for definition files (e.g., `plugin.json`) within item folders, matching how the marketplace discovers items in repos.
 - Marketplace View
@@ -117,7 +117,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ### Changed
 
-- Renamed the Installed view from "Installed" (`agentOrganizer.installed`) to "Skills" (`agentOrganizer.skills`).
+- Renamed the Installed view from "Installed" (`AIToolsOrganizer.installed`) to "Skills" (`AIToolsOrganizer.skills`).
 - Skill names parsed from `SKILL.md` frontmatter now have surrounding quotes (single or double) stripped.
 - Removed `path`, `paths`, and `singleSkill` from `SkillRepository` config. Repositories now only need `owner`, `repo`, and optionally `branch`. Area paths are discovered automatically.
 - Simplified `isSameRepository()` to compare only `owner`, `repo`, and `branch`.
@@ -135,10 +135,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Skills icon redesigned as a 3D package/box (matching the VS Code `package` codicon style) in all 4 status colors.
 - Powers area excluded from discovery (still being planned).
 - "Install Location" button renamed to "Default Download Location" across all views.
-- `agentOrganizer.installLocation` (string) replaced by `agentOrganizer.installLocations` (object with per-area properties). Legacy `installLocation` is no longer used.
-- `agentOrganizer.skillRepositories` schema simplified: `additionalProperties` constraint removed so the VS Code Settings UI renders entries inline with editable `owner`, `repo`, and `branch` fields.
+- `AIToolsOrganizer.installLocation` (string) replaced by `AIToolsOrganizer.installLocations` (object with per-area properties). Legacy `installLocation` is no longer used.
+- `AIToolsOrganizer.skillRepositories` schema simplified: `additionalProperties` constraint removed so the VS Code Settings UI renders entries inline with editable `owner`, `repo`, and `branch` fields.
 - `readRepositoriesConfig()` and `writeRepositoriesConfig()` centralize all config read/write for repositories, supporting both string and object entry formats.
-- "Custom..." option in Default Download Location quick pick now opens the VS Code Settings UI filtered to `agentOrganizer.installLocations` instead of opening `settings.json`.
+- "Custom..." option in Default Download Location quick pick now opens the VS Code Settings UI filtered to `AIToolsOrganizer.installLocations` instead of opening `settings.json`.
 - `refreshAreaProviders()` is now async and properly awaited, fixing timing issues where installed item names were collected before area providers finished refreshing.
 - All item-level mutations (delete, move, copy, delete-all) for area items now route through `syncInstalledStatus()`, ensuring the marketplace green check icons update correctly on every change.
 - "Show in Marketplace" and "Reveal in File Explorer" now share the same right-click menu group (`3_marketplace`) on area view items, matching the Skills view layout.
@@ -162,7 +162,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
   - Results shown via output channel with per-item ✅/⏭️ status and failure reasons. Toast notification includes "Show Details" button.
 - "Copy to area" right-click option on files and folders inside a plugin's area subfolders. Copies the item to the corresponding installed area's default download location.
 - `src/services/pluginSyncService.ts` — shared service for plugin sync operations with `PLUGIN_SUBFOLDER_TO_AREA` mapping, `syncPluginItem()`, and `SyncResult` type with failure reasons.
-- "Agent Organizer" output channel for detailed sync results.
+- "AI Tools Organizer" output channel for detailed sync results.
 - Plugin detail panel now shows a third tab for the raw `plugin.json` (or `hooks.json`) content when the definition file is JSON-based.
 - Plugin discovery now handles nested category folders (e.g. `plugins/agents/my-plugin/.claude-plugin/plugin.json`) by stripping known wrapper directories (`.claude-plugin`, `.github`) when determining the item root.
 - Plugin README.md fallback: when `plugin.json` is nested and README.md isn't found next to it, the detail panel also checks the plugin's root directory.
@@ -191,7 +191,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ### Changed
 
-- Renamed extension from "Agent Skills" to "Agent Organizer". All command IDs, configuration keys, view IDs, and context keys updated from `agentSkills.*` to `agentOrganizer.*`.
+- Renamed extension from "Agent Skills" to "AI Tools Organizer". All command IDs, configuration keys, view IDs, and context keys updated from `agentSkills.*` to `AIToolsOrganizer.*`.
 
 ### Added
 
@@ -208,8 +208,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
       - "Open in Browser" — opens the repository on GitHub in the default browser
     - On Skill
       - "Install skill" (in addition to the existing inline install skill icon)
-  - Toolbar now includes `agentOrganizer.addRepository` (Add Repository).
-    - Users can add a repository by GitHub URL; the extension parses URL forms like `github.com/owner/repo` and `github.com/owner/repo/tree/<branch>/<path>` and writes the parsed entry to `agentOrganizer.skillRepositories`.
+  - Toolbar now includes `AIToolsOrganizer.addRepository` (Add Repository).
+    - Users can add a repository by GitHub URL; the extension parses URL forms like `github.com/owner/repo` and `github.com/owner/repo/tree/<branch>/<path>` and writes the parsed entry to `AIToolsOrganizer.skillRepositories`.
     - When a GitHub URL does not include a branch, the extension resolves the repo's default branch via GitHub API before adding the entry.
   - Defaults to collapsed
 - Installed Skills View
@@ -250,10 +250,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Marketplace repository and skill entries are now alphabetically sorted.
 - Installed skills in Marketplace now use a green check icon.
 - Removing a repository from Marketplace no longer shows a confirmation modal.
-- `agentOrganizer.installLocation` no longer enforces a fixed enum of values; any string path is accepted.
+- `AIToolsOrganizer.installLocation` no longer enforces a fixed enum of values; any string path is accepted.
 - Scan locations for the Installed view are now sourced from the `chat.agentSkillsLocations` setting (maintained by VS Code) instead of being hardcoded. Falls back to the previous default set of six locations if the setting is not configured.
 - Installed tree view UX improvements: collapse/expand state persistence, marketplace default collapsed state, split refresh commands.
-- Split `agentOrganizer.refresh` into two commands: `agentOrganizer.refresh` (marketplace only) and `agentOrganizer.refreshInstalled` (installed only).
+- Split `AIToolsOrganizer.refresh` into two commands: `AIToolsOrganizer.refresh` (marketplace only) and `AIToolsOrganizer.refreshInstalled` (installed only).
 - Installed Skills view initially shows "Loading ..." and then "Searching for installed skills..." with a spinner during the initial scan.
 
 ## [0.0.3]

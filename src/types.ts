@@ -1,5 +1,5 @@
 /**
- * Agent Organizer type definitions
+ * AI Tools Organizer type definitions
  */
 
 import * as vscode from 'vscode';
@@ -239,7 +239,7 @@ export function parseRepositoryEntry(entry: string | SkillRepository): SkillRepo
  * Returns normalized SkillRepository[].
  */
 export function readRepositoriesConfig(): SkillRepository[] {
-    const config = vscode.workspace.getConfiguration('agentOrganizer');
+    const config = vscode.workspace.getConfiguration('AIToolsOrganizer');
     const raw = config.get<(string | SkillRepository)[]>('skillRepositories', []);
     const repos: SkillRepository[] = [];
     for (const entry of raw) {
@@ -253,7 +253,7 @@ export function readRepositoriesConfig(): SkillRepository[] {
  * Write the skillRepositories config as object[] for Settings UI compatibility.
  */
 export async function writeRepositoriesConfig(repos: SkillRepository[]): Promise<void> {
-    const config = vscode.workspace.getConfiguration('agentOrganizer');
+    const config = vscode.workspace.getConfiguration('AIToolsOrganizer');
     const normalized = repos.map(r => ({ owner: r.owner, repo: r.repo, branch: r.branch || 'main' }));
     await config.update('skillRepositories', normalized, vscode.ConfigurationTarget.Global);
 }

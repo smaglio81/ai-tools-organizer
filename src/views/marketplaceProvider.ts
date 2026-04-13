@@ -72,7 +72,7 @@ export class SkillTreeItem extends vscode.TreeItem {
         
         // Click to view details
         this.command = {
-            command: 'agentOrganizer.viewDetails',
+            command: 'AIToolsOrganizer.viewDetails',
             title: 'View Details',
             arguments: [skill]
         };
@@ -194,7 +194,7 @@ export class AreaFileTreeItem extends vscode.TreeItem {
 
         // Click to view details
         this.command = {
-            command: 'agentOrganizer.viewFileDetails',
+            command: 'AIToolsOrganizer.viewFileDetails',
             title: 'View Details',
             arguments: [fileItem]
         };
@@ -401,7 +401,7 @@ export class MarketplaceTreeDataProvider implements vscode.TreeDataProvider<Mark
      * Update VS Code context key for search state
      */
     private updateSearchContext(): void {
-        vscode.commands.executeCommand('setContext', 'agentOrganizer:searchActive', this.isSearchActive());
+        vscode.commands.executeCommand('setContext', 'AIToolsOrganizer:searchActive', this.isSearchActive());
     }
 
     /**
