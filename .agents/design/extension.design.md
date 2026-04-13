@@ -1,10 +1,10 @@
-# Agent Organizer Extension Design
+# AI Tools Organizer Extension Design
 
 ## Overview
 
-The Agent Organizer extension provides a VS Code interface for browsing, downloading, and managing reusable AI content — agents, hooks, instructions, plugins, prompts, and skills — from GitHub repositories.
+The AI Tools Organizer extension provides a VS Code interface for browsing, downloading, and managing reusable AI content — agents, hooks, instructions, plugins, prompts, and skills — from GitHub repositories.
 
-The extension adds an **Agent Organizer** activity bar container with 8 tree views:
+The extension adds an **AI Tools Organizer** activity bar container with 8 tree views:
 
 - **Marketplace** — Browse and download content from configured GitHub repositories across all content areas.
 - **Agents** — View and manage installed agent files (`*.agent.md`).
@@ -21,14 +21,14 @@ The extension adds an **Agent Organizer** activity bar container with 8 tree vie
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
-| `agentOrganizer.skillRepositories` | array | (6 defaults) | GitHub repositories to fetch content from. Each entry has `owner`, `repo`, and `branch`. Rendered inline in the Settings UI. Read/written via `readRepositoriesConfig()` / `writeRepositoriesConfig()`. |
-| `agentOrganizer.installLocations` | object | `~/.copilot/{area}` per area | Per-area default download locations. Keys are area identifiers (`agents`, `hooksGithub`, `hooksKiro`, `instructions`, `plugins`, `prompts`, `skills`). Created automatically on first activation if not present. |
-| `agentOrganizer.githubToken` | string | `""` | Optional GitHub personal access token for higher API rate limits. |
-| `agentOrganizer.cacheTimeout` | number | `3600` | Seconds before cached marketplace data expires. |
+| `AIToolsOrganizer.skillRepositories` | array | (6 defaults) | GitHub repositories to fetch content from. Each entry has `owner`, `repo`, and `branch`. Rendered inline in the Settings UI. Read/written via `readRepositoriesConfig()` / `writeRepositoriesConfig()`. |
+| `AIToolsOrganizer.installLocations` | object | `~/.copilot/{area}` per area | Per-area default download locations. Keys are area identifiers (`agents`, `hooksGithub`, `hooksKiro`, `instructions`, `plugins`, `prompts`, `skills`). Created automatically on first activation if not present. |
+| `AIToolsOrganizer.githubToken` | string | `""` | Optional GitHub personal access token for higher API rate limits. |
+| `AIToolsOrganizer.cacheTimeout` | number | `3600` | Seconds before cached marketplace data expires. |
 
 Each area's list of possible download locations is resolved from its `chat.*` configuration key (e.g., `chat.agentFilesLocations` for agents, `chat.pluginLocations` for plugins, `chat.agentSkillsLocations` for skills). If the config key is not set, a default list is generated from 8 template prefixes (`{.agents,.claude,.github,.kiro,~/.agents,~/.claude,~/.copilot,~/.kiro}/{area}`). Hooks - Kiro is fixed to `.kiro/hooks`.
 
-Related external settings: each area view scans locations from its own `chat.*` setting (e.g. `chat.agentFilesLocations` for agents, `chat.pluginLocations` for plugins). When the setting isn't configured, a default list is generated from the template prefixes. The configured download location from `agentOrganizer.installLocations` is always included in the scan.
+Related external settings: each area view scans locations from its own `chat.*` setting (e.g. `chat.agentFilesLocations` for agents, `chat.pluginLocations` for plugins). When the setting isn't configured, a default list is generated from the template prefixes. The configured download location from `AIToolsOrganizer.installLocations` is always included in the scan.
 
 ---
 
@@ -56,7 +56,7 @@ Each area has a unique icon design and color. Hooks - GitHub and Hooks - Kiro sh
 Each content area (except Skills, which has its own dedicated provider) uses the generic `InstalledAreaTreeDataProvider` (`src/views/installedAreaProvider.ts`). This provider:
 
 - Scans locations from the area's own `chat.*` setting (e.g. `chat.agentFilesLocations` for agents), falling back to generated defaults
-- Also includes the area's configured default download location from `agentOrganizer.installLocations`
+- Also includes the area's configured default download location from `AIToolsOrganizer.installLocations`
 - Groups items by install location under `AreaLocationTreeItem` nodes with colored folder icons
 - Multi-file items (`AreaInstalledItemTreeItem`) expand to show folder contents
 - Multi-file items use recursive definition file search (e.g., `plugin.json` may be nested within the item folder)
@@ -106,8 +106,8 @@ The Skills view uses its own dedicated `InstalledSkillsTreeDataProvider` with ad
 
 | Service | Responsibility |
 |---|---|
-| `GitHubSkillsClient` | Fetches content from GitHub. Uses Git Trees API for efficiency; `raw.githubusercontent.com` for file content (no rate limit). Discovers content areas via `discoverAreas()`. Fetches all area content via `fetchRepoContent()`. Parses `plugin.json`/`hooks.json` as JSON and markdown files via YAML frontmatter. For JSON-based areas, also fetches `README.md` for detail panel body content. Caches results per `agentOrganizer.cacheTimeout`. |
-| `SkillPathService` | Resolves location strings (including `~` home paths) to `vscode.Uri` values. Provides scan locations, per-area default download locations (`getDefaultDownloadLocation(area)`), and install target resolution. Manages `agentOrganizer.installLocations` config (read, write, ensure defaults on activation). |
+| `GitHubSkillsClient` | Fetches content from GitHub. Uses Git Trees API for efficiency; `raw.githubusercontent.com` for file content (no rate limit). Discovers content areas via `discoverAreas()`. Fetches all area content via `fetchRepoContent()`. Parses `plugin.json`/`hooks.json` as JSON and markdown files via YAML frontmatter. For JSON-based areas, also fetches `README.md` for detail panel body content. Caches results per `AIToolsOrganizer.cacheTimeout`. |
+| `SkillPathService` | Resolves location strings (including `~` home paths) to `vscode.Uri` values. Provides scan locations, per-area default download locations (`getDefaultDownloadLocation(area)`), and install target resolution. Manages `AIToolsOrganizer.installLocations` config (read, write, ensure defaults on activation). |
 | `SkillInstallationService` | Downloads, deletes, moves, copies, syncs skills. Uses area-specific download locations based on `skill.area`. Handles overwrite confirmation, progress notifications, and trash-based deletion. |
 | `PluginSyncService` | Handles "Get latest copy" and "Copy to area" operations for plugin subfolders. Maps plugin subfolder names to content areas (`agents→agents`, `skills→skills`, `commands→prompts`, `hooks→hooksGithub`). Provides `syncPluginItem()` with `SyncResult` including failure reasons. Also used by "Update Plugins" to push item changes to all plugins containing a copy. |
 
@@ -125,8 +125,8 @@ The Skills view uses its own dedicated `InstalledSkillsTreeDataProvider` with ad
 | `normalizeSeparators(p)` | Replaces backslashes with forward slashes. |
 | `normalizeRepository(r)` | Defaults `branch` to `'main'`. |
 | `parseRepositoryEntry(e)` | Parses a config entry (string `owner/repo@branch` or object) into a `SkillRepository`. |
-| `readRepositoriesConfig()` | Reads `agentOrganizer.skillRepositories`, handling both string and object formats. |
-| `writeRepositoriesConfig(repos)` | Writes repositories as objects to `agentOrganizer.skillRepositories`. |
+| `readRepositoriesConfig()` | Reads `AIToolsOrganizer.skillRepositories`, handling both string and object formats. |
+| `writeRepositoriesConfig(repos)` | Writes repositories as objects to `AIToolsOrganizer.skillRepositories`. |
 | `buildGitHubUrl(...)` | Builds a GitHub tree URL with URL-encoded segments. |
 
 ---
@@ -134,3 +134,9 @@ The Skills view uses its own dedicated `InstalledSkillsTreeDataProvider` with ad
 ## File Watchers
 
 The Skills view watches for `SKILL.md` creation/deletion events in workspace skill folders with debounced duplicate status recomputation. Each area view creates its own file watchers for its specific file patterns (e.g., `**/{areaDir}/*/{definitionFile}` for multi-file areas, `**/{areaDir}/**/*{suffix}` for single-file areas), including watchers on the area's configured default download location. Watchers are recreated on refresh.
+
+---
+
+## Settings Migration
+
+On activation, `migrateSettings()` checks for existing user or workspace settings under the old `agentOrganizer.*` prefix and copies them to `AIToolsOrganizer.*`. Migrated keys: `skillRepositories`, `installLocations`, `githubToken`, `cacheTimeout`. The migration runs once per install, tracked by the `AIToolsOrganizer.settingsMigrated` global state flag. Existing new-prefix values are not overwritten.

@@ -38,12 +38,12 @@ jobs:
       - name: Package VSIX
         run: npx vsce package -o extension.vsix
 
-      # - name: Publish to Visual Studio Marketplace
-      #   uses: HaaLeo/publish-vscode-extension@v2
-      #   with:
-      #     pat: ${{ secrets.VSCE_PAT }}
-      #     registryUrl: https://marketplace.visualstudio.com
-      #     extensionFile: extension.vsix
+      - name: Publish to Visual Studio Marketplace
+        uses: HaaLeo/publish-vscode-extension@v2
+        with:
+          pat: ${{ secrets.VSCE_PAT }}
+          registryUrl: https://marketplace.visualstudio.com
+          extensionFile: extension.vsix
 
       - name: Publish to Open VSX Registry
         uses: HaaLeo/publish-vscode-extension@v2

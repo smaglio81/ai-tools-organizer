@@ -2,7 +2,7 @@
 
 Plugins can contain subfolders that mirror other content areas:
 
-![Plugins](../resources/docs/agent-organizer-plugins.png)
+![Plugins](../resources/docs/ai-tools-organizer-plugins.png)
 
 | Plugin subfolder | Content area |
 |---|---|
@@ -11,7 +11,7 @@ Plugins can contain subfolders that mirror other content areas:
 | `/commands` | Prompts / Commands |
 | `/hooks` | Hooks - GitHub |
 
-Agent Organizer provides tools to keep these subfolders in sync with your installed items.
+AI Tools Organizer provides tools to keep these subfolders in sync with your installed items.
 
 ## Copying items into a plugin
 

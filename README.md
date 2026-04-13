@@ -1,10 +1,10 @@
-# Agent Organizer
+# AI Tools Organizer
 
 Browse, download, and manage AI tools from GitHub — agents, skills, hooks, instructions, plugins, and prompts — all from a single VS Code sidebar.
 
 ## What it does
 
-Agent Organizer adds a sidebar panel to VS Code with views for each type of AI tool:
+AI Tools Organizer adds a sidebar panel to VS Code with views for each type of AI tool:
 
 - **Marketplace** — discover content from GitHub repositories
 - **Agents** — `*.agent.md` files
@@ -17,12 +17,12 @@ Agent Organizer adds a sidebar panel to VS Code with views for each type of AI t
 
 Each view shows what you have installed locally, grouped by location. The Marketplace lets you browse repositories and download items with one click.
 
-![Agent Organizer](resources/agent-organizer.png)
+![AI Tools Organizer](resources/ai-tools-organizer.png)
 
 ## Getting started
 
 1. Install the extension from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=smaglio81.agent-organizer)
-2. Open the **Agent Organizer** panel in the Activity Bar
+2. Open the **AI Tools Organizer** panel in the Activity Bar
 3. Browse the Marketplace and click the download button on any item
 4. Your downloaded items appear in the corresponding area view
 
@@ -88,7 +88,7 @@ Users can then discover and install your skills through this marketplace!
 
 ## Issues & Feedback
 
-Found a bug or have a feature request? [Open an issue on GitHub](https://github.com/smaglio81/agent-organizer/issues).
+Found a bug or have a feature request? [Open an issue on GitHub](https://github.com/smaglio81/ai-tools-organizer/issues).
 
 ## License
 

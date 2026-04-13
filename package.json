@@ -1,8 +1,8 @@
 {
   "name": "agent-organizer",
-  "displayName": "Agent Organizer",
-  "description": "Agent Organizer and Marketplace",
-  "version": "0.1.0",
+  "displayName": "AI Tools Organizer",
+  "description": "AI Tools Organizer and Marketplace",
+  "version": "0.2.0",
   "icon": "resources/logo.png",
   "publisher": "smaglio81",
   "engines": {
@@ -25,68 +25,68 @@
     "kiro"
   ],
   "bugs": {
-    "url": "https://github.com/smaglio81/agent-organizer/issues",
+    "url": "https://github.com/smaglio81/ai-tools-organizer/issues",
     "email": "smaglio81@gmail.com"
   },
-  "homepage": "https://github.com/smaglio81/agent-organizer/blob/main/README.md",
+  "homepage": "https://github.com/smaglio81/ai-tools-organizer/blob/main/README.md",
   "repository": {
     "type": "git",
-    "url": "https://github.com/smaglio81/agent-organizer.git"
+    "url": "https://github.com/smaglio81/ai-tools-organizer.git"
   },
   "activationEvents": [
-    "onView:agentOrganizer.marketplace",
-    "onView:agentOrganizer.skills"
+    "onView:AIToolsOrganizer.marketplace",
+    "onView:AIToolsOrganizer.skills"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "agent-organizer",
-          "title": "Agent Organizer",
+          "id": "ai-tools-organizer",
+          "title": "AI Tools Organizer",
           "icon": "resources/activity-bar-icon.svg"
         }
       ]
     },
     "views": {
-      "agent-organizer": [
+      "ai-tools-organizer": [
         {
-          "id": "agentOrganizer.marketplace",
+          "id": "AIToolsOrganizer.marketplace",
           "name": "Marketplace",
           "icon": "resources/activity-bar-icon.svg"
         },
         {
-          "id": "agentOrganizer.agents",
+          "id": "AIToolsOrganizer.agents",
           "name": "Agents",
           "icon": "resources/agents-icon.svg"
         },
         {
-          "id": "agentOrganizer.hooksGithub",
+          "id": "AIToolsOrganizer.hooksGithub",
           "name": "Hooks - GitHub",
           "icon": "resources/hooks-icon.svg"
         },
         {
-          "id": "agentOrganizer.hooksKiro",
+          "id": "AIToolsOrganizer.hooksKiro",
           "name": "Hooks - Kiro",
           "icon": "resources/hooks-icon.svg"
         },
         {
-          "id": "agentOrganizer.instructions",
+          "id": "AIToolsOrganizer.instructions",
           "name": "Instructions",
           "icon": "resources/instructions-icon.svg"
         },
         {
-          "id": "agentOrganizer.plugins",
+          "id": "AIToolsOrganizer.plugins",
           "name": "Plugins",
           "icon": "resources/plugins-icon.svg"
         },
         {
-          "id": "agentOrganizer.prompts",
+          "id": "AIToolsOrganizer.prompts",
           "name": "Prompts / Commands",
           "icon": "resources/prompts-icon.svg"
         },
         {
-          "id": "agentOrganizer.skills",
+          "id": "AIToolsOrganizer.skills",
           "name": "Skills",
           "icon": "resources/skills-icon.svg"
         }
@@ -94,522 +94,522 @@
     },
     "viewsWelcome": [
       {
-        "view": "agentOrganizer.skills",
+        "view": "AIToolsOrganizer.skills",
         "contents": "Loading ...",
-        "when": "!agentOrganizer:initialScanComplete"
+        "when": "!AIToolsOrganizer:initialScanComplete"
       },
       {
-        "view": "agentOrganizer.skills",
-        "contents": "No skills installed yet.\n[Browse Marketplace](command:agentOrganizer.focusMarketplace)",
-        "when": "agentOrganizer:initialScanComplete"
+        "view": "AIToolsOrganizer.skills",
+        "contents": "No skills installed yet.\n[Browse Marketplace](command:AIToolsOrganizer.focusMarketplace)",
+        "when": "AIToolsOrganizer:initialScanComplete"
       },
       {
-        "view": "agentOrganizer.agents",
+        "view": "AIToolsOrganizer.agents",
         "contents": "Loading ...",
-        "when": "!agentOrganizer.agents:initialScanComplete"
+        "when": "!AIToolsOrganizer.agents:initialScanComplete"
       },
       {
-        "view": "agentOrganizer.agents",
+        "view": "AIToolsOrganizer.agents",
         "contents": "No agents found.",
-        "when": "agentOrganizer.agents:initialScanComplete"
+        "when": "AIToolsOrganizer.agents:initialScanComplete"
       },
       {
-        "view": "agentOrganizer.hooksGithub",
+        "view": "AIToolsOrganizer.hooksGithub",
         "contents": "Loading ...",
-        "when": "!agentOrganizer.hooksGithub:initialScanComplete"
+        "when": "!AIToolsOrganizer.hooksGithub:initialScanComplete"
       },
       {
-        "view": "agentOrganizer.hooksGithub",
+        "view": "AIToolsOrganizer.hooksGithub",
         "contents": "No GitHub hooks found.",
-        "when": "agentOrganizer.hooksGithub:initialScanComplete"
+        "when": "AIToolsOrganizer.hooksGithub:initialScanComplete"
       },
       {
-        "view": "agentOrganizer.hooksKiro",
+        "view": "AIToolsOrganizer.hooksKiro",
         "contents": "Loading ...",
-        "when": "!agentOrganizer.hooksKiro:initialScanComplete"
+        "when": "!AIToolsOrganizer.hooksKiro:initialScanComplete"
       },
       {
-        "view": "agentOrganizer.hooksKiro",
+        "view": "AIToolsOrganizer.hooksKiro",
         "contents": "No Kiro hooks found.",
-        "when": "agentOrganizer.hooksKiro:initialScanComplete"
+        "when": "AIToolsOrganizer.hooksKiro:initialScanComplete"
       },
       {
-        "view": "agentOrganizer.instructions",
+        "view": "AIToolsOrganizer.instructions",
         "contents": "Loading ...",
-        "when": "!agentOrganizer.instructions:initialScanComplete"
+        "when": "!AIToolsOrganizer.instructions:initialScanComplete"
       },
       {
-        "view": "agentOrganizer.instructions",
+        "view": "AIToolsOrganizer.instructions",
         "contents": "No instructions found.",
-        "when": "agentOrganizer.instructions:initialScanComplete"
+        "when": "AIToolsOrganizer.instructions:initialScanComplete"
       },
       {
-        "view": "agentOrganizer.plugins",
+        "view": "AIToolsOrganizer.plugins",
         "contents": "Loading ...",
-        "when": "!agentOrganizer.plugins:initialScanComplete"
+        "when": "!AIToolsOrganizer.plugins:initialScanComplete"
       },
       {
-        "view": "agentOrganizer.plugins",
+        "view": "AIToolsOrganizer.plugins",
         "contents": "No plugins found.",
-        "when": "agentOrganizer.plugins:initialScanComplete"
+        "when": "AIToolsOrganizer.plugins:initialScanComplete"
       },
       {
-        "view": "agentOrganizer.prompts",
+        "view": "AIToolsOrganizer.prompts",
         "contents": "Loading ...",
-        "when": "!agentOrganizer.prompts:initialScanComplete"
+        "when": "!AIToolsOrganizer.prompts:initialScanComplete"
       },
       {
-        "view": "agentOrganizer.prompts",
+        "view": "AIToolsOrganizer.prompts",
         "contents": "No prompts found.",
-        "when": "agentOrganizer.prompts:initialScanComplete"
+        "when": "AIToolsOrganizer.prompts:initialScanComplete"
       }
     ],
     "commands": [
       {
-        "command": "agentOrganizer.install",
+        "command": "AIToolsOrganizer.install",
         "title": "Download",
         "icon": "$(cloud-download)"
       },
       {
-        "command": "agentOrganizer.uninstall",
+        "command": "AIToolsOrganizer.uninstall",
         "title": "Delete",
         "icon": "$(trash)"
       },
       {
-        "command": "agentOrganizer.refresh",
+        "command": "AIToolsOrganizer.refresh",
         "title": "Refresh Marketplace",
         "icon": "$(refresh)"
       },
       {
-        "command": "agentOrganizer.refreshInstalled",
+        "command": "AIToolsOrganizer.refreshInstalled",
         "title": "Refresh Installed Skills",
         "icon": "$(refresh)"
       },
       {
-        "command": "agentOrganizer.viewDetails",
+        "command": "AIToolsOrganizer.viewDetails",
         "title": "View Details",
         "icon": "$(info)"
       },
       {
-        "command": "agentOrganizer.viewFileDetails",
+        "command": "AIToolsOrganizer.viewFileDetails",
         "title": "View Details",
         "icon": "$(info)"
       },
       {
-        "command": "agentOrganizer.removeRepository",
+        "command": "AIToolsOrganizer.removeRepository",
         "title": "Delete",
         "icon": "$(trash)"
       },
       {
-        "command": "agentOrganizer.addRepository",
+        "command": "AIToolsOrganizer.addRepository",
         "title": "Add Repository",
         "icon": "$(add)"
       },
       {
-        "command": "agentOrganizer.search",
+        "command": "AIToolsOrganizer.search",
         "title": "Search Marketplace Skills",
         "icon": "$(search)"
       },
       {
-        "command": "agentOrganizer.clearSearch",
+        "command": "AIToolsOrganizer.clearSearch",
         "title": "Clear Marketplace Search",
         "icon": "$(close)"
       },
       {
-        "command": "agentOrganizer.openSkillFolder",
+        "command": "AIToolsOrganizer.openSkillFolder",
         "title": "View Installed Item",
         "icon": "$(folder-opened)"
       },
       {
-        "command": "agentOrganizer.moveSkill",
+        "command": "AIToolsOrganizer.moveSkill",
         "title": "Move to..."
       },
       {
-        "command": "agentOrganizer.copySkill",
+        "command": "AIToolsOrganizer.copySkill",
         "title": "Copy to..."
       },
       {
-        "command": "agentOrganizer.copyToPlugin",
+        "command": "AIToolsOrganizer.copyToPlugin",
         "title": "Copy to Plugin..."
       },
       {
-        "command": "agentOrganizer.updatePlugins",
+        "command": "AIToolsOrganizer.updatePlugins",
         "title": "Update Plugins"
       },
       {
-        "command": "agentOrganizer.pluginGetLatestAll",
+        "command": "AIToolsOrganizer.pluginGetLatestAll",
         "title": "Get latest copy of AI tools"
       },
       {
-        "command": "agentOrganizer.pluginGetLatestFolder",
+        "command": "AIToolsOrganizer.pluginGetLatestFolder",
         "title": "Get latest copies"
       },
       {
-        "command": "agentOrganizer.pluginGetLatestItem",
+        "command": "AIToolsOrganizer.pluginGetLatestItem",
         "title": "Get latest copy"
       },
       {
-        "command": "agentOrganizer.pluginCopyToArea",
+        "command": "AIToolsOrganizer.pluginCopyToArea",
         "title": "Copy to area"
       },
       {
-        "command": "agentOrganizer.syncSkill",
+        "command": "AIToolsOrganizer.syncSkill",
         "title": "Update older skill copies with latest"
       },
       {
-        "command": "agentOrganizer.getLatestSkill",
+        "command": "AIToolsOrganizer.getLatestSkill",
         "title": "Get latest copy of skill"
       },
       {
-        "command": "agentOrganizer.syncAgent",
+        "command": "AIToolsOrganizer.syncAgent",
         "title": "Update older agent copies with latest"
       },
       {
-        "command": "agentOrganizer.getLatestAgent",
+        "command": "AIToolsOrganizer.getLatestAgent",
         "title": "Get latest copy of agent"
       },
       {
-        "command": "agentOrganizer.syncHook",
+        "command": "AIToolsOrganizer.syncHook",
         "title": "Update older hook copies with latest"
       },
       {
-        "command": "agentOrganizer.getLatestHook",
+        "command": "AIToolsOrganizer.getLatestHook",
         "title": "Get latest copy of hook"
       },
       {
-        "command": "agentOrganizer.syncInstruction",
+        "command": "AIToolsOrganizer.syncInstruction",
         "title": "Update older instruction copies with latest"
       },
       {
-        "command": "agentOrganizer.getLatestInstruction",
+        "command": "AIToolsOrganizer.getLatestInstruction",
         "title": "Get latest copy of instruction"
       },
       {
-        "command": "agentOrganizer.syncPlugin",
+        "command": "AIToolsOrganizer.syncPlugin",
         "title": "Update older plugin copies with latest"
       },
       {
-        "command": "agentOrganizer.getLatestPlugin",
+        "command": "AIToolsOrganizer.getLatestPlugin",
         "title": "Get latest copy of plugin"
       },
       {
-        "command": "agentOrganizer.syncPrompt",
+        "command": "AIToolsOrganizer.syncPrompt",
         "title": "Update older prompt copies with latest"
       },
       {
-        "command": "agentOrganizer.getLatestPrompt",
+        "command": "AIToolsOrganizer.getLatestPrompt",
         "title": "Get latest copy of prompt"
       },
       {
-        "command": "agentOrganizer.deleteAllSkills",
+        "command": "AIToolsOrganizer.deleteAllSkills",
         "title": "Delete"
       },
       {
-        "command": "agentOrganizer.showInMarketplace",
+        "command": "AIToolsOrganizer.showInMarketplace",
         "title": "Show in Marketplace"
       },
       {
-        "command": "agentOrganizer.openInBrowser",
+        "command": "AIToolsOrganizer.openInBrowser",
         "title": "Open in Browser",
         "icon": "$(link-external)"
       },
       {
-        "command": "agentOrganizer.revealInFileExplorer",
+        "command": "AIToolsOrganizer.revealInFileExplorer",
         "title": "Reveal in File Explorer"
       },
       {
-        "command": "agentOrganizer.searchInstalled",
+        "command": "AIToolsOrganizer.searchInstalled",
         "title": "Search Installed Skills",
         "icon": "$(search)"
       },
       {
-        "command": "agentOrganizer.clearSearchInstalled",
+        "command": "AIToolsOrganizer.clearSearchInstalled",
         "title": "Clear Installed Search",
         "icon": "$(close)"
       },
       {
-        "command": "agentOrganizer.agents.refresh",
+        "command": "AIToolsOrganizer.agents.refresh",
         "title": "Refresh",
         "icon": "$(refresh)"
       },
       {
-        "command": "agentOrganizer.agents.search",
+        "command": "AIToolsOrganizer.agents.search",
         "title": "Search",
         "icon": "$(search)"
       },
       {
-        "command": "agentOrganizer.agents.clearSearch",
+        "command": "AIToolsOrganizer.agents.clearSearch",
         "title": "Clear Search",
         "icon": "$(close)"
       },
       {
-        "command": "agentOrganizer.hooksGithub.refresh",
+        "command": "AIToolsOrganizer.hooksGithub.refresh",
         "title": "Refresh",
         "icon": "$(refresh)"
       },
       {
-        "command": "agentOrganizer.hooksGithub.search",
+        "command": "AIToolsOrganizer.hooksGithub.search",
         "title": "Search",
         "icon": "$(search)"
       },
       {
-        "command": "agentOrganizer.hooksGithub.clearSearch",
+        "command": "AIToolsOrganizer.hooksGithub.clearSearch",
         "title": "Clear Search",
         "icon": "$(close)"
       },
       {
-        "command": "agentOrganizer.hooksKiro.refresh",
+        "command": "AIToolsOrganizer.hooksKiro.refresh",
         "title": "Refresh",
         "icon": "$(refresh)"
       },
       {
-        "command": "agentOrganizer.hooksKiro.search",
+        "command": "AIToolsOrganizer.hooksKiro.search",
         "title": "Search",
         "icon": "$(search)"
       },
       {
-        "command": "agentOrganizer.hooksKiro.clearSearch",
+        "command": "AIToolsOrganizer.hooksKiro.clearSearch",
         "title": "Clear Search",
         "icon": "$(close)"
       },
       {
-        "command": "agentOrganizer.instructions.refresh",
+        "command": "AIToolsOrganizer.instructions.refresh",
         "title": "Refresh",
         "icon": "$(refresh)"
       },
       {
-        "command": "agentOrganizer.instructions.search",
+        "command": "AIToolsOrganizer.instructions.search",
         "title": "Search",
         "icon": "$(search)"
       },
       {
-        "command": "agentOrganizer.instructions.clearSearch",
+        "command": "AIToolsOrganizer.instructions.clearSearch",
         "title": "Clear Search",
         "icon": "$(close)"
       },
       {
-        "command": "agentOrganizer.plugins.refresh",
+        "command": "AIToolsOrganizer.plugins.refresh",
         "title": "Refresh",
         "icon": "$(refresh)"
       },
       {
-        "command": "agentOrganizer.plugins.search",
+        "command": "AIToolsOrganizer.plugins.search",
         "title": "Search",
         "icon": "$(search)"
       },
       {
-        "command": "agentOrganizer.plugins.clearSearch",
+        "command": "AIToolsOrganizer.plugins.clearSearch",
         "title": "Clear Search",
         "icon": "$(close)"
       },
       {
-        "command": "agentOrganizer.prompts.refresh",
+        "command": "AIToolsOrganizer.prompts.refresh",
         "title": "Refresh",
         "icon": "$(refresh)"
       },
       {
-        "command": "agentOrganizer.prompts.search",
+        "command": "AIToolsOrganizer.prompts.search",
         "title": "Search",
         "icon": "$(search)"
       },
       {
-        "command": "agentOrganizer.prompts.clearSearch",
+        "command": "AIToolsOrganizer.prompts.clearSearch",
         "title": "Clear Search",
         "icon": "$(close)"
       },
       {
-        "command": "agentOrganizer.agents.expandAll",
+        "command": "AIToolsOrganizer.agents.expandAll",
         "title": "Expand All",
         "icon": "$(expand-all)"
       },
       {
-        "command": "agentOrganizer.hooksGithub.expandAll",
+        "command": "AIToolsOrganizer.hooksGithub.expandAll",
         "title": "Expand All",
         "icon": "$(expand-all)"
       },
       {
-        "command": "agentOrganizer.hooksKiro.expandAll",
+        "command": "AIToolsOrganizer.hooksKiro.expandAll",
         "title": "Expand All",
         "icon": "$(expand-all)"
       },
       {
-        "command": "agentOrganizer.instructions.expandAll",
+        "command": "AIToolsOrganizer.instructions.expandAll",
         "title": "Expand All",
         "icon": "$(expand-all)"
       },
       {
-        "command": "agentOrganizer.plugins.expandAll",
+        "command": "AIToolsOrganizer.plugins.expandAll",
         "title": "Expand All",
         "icon": "$(expand-all)"
       },
       {
-        "command": "agentOrganizer.prompts.expandAll",
+        "command": "AIToolsOrganizer.prompts.expandAll",
         "title": "Expand All",
         "icon": "$(expand-all)"
       },
       {
-        "command": "agentOrganizer.agents.selectDefaultDownloadLocation",
+        "command": "AIToolsOrganizer.agents.selectDefaultDownloadLocation",
         "title": "Default Download Location",
         "icon": "$(folder)"
       },
       {
-        "command": "agentOrganizer.hooksGithub.selectDefaultDownloadLocation",
+        "command": "AIToolsOrganizer.hooksGithub.selectDefaultDownloadLocation",
         "title": "Default Download Location",
         "icon": "$(folder)"
       },
       {
-        "command": "agentOrganizer.hooksKiro.selectDefaultDownloadLocation",
+        "command": "AIToolsOrganizer.hooksKiro.selectDefaultDownloadLocation",
         "title": "Default Download Location",
         "icon": "$(folder)"
       },
       {
-        "command": "agentOrganizer.instructions.selectDefaultDownloadLocation",
+        "command": "AIToolsOrganizer.instructions.selectDefaultDownloadLocation",
         "title": "Default Download Location",
         "icon": "$(folder)"
       },
       {
-        "command": "agentOrganizer.plugins.selectDefaultDownloadLocation",
+        "command": "AIToolsOrganizer.plugins.selectDefaultDownloadLocation",
         "title": "Default Download Location",
         "icon": "$(folder)"
       },
       {
-        "command": "agentOrganizer.prompts.selectDefaultDownloadLocation",
+        "command": "AIToolsOrganizer.prompts.selectDefaultDownloadLocation",
         "title": "Default Download Location",
         "icon": "$(folder)"
       },
       {
-        "command": "agentOrganizer.focusMarketplace",
+        "command": "AIToolsOrganizer.focusMarketplace",
         "title": "Focus Marketplace View"
       },
       {
-        "command": "agentOrganizer.selectInstallLocation",
+        "command": "AIToolsOrganizer.selectInstallLocation",
         "title": "Default Download Location",
         "icon": "$(folder)"
       },
       {
-        "command": "agentOrganizer.expandAll",
+        "command": "AIToolsOrganizer.expandAll",
         "title": "Expand All",
         "icon": "$(expand-all)"
       },
       {
-        "command": "agentOrganizer.collapseAll",
+        "command": "AIToolsOrganizer.collapseAll",
         "title": "Collapse All",
         "icon": "$(collapse-all)"
       },
       {
-        "command": "agentOrganizer.newSkillItem",
+        "command": "AIToolsOrganizer.newSkillItem",
         "title": "Add Skill",
         "icon": "$(add)"
       },
       {
-        "command": "agentOrganizer.newSkillAtLocation",
+        "command": "AIToolsOrganizer.newSkillAtLocation",
         "title": "Add Skill"
       },
       {
-        "command": "agentOrganizer.newItemAtLocation",
+        "command": "AIToolsOrganizer.newItemAtLocation",
         "title": "Add Item"
       },
       {
-        "command": "agentOrganizer.newAgentAtLocation",
+        "command": "AIToolsOrganizer.newAgentAtLocation",
         "title": "Add Agent"
       },
       {
-        "command": "agentOrganizer.newHookGithubAtLocation",
+        "command": "AIToolsOrganizer.newHookGithubAtLocation",
         "title": "Add Hook"
       },
       {
-        "command": "agentOrganizer.newHookKiroAtLocation",
+        "command": "AIToolsOrganizer.newHookKiroAtLocation",
         "title": "Add Hook"
       },
       {
-        "command": "agentOrganizer.newInstructionAtLocation",
+        "command": "AIToolsOrganizer.newInstructionAtLocation",
         "title": "Add Instruction"
       },
       {
-        "command": "agentOrganizer.newPluginAtLocation",
+        "command": "AIToolsOrganizer.newPluginAtLocation",
         "title": "Add Plugin"
       },
       {
-        "command": "agentOrganizer.newPromptAtLocation",
+        "command": "AIToolsOrganizer.newPromptAtLocation",
         "title": "Add Prompt"
       },
       {
-        "command": "agentOrganizer.agents.newItem",
+        "command": "AIToolsOrganizer.agents.newItem",
         "title": "Add Agent",
         "icon": "$(add)"
       },
       {
-        "command": "agentOrganizer.hooksGithub.newItem",
+        "command": "AIToolsOrganizer.hooksGithub.newItem",
         "title": "Add Hook",
         "icon": "$(add)"
       },
       {
-        "command": "agentOrganizer.hooksKiro.newItem",
+        "command": "AIToolsOrganizer.hooksKiro.newItem",
         "title": "Add Hook",
         "icon": "$(add)"
       },
       {
-        "command": "agentOrganizer.instructions.newItem",
+        "command": "AIToolsOrganizer.instructions.newItem",
         "title": "Add Instruction",
         "icon": "$(add)"
       },
       {
-        "command": "agentOrganizer.plugins.newItem",
+        "command": "AIToolsOrganizer.plugins.newItem",
         "title": "Add Plugin",
         "icon": "$(add)"
       },
       {
-        "command": "agentOrganizer.prompts.newItem",
+        "command": "AIToolsOrganizer.prompts.newItem",
         "title": "Add Prompt",
         "icon": "$(add)"
       },
       {
-        "command": "agentOrganizer.renameItem",
+        "command": "AIToolsOrganizer.renameItem",
         "title": "Rename",
         "icon": "$(edit)"
       },
       {
-        "command": "agentOrganizer.copyItemName",
+        "command": "AIToolsOrganizer.copyItemName",
         "title": "Copy Name",
         "icon": "$(clippy)"
       },
       {
-        "command": "agentOrganizer.duplicateItem",
+        "command": "AIToolsOrganizer.duplicateItem",
         "title": "Duplicate",
         "icon": "$(copy)"
       },
       {
-        "command": "agentOrganizer.copyItemPath",
+        "command": "AIToolsOrganizer.copyItemPath",
         "title": "Copy #{path}",
         "icon": "$(symbol-file)"
       },
       {
-        "command": "agentOrganizer.copyAbsolutePath",
+        "command": "AIToolsOrganizer.copyAbsolutePath",
         "title": "Copy Absolute Path",
         "icon": "$(file-symlink-file)"
       },
       {
-        "command": "agentOrganizer.addFile",
+        "command": "AIToolsOrganizer.addFile",
         "title": "Add File",
         "icon": "$(new-file)"
       },
       {
-        "command": "agentOrganizer.addFolder",
+        "command": "AIToolsOrganizer.addFolder",
         "title": "Add Folder",
         "icon": "$(new-folder)"
       },
       {
-        "command": "agentOrganizer.renameFile",
+        "command": "AIToolsOrganizer.renameFile",
         "title": "Rename",
         "icon": "$(edit)"
       },
       {
-        "command": "agentOrganizer.deleteSkillFile",
+        "command": "AIToolsOrganizer.deleteSkillFile",
         "title": "Delete",
         "icon": "$(trash)"
       },
       {
-        "command": "agentOrganizer.deleteSkillFolder",
+        "command": "AIToolsOrganizer.deleteSkillFolder",
         "title": "Delete",
         "icon": "$(trash)"
       }
@@ -617,803 +617,803 @@
     "menus": {
       "view/title": [
         {
-          "command": "agentOrganizer.addRepository",
-          "when": "view == agentOrganizer.marketplace",
+          "command": "AIToolsOrganizer.addRepository",
+          "when": "view == AIToolsOrganizer.marketplace",
           "group": "navigation@3"
         },
         {
-          "command": "agentOrganizer.search",
-          "when": "view == agentOrganizer.marketplace",
+          "command": "AIToolsOrganizer.search",
+          "when": "view == AIToolsOrganizer.marketplace",
           "group": "navigation@1"
         },
         {
-          "command": "agentOrganizer.clearSearch",
-          "when": "view == agentOrganizer.marketplace && agentOrganizer:searchActive",
+          "command": "AIToolsOrganizer.clearSearch",
+          "when": "view == AIToolsOrganizer.marketplace && AIToolsOrganizer:searchActive",
           "group": "navigation@1"
         },
         {
-          "command": "agentOrganizer.refresh",
-          "when": "view == agentOrganizer.marketplace",
+          "command": "AIToolsOrganizer.refresh",
+          "when": "view == AIToolsOrganizer.marketplace",
           "group": "navigation@2"
         },
         {
-          "command": "agentOrganizer.refreshInstalled",
-          "when": "view == agentOrganizer.skills",
+          "command": "AIToolsOrganizer.refreshInstalled",
+          "when": "view == AIToolsOrganizer.skills",
           "group": "navigation@2"
         },
         {
-          "command": "agentOrganizer.searchInstalled",
-          "when": "view == agentOrganizer.skills",
+          "command": "AIToolsOrganizer.searchInstalled",
+          "when": "view == AIToolsOrganizer.skills",
           "group": "navigation@1"
         },
         {
-          "command": "agentOrganizer.clearSearchInstalled",
-          "when": "view == agentOrganizer.skills && agentOrganizer:installedSearchActive",
+          "command": "AIToolsOrganizer.clearSearchInstalled",
+          "when": "view == AIToolsOrganizer.skills && AIToolsOrganizer:installedSearchActive",
           "group": "navigation@1"
         },
         {
-          "command": "agentOrganizer.selectInstallLocation",
-          "when": "view == agentOrganizer.skills",
+          "command": "AIToolsOrganizer.selectInstallLocation",
+          "when": "view == AIToolsOrganizer.skills",
           "group": "navigation@3"
         },
         {
-          "command": "agentOrganizer.newSkillItem",
-          "when": "view == agentOrganizer.skills",
+          "command": "AIToolsOrganizer.newSkillItem",
+          "when": "view == AIToolsOrganizer.skills",
           "group": "navigation@4"
         },
         {
-          "command": "agentOrganizer.expandAll",
-          "when": "view == agentOrganizer.skills",
+          "command": "AIToolsOrganizer.expandAll",
+          "when": "view == AIToolsOrganizer.skills",
           "group": "navigation@5"
         },
         {
-          "command": "agentOrganizer.collapseAll",
-          "when": "view == agentOrganizer.skills",
+          "command": "AIToolsOrganizer.collapseAll",
+          "when": "view == AIToolsOrganizer.skills",
           "group": "navigation@6"
         },
         {
-          "command": "agentOrganizer.agents.search",
-          "when": "view == agentOrganizer.agents",
+          "command": "AIToolsOrganizer.agents.search",
+          "when": "view == AIToolsOrganizer.agents",
           "group": "navigation@1"
         },
         {
-          "command": "agentOrganizer.agents.clearSearch",
-          "when": "view == agentOrganizer.agents && agentOrganizer.agents:searchActive",
+          "command": "AIToolsOrganizer.agents.clearSearch",
+          "when": "view == AIToolsOrganizer.agents && AIToolsOrganizer.agents:searchActive",
           "group": "navigation@1"
         },
         {
-          "command": "agentOrganizer.agents.refresh",
-          "when": "view == agentOrganizer.agents",
+          "command": "AIToolsOrganizer.agents.refresh",
+          "when": "view == AIToolsOrganizer.agents",
           "group": "navigation@2"
         },
         {
-          "command": "agentOrganizer.agents.selectDefaultDownloadLocation",
-          "when": "view == agentOrganizer.agents",
+          "command": "AIToolsOrganizer.agents.selectDefaultDownloadLocation",
+          "when": "view == AIToolsOrganizer.agents",
           "group": "navigation@3"
         },
         {
-          "command": "agentOrganizer.agents.newItem",
-          "when": "view == agentOrganizer.agents",
+          "command": "AIToolsOrganizer.agents.newItem",
+          "when": "view == AIToolsOrganizer.agents",
           "group": "navigation@4"
         },
         {
-          "command": "agentOrganizer.agents.expandAll",
-          "when": "view == agentOrganizer.agents",
+          "command": "AIToolsOrganizer.agents.expandAll",
+          "when": "view == AIToolsOrganizer.agents",
           "group": "navigation@5"
         },
         {
-          "command": "agentOrganizer.hooksGithub.search",
-          "when": "view == agentOrganizer.hooksGithub",
+          "command": "AIToolsOrganizer.hooksGithub.search",
+          "when": "view == AIToolsOrganizer.hooksGithub",
           "group": "navigation@1"
         },
         {
-          "command": "agentOrganizer.hooksGithub.clearSearch",
-          "when": "view == agentOrganizer.hooksGithub && agentOrganizer.hooksGithub:searchActive",
+          "command": "AIToolsOrganizer.hooksGithub.clearSearch",
+          "when": "view == AIToolsOrganizer.hooksGithub && AIToolsOrganizer.hooksGithub:searchActive",
           "group": "navigation@1"
         },
         {
-          "command": "agentOrganizer.hooksGithub.refresh",
-          "when": "view == agentOrganizer.hooksGithub",
+          "command": "AIToolsOrganizer.hooksGithub.refresh",
+          "when": "view == AIToolsOrganizer.hooksGithub",
           "group": "navigation@2"
         },
         {
-          "command": "agentOrganizer.hooksGithub.selectDefaultDownloadLocation",
-          "when": "view == agentOrganizer.hooksGithub",
+          "command": "AIToolsOrganizer.hooksGithub.selectDefaultDownloadLocation",
+          "when": "view == AIToolsOrganizer.hooksGithub",
           "group": "navigation@3"
         },
         {
-          "command": "agentOrganizer.hooksGithub.newItem",
-          "when": "view == agentOrganizer.hooksGithub",
+          "command": "AIToolsOrganizer.hooksGithub.newItem",
+          "when": "view == AIToolsOrganizer.hooksGithub",
           "group": "navigation@4"
         },
         {
-          "command": "agentOrganizer.hooksGithub.expandAll",
-          "when": "view == agentOrganizer.hooksGithub",
+          "command": "AIToolsOrganizer.hooksGithub.expandAll",
+          "when": "view == AIToolsOrganizer.hooksGithub",
           "group": "navigation@5"
         },
         {
-          "command": "agentOrganizer.hooksKiro.search",
-          "when": "view == agentOrganizer.hooksKiro",
+          "command": "AIToolsOrganizer.hooksKiro.search",
+          "when": "view == AIToolsOrganizer.hooksKiro",
           "group": "navigation@1"
         },
         {
-          "command": "agentOrganizer.hooksKiro.clearSearch",
-          "when": "view == agentOrganizer.hooksKiro && agentOrganizer.hooksKiro:searchActive",
+          "command": "AIToolsOrganizer.hooksKiro.clearSearch",
+          "when": "view == AIToolsOrganizer.hooksKiro && AIToolsOrganizer.hooksKiro:searchActive",
           "group": "navigation@1"
         },
         {
-          "command": "agentOrganizer.hooksKiro.refresh",
-          "when": "view == agentOrganizer.hooksKiro",
+          "command": "AIToolsOrganizer.hooksKiro.refresh",
+          "when": "view == AIToolsOrganizer.hooksKiro",
           "group": "navigation@2"
         },
         {
-          "command": "agentOrganizer.hooksKiro.selectDefaultDownloadLocation",
-          "when": "view == agentOrganizer.hooksKiro",
+          "command": "AIToolsOrganizer.hooksKiro.selectDefaultDownloadLocation",
+          "when": "view == AIToolsOrganizer.hooksKiro",
           "group": "navigation@3"
         },
         {
-          "command": "agentOrganizer.hooksKiro.newItem",
-          "when": "view == agentOrganizer.hooksKiro",
+          "command": "AIToolsOrganizer.hooksKiro.newItem",
+          "when": "view == AIToolsOrganizer.hooksKiro",
           "group": "navigation@4"
         },
         {
-          "command": "agentOrganizer.hooksKiro.expandAll",
-          "when": "view == agentOrganizer.hooksKiro",
+          "command": "AIToolsOrganizer.hooksKiro.expandAll",
+          "when": "view == AIToolsOrganizer.hooksKiro",
           "group": "navigation@5"
         },
         {
-          "command": "agentOrganizer.instructions.search",
-          "when": "view == agentOrganizer.instructions",
+          "command": "AIToolsOrganizer.instructions.search",
+          "when": "view == AIToolsOrganizer.instructions",
           "group": "navigation@1"
         },
         {
-          "command": "agentOrganizer.instructions.clearSearch",
-          "when": "view == agentOrganizer.instructions && agentOrganizer.instructions:searchActive",
+          "command": "AIToolsOrganizer.instructions.clearSearch",
+          "when": "view == AIToolsOrganizer.instructions && AIToolsOrganizer.instructions:searchActive",
           "group": "navigation@1"
         },
         {
-          "command": "agentOrganizer.instructions.refresh",
-          "when": "view == agentOrganizer.instructions",
+          "command": "AIToolsOrganizer.instructions.refresh",
+          "when": "view == AIToolsOrganizer.instructions",
           "group": "navigation@2"
         },
         {
-          "command": "agentOrganizer.instructions.selectDefaultDownloadLocation",
-          "when": "view == agentOrganizer.instructions",
+          "command": "AIToolsOrganizer.instructions.selectDefaultDownloadLocation",
+          "when": "view == AIToolsOrganizer.instructions",
           "group": "navigation@3"
         },
         {
-          "command": "agentOrganizer.instructions.newItem",
-          "when": "view == agentOrganizer.instructions",
+          "command": "AIToolsOrganizer.instructions.newItem",
+          "when": "view == AIToolsOrganizer.instructions",
           "group": "navigation@4"
         },
         {
-          "command": "agentOrganizer.instructions.expandAll",
-          "when": "view == agentOrganizer.instructions",
+          "command": "AIToolsOrganizer.instructions.expandAll",
+          "when": "view == AIToolsOrganizer.instructions",
           "group": "navigation@5"
         },
         {
-          "command": "agentOrganizer.plugins.search",
-          "when": "view == agentOrganizer.plugins",
+          "command": "AIToolsOrganizer.plugins.search",
+          "when": "view == AIToolsOrganizer.plugins",
           "group": "navigation@1"
         },
         {
-          "command": "agentOrganizer.plugins.clearSearch",
-          "when": "view == agentOrganizer.plugins && agentOrganizer.plugins:searchActive",
+          "command": "AIToolsOrganizer.plugins.clearSearch",
+          "when": "view == AIToolsOrganizer.plugins && AIToolsOrganizer.plugins:searchActive",
           "group": "navigation@1"
         },
         {
-          "command": "agentOrganizer.plugins.refresh",
-          "when": "view == agentOrganizer.plugins",
+          "command": "AIToolsOrganizer.plugins.refresh",
+          "when": "view == AIToolsOrganizer.plugins",
           "group": "navigation@2"
         },
         {
-          "command": "agentOrganizer.plugins.selectDefaultDownloadLocation",
-          "when": "view == agentOrganizer.plugins",
+          "command": "AIToolsOrganizer.plugins.selectDefaultDownloadLocation",
+          "when": "view == AIToolsOrganizer.plugins",
           "group": "navigation@3"
         },
         {
-          "command": "agentOrganizer.plugins.newItem",
-          "when": "view == agentOrganizer.plugins",
+          "command": "AIToolsOrganizer.plugins.newItem",
+          "when": "view == AIToolsOrganizer.plugins",
           "group": "navigation@4"
         },
         {
-          "command": "agentOrganizer.plugins.expandAll",
-          "when": "view == agentOrganizer.plugins",
+          "command": "AIToolsOrganizer.plugins.expandAll",
+          "when": "view == AIToolsOrganizer.plugins",
           "group": "navigation@5"
         },
         {
-          "command": "agentOrganizer.prompts.search",
-          "when": "view == agentOrganizer.prompts",
+          "command": "AIToolsOrganizer.prompts.search",
+          "when": "view == AIToolsOrganizer.prompts",
           "group": "navigation@1"
         },
         {
-          "command": "agentOrganizer.prompts.clearSearch",
-          "when": "view == agentOrganizer.prompts && agentOrganizer.prompts:searchActive",
+          "command": "AIToolsOrganizer.prompts.clearSearch",
+          "when": "view == AIToolsOrganizer.prompts && AIToolsOrganizer.prompts:searchActive",
           "group": "navigation@1"
         },
         {
-          "command": "agentOrganizer.prompts.refresh",
-          "when": "view == agentOrganizer.prompts",
+          "command": "AIToolsOrganizer.prompts.refresh",
+          "when": "view == AIToolsOrganizer.prompts",
           "group": "navigation@2"
         },
         {
-          "command": "agentOrganizer.prompts.selectDefaultDownloadLocation",
-          "when": "view == agentOrganizer.prompts",
+          "command": "AIToolsOrganizer.prompts.selectDefaultDownloadLocation",
+          "when": "view == AIToolsOrganizer.prompts",
           "group": "navigation@3"
         },
         {
-          "command": "agentOrganizer.prompts.newItem",
-          "when": "view == agentOrganizer.prompts",
+          "command": "AIToolsOrganizer.prompts.newItem",
+          "when": "view == AIToolsOrganizer.prompts",
           "group": "navigation@4"
         },
         {
-          "command": "agentOrganizer.prompts.expandAll",
-          "when": "view == agentOrganizer.prompts",
+          "command": "AIToolsOrganizer.prompts.expandAll",
+          "when": "view == AIToolsOrganizer.prompts",
           "group": "navigation@5"
         }
       ],
       "view/item/context": [
         {
-          "command": "agentOrganizer.install",
-          "when": "view == agentOrganizer.marketplace && viewItem == skill",
+          "command": "AIToolsOrganizer.install",
+          "when": "view == AIToolsOrganizer.marketplace && viewItem == skill",
           "group": "inline@1"
         },
         {
-          "command": "agentOrganizer.install",
-          "when": "view == agentOrganizer.marketplace && viewItem == skill",
+          "command": "AIToolsOrganizer.install",
+          "when": "view == AIToolsOrganizer.marketplace && viewItem == skill",
           "group": "1_install@1"
         },
         {
-          "command": "agentOrganizer.install",
-          "when": "view == agentOrganizer.marketplace && viewItem == areaFile",
+          "command": "AIToolsOrganizer.install",
+          "when": "view == AIToolsOrganizer.marketplace && viewItem == areaFile",
           "group": "inline@1"
         },
         {
-          "command": "agentOrganizer.install",
-          "when": "view == agentOrganizer.marketplace && viewItem == areaFile",
+          "command": "AIToolsOrganizer.install",
+          "when": "view == AIToolsOrganizer.marketplace && viewItem == areaFile",
           "group": "1_install@1"
         },
         {
-          "command": "agentOrganizer.viewDetails",
-          "when": "view == agentOrganizer.marketplace && viewItem == skill",
+          "command": "AIToolsOrganizer.viewDetails",
+          "when": "view == AIToolsOrganizer.marketplace && viewItem == skill",
           "group": "inline@2"
         },
         {
-          "command": "agentOrganizer.removeRepository",
-          "when": "view == agentOrganizer.marketplace && (viewItem == source || viewItem == failedSource)",
+          "command": "AIToolsOrganizer.removeRepository",
+          "when": "view == AIToolsOrganizer.marketplace && (viewItem == source || viewItem == failedSource)",
           "group": "inline@1"
         },
         {
-          "command": "agentOrganizer.openInBrowser",
-          "when": "view == agentOrganizer.marketplace && (viewItem == source || viewItem == failedSource)",
+          "command": "AIToolsOrganizer.openInBrowser",
+          "when": "view == AIToolsOrganizer.marketplace && (viewItem == source || viewItem == failedSource)",
           "group": "0_open@1"
         },
         {
-          "command": "agentOrganizer.openInBrowser",
-          "when": "view == agentOrganizer.marketplace && viewItem == skill",
+          "command": "AIToolsOrganizer.openInBrowser",
+          "when": "view == AIToolsOrganizer.marketplace && viewItem == skill",
           "group": "2_open@1"
         },
         {
-          "command": "agentOrganizer.openInBrowser",
-          "when": "view == agentOrganizer.marketplace && viewItem == skillsGroup",
+          "command": "AIToolsOrganizer.openInBrowser",
+          "when": "view == AIToolsOrganizer.marketplace && viewItem == skillsGroup",
           "group": "0_open@1"
         },
         {
-          "command": "agentOrganizer.openInBrowser",
-          "when": "view == agentOrganizer.marketplace && viewItem == areaGroup",
+          "command": "AIToolsOrganizer.openInBrowser",
+          "when": "view == AIToolsOrganizer.marketplace && viewItem == areaGroup",
           "group": "0_open@1"
         },
         {
-          "command": "agentOrganizer.viewFileDetails",
-          "when": "view == agentOrganizer.marketplace && viewItem == areaFile",
+          "command": "AIToolsOrganizer.viewFileDetails",
+          "when": "view == AIToolsOrganizer.marketplace && viewItem == areaFile",
           "group": "inline@2"
         },
         {
-          "command": "agentOrganizer.openInBrowser",
-          "when": "view == agentOrganizer.marketplace && viewItem == areaFile",
+          "command": "AIToolsOrganizer.openInBrowser",
+          "when": "view == AIToolsOrganizer.marketplace && viewItem == areaFile",
           "group": "2_open@1"
         },
         {
-          "command": "agentOrganizer.removeRepository",
-          "when": "view == agentOrganizer.marketplace && (viewItem == source || viewItem == failedSource)",
+          "command": "AIToolsOrganizer.removeRepository",
+          "when": "view == AIToolsOrganizer.marketplace && (viewItem == source || viewItem == failedSource)",
           "group": "1_delete@1"
         },
         {
-          "command": "agentOrganizer.addFile",
-          "when": "view == agentOrganizer.skills && (viewItem =~ /^installedSkill/ || viewItem == skillFolder)",
+          "command": "AIToolsOrganizer.addFile",
+          "when": "view == AIToolsOrganizer.skills && (viewItem =~ /^installedSkill/ || viewItem == skillFolder)",
           "group": "0_add@1"
         },
         {
-          "command": "agentOrganizer.addFolder",
-          "when": "view == agentOrganizer.skills && (viewItem =~ /^installedSkill/ || viewItem == skillFolder)",
+          "command": "AIToolsOrganizer.addFolder",
+          "when": "view == AIToolsOrganizer.skills && (viewItem =~ /^installedSkill/ || viewItem == skillFolder)",
           "group": "0_add@2"
         },
         {
-          "command": "agentOrganizer.renameFile",
-          "when": "view == agentOrganizer.skills && viewItem == skillFile",
+          "command": "AIToolsOrganizer.renameFile",
+          "when": "view == AIToolsOrganizer.skills && viewItem == skillFile",
           "group": "0_rename@1"
         },
         {
-          "command": "agentOrganizer.copyItemPath",
-          "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
+          "command": "AIToolsOrganizer.copyItemPath",
+          "when": "view == AIToolsOrganizer.skills && viewItem =~ /^installedSkill/",
           "group": "0_path@1"
         },
         {
-          "command": "agentOrganizer.copyAbsolutePath",
-          "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
+          "command": "AIToolsOrganizer.copyAbsolutePath",
+          "when": "view == AIToolsOrganizer.skills && viewItem =~ /^installedSkill/",
           "group": "0_path@2"
         },
         {
-          "command": "agentOrganizer.copyItemPath",
-          "when": "view == agentOrganizer.skills && viewItem == skillFolder",
+          "command": "AIToolsOrganizer.copyItemPath",
+          "when": "view == AIToolsOrganizer.skills && viewItem == skillFolder",
           "group": "0_path@1"
         },
         {
-          "command": "agentOrganizer.copyAbsolutePath",
-          "when": "view == agentOrganizer.skills && viewItem == skillFolder",
+          "command": "AIToolsOrganizer.copyAbsolutePath",
+          "when": "view == AIToolsOrganizer.skills && viewItem == skillFolder",
           "group": "0_path@2"
         },
         {
-          "command": "agentOrganizer.copyItemPath",
-          "when": "view == agentOrganizer.skills && viewItem == skillFile",
+          "command": "AIToolsOrganizer.copyItemPath",
+          "when": "view == AIToolsOrganizer.skills && viewItem == skillFile",
           "group": "0_path@1"
         },
         {
-          "command": "agentOrganizer.copyAbsolutePath",
-          "when": "view == agentOrganizer.skills && viewItem == skillFile",
+          "command": "AIToolsOrganizer.copyAbsolutePath",
+          "when": "view == AIToolsOrganizer.skills && viewItem == skillFile",
           "group": "0_path@2"
         },
         {
-          "command": "agentOrganizer.deleteSkillFile",
-          "when": "view == agentOrganizer.skills && viewItem == skillFile",
+          "command": "AIToolsOrganizer.deleteSkillFile",
+          "when": "view == AIToolsOrganizer.skills && viewItem == skillFile",
           "group": "2_delete@1"
         },
         {
-          "command": "agentOrganizer.deleteSkillFolder",
-          "when": "view == agentOrganizer.skills && viewItem == skillFolder",
+          "command": "AIToolsOrganizer.deleteSkillFolder",
+          "when": "view == AIToolsOrganizer.skills && viewItem == skillFolder",
           "group": "2_delete@1"
         },
         {
-          "command": "agentOrganizer.moveSkill",
-          "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
+          "command": "AIToolsOrganizer.moveSkill",
+          "when": "view == AIToolsOrganizer.skills && viewItem =~ /^installedSkill/",
           "group": "1_move@1"
         },
         {
-          "command": "agentOrganizer.copySkill",
-          "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
+          "command": "AIToolsOrganizer.copySkill",
+          "when": "view == AIToolsOrganizer.skills && viewItem =~ /^installedSkill/",
           "group": "1_move@2"
         },
         {
-          "command": "agentOrganizer.copyToPlugin",
-          "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
+          "command": "AIToolsOrganizer.copyToPlugin",
+          "when": "view == AIToolsOrganizer.skills && viewItem =~ /^installedSkill/",
           "group": "1_move@3"
         },
         {
-          "command": "agentOrganizer.updatePlugins",
-          "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
+          "command": "AIToolsOrganizer.updatePlugins",
+          "when": "view == AIToolsOrganizer.skills && viewItem =~ /^installedSkill/",
           "group": "1_move@4"
         },
         {
-          "command": "agentOrganizer.renameItem",
-          "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
+          "command": "AIToolsOrganizer.renameItem",
+          "when": "view == AIToolsOrganizer.skills && viewItem =~ /^installedSkill/",
           "group": "0_rename@1"
         },
         {
-          "command": "agentOrganizer.copyItemName",
-          "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
+          "command": "AIToolsOrganizer.copyItemName",
+          "when": "view == AIToolsOrganizer.skills && viewItem =~ /^installedSkill/",
           "group": "0_rename@2"
         },
         {
-          "command": "agentOrganizer.duplicateItem",
-          "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
+          "command": "AIToolsOrganizer.duplicateItem",
+          "when": "view == AIToolsOrganizer.skills && viewItem =~ /^installedSkill/",
           "group": "0_rename@3"
         },
         {
-          "command": "agentOrganizer.syncSkill",
-          "when": "view == agentOrganizer.skills && viewItem == installedSkill_newest",
+          "command": "AIToolsOrganizer.syncSkill",
+          "when": "view == AIToolsOrganizer.skills && viewItem == installedSkill_newest",
           "group": "1_move@3"
         },
         {
-          "command": "agentOrganizer.getLatestSkill",
-          "when": "view == agentOrganizer.skills && viewItem == installedSkill_older",
+          "command": "AIToolsOrganizer.getLatestSkill",
+          "when": "view == AIToolsOrganizer.skills && viewItem == installedSkill_older",
           "group": "1_move@4"
         },
         {
-          "command": "agentOrganizer.uninstall",
-          "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
+          "command": "AIToolsOrganizer.uninstall",
+          "when": "view == AIToolsOrganizer.skills && viewItem =~ /^installedSkill/",
           "group": "inline@1"
         },
         {
-          "command": "agentOrganizer.uninstall",
-          "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
+          "command": "AIToolsOrganizer.uninstall",
+          "when": "view == AIToolsOrganizer.skills && viewItem =~ /^installedSkill/",
           "group": "2_delete@1"
         },
         {
-          "command": "agentOrganizer.openSkillFolder",
-          "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
+          "command": "AIToolsOrganizer.openSkillFolder",
+          "when": "view == AIToolsOrganizer.skills && viewItem =~ /^installedSkill/",
           "group": "inline@2"
         },
         {
-          "command": "agentOrganizer.showInMarketplace",
-          "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
+          "command": "AIToolsOrganizer.showInMarketplace",
+          "when": "view == AIToolsOrganizer.skills && viewItem =~ /^installedSkill/",
           "group": "3_marketplace@1"
         },
         {
-          "command": "agentOrganizer.deleteAllSkills",
-          "when": "view == agentOrganizer.skills && viewItem == location",
+          "command": "AIToolsOrganizer.deleteAllSkills",
+          "when": "view == AIToolsOrganizer.skills && viewItem == location",
           "group": "1_delete@1"
         },
         {
-          "command": "agentOrganizer.revealInFileExplorer",
-          "when": "view == agentOrganizer.skills && viewItem == location",
+          "command": "AIToolsOrganizer.revealInFileExplorer",
+          "when": "view == AIToolsOrganizer.skills && viewItem == location",
           "group": "9_reveal@1"
         },
         {
-          "command": "agentOrganizer.moveSkill",
-          "when": "view == agentOrganizer.skills && viewItem == location",
+          "command": "AIToolsOrganizer.moveSkill",
+          "when": "view == AIToolsOrganizer.skills && viewItem == location",
           "group": "0_move@1"
         },
         {
-          "command": "agentOrganizer.newSkillAtLocation",
-          "when": "view == agentOrganizer.skills && viewItem == location",
+          "command": "AIToolsOrganizer.newSkillAtLocation",
+          "when": "view == AIToolsOrganizer.skills && viewItem == location",
           "group": "0_add@1"
         },
         {
-          "command": "agentOrganizer.copySkill",
-          "when": "view == agentOrganizer.skills && viewItem == location",
+          "command": "AIToolsOrganizer.copySkill",
+          "when": "view == AIToolsOrganizer.skills && viewItem == location",
           "group": "0_move@2"
         },
         {
-          "command": "agentOrganizer.revealInFileExplorer",
-          "when": "view == agentOrganizer.skills && viewItem =~ /^installedSkill/",
+          "command": "AIToolsOrganizer.revealInFileExplorer",
+          "when": "view == AIToolsOrganizer.skills && viewItem =~ /^installedSkill/",
           "group": "3_marketplace@2"
         },
         {
-          "command": "agentOrganizer.revealInFileExplorer",
-          "when": "view == agentOrganizer.skills && viewItem == skillFolder",
+          "command": "AIToolsOrganizer.revealInFileExplorer",
+          "when": "view == AIToolsOrganizer.skills && viewItem == skillFolder",
           "group": "9_reveal@1"
         },
         {
-          "command": "agentOrganizer.revealInFileExplorer",
-          "when": "view == agentOrganizer.skills && viewItem == skillFile",
+          "command": "AIToolsOrganizer.revealInFileExplorer",
+          "when": "view == AIToolsOrganizer.skills && viewItem == skillFile",
           "group": "9_reveal@1"
         },
         {
-          "command": "agentOrganizer.revealInFileExplorer",
+          "command": "AIToolsOrganizer.revealInFileExplorer",
           "when": "viewItem == areaLocation",
           "group": "9_reveal@1"
         },
         {
-          "command": "agentOrganizer.deleteAllSkills",
+          "command": "AIToolsOrganizer.deleteAllSkills",
           "when": "viewItem == areaLocation",
           "group": "1_delete@0"
         },
         {
-          "command": "agentOrganizer.moveSkill",
+          "command": "AIToolsOrganizer.moveSkill",
           "when": "viewItem == areaLocation",
           "group": "0_move@1"
         },
         {
-          "command": "agentOrganizer.newAgentAtLocation",
-          "when": "viewItem == areaLocation && view == agentOrganizer.agents",
+          "command": "AIToolsOrganizer.newAgentAtLocation",
+          "when": "viewItem == areaLocation && view == AIToolsOrganizer.agents",
           "group": "0_add@1"
         },
         {
-          "command": "agentOrganizer.newHookGithubAtLocation",
-          "when": "viewItem == areaLocation && view == agentOrganizer.hooksGithub",
+          "command": "AIToolsOrganizer.newHookGithubAtLocation",
+          "when": "viewItem == areaLocation && view == AIToolsOrganizer.hooksGithub",
           "group": "0_add@1"
         },
         {
-          "command": "agentOrganizer.newHookKiroAtLocation",
-          "when": "viewItem == areaLocation && view == agentOrganizer.hooksKiro",
+          "command": "AIToolsOrganizer.newHookKiroAtLocation",
+          "when": "viewItem == areaLocation && view == AIToolsOrganizer.hooksKiro",
           "group": "0_add@1"
         },
         {
-          "command": "agentOrganizer.newInstructionAtLocation",
-          "when": "viewItem == areaLocation && view == agentOrganizer.instructions",
+          "command": "AIToolsOrganizer.newInstructionAtLocation",
+          "when": "viewItem == areaLocation && view == AIToolsOrganizer.instructions",
           "group": "0_add@1"
         },
         {
-          "command": "agentOrganizer.newPluginAtLocation",
-          "when": "viewItem == areaLocation && view == agentOrganizer.plugins",
+          "command": "AIToolsOrganizer.newPluginAtLocation",
+          "when": "viewItem == areaLocation && view == AIToolsOrganizer.plugins",
           "group": "0_add@1"
         },
         {
-          "command": "agentOrganizer.newPromptAtLocation",
-          "when": "viewItem == areaLocation && view == agentOrganizer.prompts",
+          "command": "AIToolsOrganizer.newPromptAtLocation",
+          "when": "viewItem == areaLocation && view == AIToolsOrganizer.prompts",
           "group": "0_add@1"
         },
         {
-          "command": "agentOrganizer.copySkill",
+          "command": "AIToolsOrganizer.copySkill",
           "when": "viewItem == areaLocation",
           "group": "0_move@2"
         },
         {
-          "command": "agentOrganizer.addFile",
+          "command": "AIToolsOrganizer.addFile",
           "when": "viewItem =~ /^areaInstalledFolder/",
           "group": "0_add@1"
         },
         {
-          "command": "agentOrganizer.addFolder",
+          "command": "AIToolsOrganizer.addFolder",
           "when": "viewItem =~ /^areaInstalledFolder/",
           "group": "0_add@2"
         },
         {
-          "command": "agentOrganizer.revealInFileExplorer",
+          "command": "AIToolsOrganizer.revealInFileExplorer",
           "when": "viewItem =~ /^areaInstalledFolder/",
           "group": "3_marketplace@2"
         },
         {
-          "command": "agentOrganizer.uninstall",
+          "command": "AIToolsOrganizer.uninstall",
           "when": "viewItem =~ /^areaInstalledFolder/",
           "group": "inline@1"
         },
         {
-          "command": "agentOrganizer.uninstall",
+          "command": "AIToolsOrganizer.uninstall",
           "when": "viewItem =~ /^areaInstalledFolder/",
           "group": "2_delete@1"
         },
         {
-          "command": "agentOrganizer.moveSkill",
+          "command": "AIToolsOrganizer.moveSkill",
           "when": "viewItem =~ /^areaInstalledFolder/",
           "group": "1_move@1"
         },
         {
-          "command": "agentOrganizer.copySkill",
+          "command": "AIToolsOrganizer.copySkill",
           "when": "viewItem =~ /^areaInstalledFolder/",
           "group": "1_move@2"
         },
         {
-          "command": "agentOrganizer.copyToPlugin",
-          "when": "viewItem =~ /^areaInstalledFolder/ && view != agentOrganizer.plugins && view != agentOrganizer.instructions",
+          "command": "AIToolsOrganizer.copyToPlugin",
+          "when": "viewItem =~ /^areaInstalledFolder/ && view != AIToolsOrganizer.plugins && view != AIToolsOrganizer.instructions",
           "group": "1_move@3"
         },
         {
-          "command": "agentOrganizer.updatePlugins",
-          "when": "viewItem =~ /^areaInstalledFolder/ && view != agentOrganizer.plugins && view != agentOrganizer.instructions",
+          "command": "AIToolsOrganizer.updatePlugins",
+          "when": "viewItem =~ /^areaInstalledFolder/ && view != AIToolsOrganizer.plugins && view != AIToolsOrganizer.instructions",
           "group": "1_move@4"
         },
         {
-          "command": "agentOrganizer.renameItem",
+          "command": "AIToolsOrganizer.renameItem",
           "when": "viewItem =~ /^areaInstalledFolder/",
           "group": "0_rename@1"
         },
         {
-          "command": "agentOrganizer.copyItemPath",
+          "command": "AIToolsOrganizer.copyItemPath",
           "when": "viewItem =~ /^areaInstalledFolder/",
           "group": "0_path@1"
         },
         {
-          "command": "agentOrganizer.copyAbsolutePath",
+          "command": "AIToolsOrganizer.copyAbsolutePath",
           "when": "viewItem =~ /^areaInstalledFolder/",
           "group": "0_path@2"
         },
         {
-          "command": "agentOrganizer.copyItemName",
+          "command": "AIToolsOrganizer.copyItemName",
           "when": "viewItem =~ /^areaInstalledFolder/",
           "group": "0_rename@2"
         },
         {
-          "command": "agentOrganizer.duplicateItem",
+          "command": "AIToolsOrganizer.duplicateItem",
           "when": "viewItem =~ /^areaInstalledFolder/",
           "group": "0_rename@3"
         },
         {
-          "command": "agentOrganizer.showInMarketplace",
+          "command": "AIToolsOrganizer.showInMarketplace",
           "when": "viewItem =~ /^areaInstalledFolder/",
           "group": "3_marketplace@1"
         },
         {
-          "command": "agentOrganizer.syncAgent",
-          "when": "view == agentOrganizer.agents && (viewItem == areaInstalledFolder_newest || viewItem == areaInstalledFile_newest)",
+          "command": "AIToolsOrganizer.syncAgent",
+          "when": "view == AIToolsOrganizer.agents && (viewItem == areaInstalledFolder_newest || viewItem == areaInstalledFile_newest)",
           "group": "1_move@5"
         },
         {
-          "command": "agentOrganizer.getLatestAgent",
-          "when": "view == agentOrganizer.agents && (viewItem == areaInstalledFolder_older || viewItem == areaInstalledFile_older)",
+          "command": "AIToolsOrganizer.getLatestAgent",
+          "when": "view == AIToolsOrganizer.agents && (viewItem == areaInstalledFolder_older || viewItem == areaInstalledFile_older)",
           "group": "1_move@6"
         },
         {
-          "command": "agentOrganizer.syncHook",
-          "when": "(view == agentOrganizer.hooksGithub || view == agentOrganizer.hooksKiro) && (viewItem == areaInstalledFolder_newest || viewItem == areaInstalledFile_newest)",
+          "command": "AIToolsOrganizer.syncHook",
+          "when": "(view == AIToolsOrganizer.hooksGithub || view == AIToolsOrganizer.hooksKiro) && (viewItem == areaInstalledFolder_newest || viewItem == areaInstalledFile_newest)",
           "group": "1_move@5"
         },
         {
-          "command": "agentOrganizer.getLatestHook",
-          "when": "(view == agentOrganizer.hooksGithub || view == agentOrganizer.hooksKiro) && (viewItem == areaInstalledFolder_older || viewItem == areaInstalledFile_older)",
+          "command": "AIToolsOrganizer.getLatestHook",
+          "when": "(view == AIToolsOrganizer.hooksGithub || view == AIToolsOrganizer.hooksKiro) && (viewItem == areaInstalledFolder_older || viewItem == areaInstalledFile_older)",
           "group": "1_move@6"
         },
         {
-          "command": "agentOrganizer.syncInstruction",
-          "when": "view == agentOrganizer.instructions && (viewItem == areaInstalledFolder_newest || viewItem == areaInstalledFile_newest)",
+          "command": "AIToolsOrganizer.syncInstruction",
+          "when": "view == AIToolsOrganizer.instructions && (viewItem == areaInstalledFolder_newest || viewItem == areaInstalledFile_newest)",
           "group": "1_move@5"
         },
         {
-          "command": "agentOrganizer.getLatestInstruction",
-          "when": "view == agentOrganizer.instructions && (viewItem == areaInstalledFolder_older || viewItem == areaInstalledFile_older)",
+          "command": "AIToolsOrganizer.getLatestInstruction",
+          "when": "view == AIToolsOrganizer.instructions && (viewItem == areaInstalledFolder_older || viewItem == areaInstalledFile_older)",
           "group": "1_move@6"
         },
         {
-          "command": "agentOrganizer.syncPlugin",
-          "when": "view == agentOrganizer.plugins && (viewItem == areaInstalledFolder_newest || viewItem == areaInstalledFile_newest)",
+          "command": "AIToolsOrganizer.syncPlugin",
+          "when": "view == AIToolsOrganizer.plugins && (viewItem == areaInstalledFolder_newest || viewItem == areaInstalledFile_newest)",
           "group": "1_move@5"
         },
         {
-          "command": "agentOrganizer.getLatestPlugin",
-          "when": "view == agentOrganizer.plugins && (viewItem == areaInstalledFolder_older || viewItem == areaInstalledFile_older)",
+          "command": "AIToolsOrganizer.getLatestPlugin",
+          "when": "view == AIToolsOrganizer.plugins && (viewItem == areaInstalledFolder_older || viewItem == areaInstalledFile_older)",
           "group": "1_move@6"
         },
         {
-          "command": "agentOrganizer.syncPrompt",
-          "when": "view == agentOrganizer.prompts && (viewItem == areaInstalledFolder_newest || viewItem == areaInstalledFile_newest)",
+          "command": "AIToolsOrganizer.syncPrompt",
+          "when": "view == AIToolsOrganizer.prompts && (viewItem == areaInstalledFolder_newest || viewItem == areaInstalledFile_newest)",
           "group": "1_move@5"
         },
         {
-          "command": "agentOrganizer.getLatestPrompt",
-          "when": "view == agentOrganizer.prompts && (viewItem == areaInstalledFolder_older || viewItem == areaInstalledFile_older)",
+          "command": "AIToolsOrganizer.getLatestPrompt",
+          "when": "view == AIToolsOrganizer.prompts && (viewItem == areaInstalledFolder_older || viewItem == areaInstalledFile_older)",
           "group": "1_move@6"
         },
         {
-          "command": "agentOrganizer.pluginGetLatestAll",
-          "when": "view == agentOrganizer.plugins && viewItem =~ /^areaInstalledFolder/",
+          "command": "AIToolsOrganizer.pluginGetLatestAll",
+          "when": "view == AIToolsOrganizer.plugins && viewItem =~ /^areaInstalledFolder/",
           "group": "1_move@4"
         },
         {
-          "command": "agentOrganizer.openSkillFolder",
+          "command": "AIToolsOrganizer.openSkillFolder",
           "when": "viewItem =~ /^areaInstalledFolder/",
           "group": "inline@2"
         },
         {
-          "command": "agentOrganizer.revealInFileExplorer",
+          "command": "AIToolsOrganizer.revealInFileExplorer",
           "when": "viewItem =~ /^areaInstalledFile/",
           "group": "3_marketplace@2"
         },
         {
-          "command": "agentOrganizer.uninstall",
+          "command": "AIToolsOrganizer.uninstall",
           "when": "viewItem =~ /^areaInstalledFile/",
           "group": "inline@1"
         },
         {
-          "command": "agentOrganizer.openSkillFolder",
+          "command": "AIToolsOrganizer.openSkillFolder",
           "when": "viewItem =~ /^areaInstalledFile/",
           "group": "inline@2"
         },
         {
-          "command": "agentOrganizer.uninstall",
+          "command": "AIToolsOrganizer.uninstall",
           "when": "viewItem =~ /^areaInstalledFile/",
           "group": "2_delete@1"
         },
         {
-          "command": "agentOrganizer.moveSkill",
+          "command": "AIToolsOrganizer.moveSkill",
           "when": "viewItem =~ /^areaInstalledFile/",
           "group": "1_move@1"
         },
         {
-          "command": "agentOrganizer.copySkill",
+          "command": "AIToolsOrganizer.copySkill",
           "when": "viewItem =~ /^areaInstalledFile/",
           "group": "1_move@2"
         },
         {
-          "command": "agentOrganizer.copyToPlugin",
-          "when": "viewItem =~ /^areaInstalledFile/ && view != agentOrganizer.plugins && view != agentOrganizer.instructions",
+          "command": "AIToolsOrganizer.copyToPlugin",
+          "when": "viewItem =~ /^areaInstalledFile/ && view != AIToolsOrganizer.plugins && view != AIToolsOrganizer.instructions",
           "group": "1_move@3"
         },
         {
-          "command": "agentOrganizer.updatePlugins",
-          "when": "viewItem =~ /^areaInstalledFile/ && view != agentOrganizer.plugins && view != agentOrganizer.instructions",
+          "command": "AIToolsOrganizer.updatePlugins",
+          "when": "viewItem =~ /^areaInstalledFile/ && view != AIToolsOrganizer.plugins && view != AIToolsOrganizer.instructions",
           "group": "1_move@4"
         },
         {
-          "command": "agentOrganizer.renameItem",
+          "command": "AIToolsOrganizer.renameItem",
           "when": "viewItem =~ /^areaInstalledFile/",
           "group": "0_rename@1"
         },
         {
-          "command": "agentOrganizer.copyItemPath",
+          "command": "AIToolsOrganizer.copyItemPath",
           "when": "viewItem =~ /^areaInstalledFile/",
           "group": "0_path@1"
         },
         {
-          "command": "agentOrganizer.copyAbsolutePath",
+          "command": "AIToolsOrganizer.copyAbsolutePath",
           "when": "viewItem =~ /^areaInstalledFile/",
           "group": "0_path@2"
         },
         {
-          "command": "agentOrganizer.copyItemName",
+          "command": "AIToolsOrganizer.copyItemName",
           "when": "viewItem =~ /^areaInstalledFile/",
           "group": "0_rename@2"
         },
         {
-          "command": "agentOrganizer.duplicateItem",
+          "command": "AIToolsOrganizer.duplicateItem",
           "when": "viewItem =~ /^areaInstalledFile/",
           "group": "0_rename@3"
         },
         {
-          "command": "agentOrganizer.showInMarketplace",
+          "command": "AIToolsOrganizer.showInMarketplace",
           "when": "viewItem =~ /^areaInstalledFile/",
           "group": "3_marketplace@1"
         },
         {
-          "command": "agentOrganizer.addFile",
+          "command": "AIToolsOrganizer.addFile",
           "when": "viewItem == areaItemFolder",
           "group": "0_add@1"
         },
         {
-          "command": "agentOrganizer.addFolder",
+          "command": "AIToolsOrganizer.addFolder",
           "when": "viewItem == areaItemFolder",
           "group": "0_add@2"
         },
         {
-          "command": "agentOrganizer.copyItemPath",
+          "command": "AIToolsOrganizer.copyItemPath",
           "when": "viewItem == areaItemFolder",
           "group": "0_path@1"
         },
         {
-          "command": "agentOrganizer.copyAbsolutePath",
+          "command": "AIToolsOrganizer.copyAbsolutePath",
           "when": "viewItem == areaItemFolder",
           "group": "0_path@2"
         },
         {
-          "command": "agentOrganizer.revealInFileExplorer",
+          "command": "AIToolsOrganizer.revealInFileExplorer",
           "when": "viewItem == areaItemFolder",
           "group": "9_reveal@1"
         },
         {
-          "command": "agentOrganizer.deleteSkillFolder",
+          "command": "AIToolsOrganizer.deleteSkillFolder",
           "when": "viewItem == areaItemFolder",
           "group": "2_delete@1"
         },
         {
-          "command": "agentOrganizer.pluginGetLatestFolder",
-          "when": "view == agentOrganizer.plugins && viewItem == areaItemFolder",
+          "command": "AIToolsOrganizer.pluginGetLatestFolder",
+          "when": "view == AIToolsOrganizer.plugins && viewItem == areaItemFolder",
           "group": "1_move@1"
         },
         {
-          "command": "agentOrganizer.pluginCopyToArea",
-          "when": "view == agentOrganizer.plugins && viewItem == areaItemFolder",
+          "command": "AIToolsOrganizer.pluginCopyToArea",
+          "when": "view == AIToolsOrganizer.plugins && viewItem == areaItemFolder",
           "group": "1_move@2"
         },
         {
-          "command": "agentOrganizer.renameFile",
+          "command": "AIToolsOrganizer.renameFile",
           "when": "viewItem == areaItemFile",
           "group": "0_rename@1"
         },
         {
-          "command": "agentOrganizer.copyItemPath",
+          "command": "AIToolsOrganizer.copyItemPath",
           "when": "viewItem == areaItemFile",
           "group": "0_path@1"
         },
         {
-          "command": "agentOrganizer.copyAbsolutePath",
+          "command": "AIToolsOrganizer.copyAbsolutePath",
           "when": "viewItem == areaItemFile",
           "group": "0_path@2"
         },
         {
-          "command": "agentOrganizer.revealInFileExplorer",
+          "command": "AIToolsOrganizer.revealInFileExplorer",
           "when": "viewItem == areaItemFile",
           "group": "9_reveal@1"
         },
         {
-          "command": "agentOrganizer.deleteSkillFile",
+          "command": "AIToolsOrganizer.deleteSkillFile",
           "when": "viewItem == areaItemFile",
           "group": "2_delete@1"
         },
         {
-          "command": "agentOrganizer.pluginGetLatestItem",
-          "when": "view == agentOrganizer.plugins && viewItem == areaItemFile",
+          "command": "AIToolsOrganizer.pluginGetLatestItem",
+          "when": "view == AIToolsOrganizer.plugins && viewItem == areaItemFile",
           "group": "1_move@1"
         },
         {
-          "command": "agentOrganizer.pluginCopyToArea",
-          "when": "view == agentOrganizer.plugins && viewItem == areaItemFile",
+          "command": "AIToolsOrganizer.pluginCopyToArea",
+          "when": "view == AIToolsOrganizer.plugins && viewItem == areaItemFile",
           "group": "1_move@2"
         }
       ]
     },
     "configuration": {
-      "title": "Agent Organizer",
+      "title": "AI Tools Organizer",
       "properties": {
-        "agentOrganizer.skillRepositories": {
+        "AIToolsOrganizer.skillRepositories": {
           "type": "array",
           "default": [
             {
@@ -1477,7 +1477,7 @@
             }
           }
         },
-        "agentOrganizer.installLocations": {
+        "AIToolsOrganizer.installLocations": {
           "type": "object",
           "default": {
             "agents": "~/.copilot/agents",
@@ -1500,13 +1500,13 @@
           },
           "additionalProperties": false
         },
-        "agentOrganizer.githubToken": {
+        "AIToolsOrganizer.githubToken": {
           "type": "string",
           "default": "",
           "description": "GitHub personal access token for higher API rate limits (optional)",
           "scope": "application"
         },
-        "agentOrganizer.cacheTimeout": {
+        "AIToolsOrganizer.cacheTimeout": {
           "type": "number",
           "default": 3600,
           "description": "Cache timeout for marketplace data in seconds"

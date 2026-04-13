@@ -9,7 +9,7 @@ import { Skill, buildGitHubUrl, AREA_DEFINITIONS } from '../types';
 import { InstalledSkillsTreeDataProvider } from './installedProvider';
 
 export class SkillDetailPanel {
-    public static readonly viewType = 'agentOrganizer.skillDetail';
+    public static readonly viewType = 'AIToolsOrganizer.skillDetail';
     
     private static panels: Map<string, SkillDetailPanel> = new Map();
     
@@ -51,10 +51,10 @@ export class SkillDetailPanel {
             async (message) => {
                 switch (message.command) {
                     case 'install':
-                        await vscode.commands.executeCommand('agentOrganizer.install', this._skill);
+                        await vscode.commands.executeCommand('AIToolsOrganizer.install', this._skill);
                         break;
                     case 'uninstall':
-                        await vscode.commands.executeCommand('agentOrganizer.uninstall', this._skill);
+                        await vscode.commands.executeCommand('AIToolsOrganizer.uninstall', this._skill);
                         break;
                     case 'openExternal':
                         if (message.url) {

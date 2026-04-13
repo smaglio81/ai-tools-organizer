@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The Marketplace view (`agentOrganizer.marketplace`) lets users browse content from configured GitHub repositories across multiple content areas (agents, hooks, instructions, plugins, prompts, skills), search by name or description, view details, and download items.
+The Marketplace view (`AIToolsOrganizer.marketplace`) lets users browse content from configured GitHub repositories across multiple content areas (agents, hooks, instructions, plugins, prompts, skills), search by name or description, view details, and download items.
 
 ---
 
@@ -60,7 +60,7 @@ github/awesome-copilot            ← SourceTreeItem (github icon, collapsed)
 
 ## Data Sources
 
-Repositories are configured via `agentOrganizer.skillRepositories`. Each entry specifies:
+Repositories are configured via `AIToolsOrganizer.skillRepositories`. Each entry specifies:
 
 | Field | Description |
 |---|---|
@@ -92,7 +92,7 @@ Content is fetched using the Git Trees API (1 call per repo, recursive) + `raw.g
 
 Repositories are loaded progressively with a concurrency limit of 2. This prevents event loop starvation that would otherwise delay local filesystem operations (installed item scans) when many repositories are configured.
 
-Results are cached in memory per `agentOrganizer.cacheTimeout` seconds.
+Results are cached in memory per `AIToolsOrganizer.cacheTimeout` seconds.
 
 ---
 
@@ -100,10 +100,10 @@ Results are cached in memory per `agentOrganizer.cacheTimeout` seconds.
 
 | Button | Command | Description |
 |---|---|---|
-| Add Repository (add icon) | `agentOrganizer.addRepository` | Prompts for a GitHub URL and adds a new entry to `agentOrganizer.skillRepositories`. |
-| Search (search icon) | `agentOrganizer.search` | Opens an input box; filters displayed items by name or description (case-insensitive). |
-| Clear Search (close icon) | `agentOrganizer.clearSearch` | Clears the active search filter. Only shown when a search is active. |
-| Refresh (refresh icon) | `agentOrganizer.refresh` | Clears the cache and re-fetches all content from GitHub. |
+| Add Repository (add icon) | `AIToolsOrganizer.addRepository` | Prompts for a GitHub URL and adds a new entry to `AIToolsOrganizer.skillRepositories`. |
+| Search (search icon) | `AIToolsOrganizer.search` | Opens an input box; filters displayed items by name or description (case-insensitive). |
+| Clear Search (close icon) | `AIToolsOrganizer.clearSearch` | Clears the active search filter. Only shown when a search is active. |
+| Refresh (refresh icon) | `AIToolsOrganizer.refresh` | Clears the cache and re-fetches all content from GitHub. |
 | Collapse All | Built-in VS Code | Collapses all groups. |
 
 ---
@@ -114,30 +114,30 @@ Results are cached in memory per `agentOrganizer.cacheTimeout` seconds.
 
 | Action | Type | Command | Description |
 |---|---|---|---|
-| Download | inline + menu | `agentOrganizer.install` | Downloads the item to the configured install location. |
-| View Details | inline | `agentOrganizer.viewDetails` | Opens the detail webview panel. |
-| Open in Browser | menu | `agentOrganizer.openInBrowser` | Opens the item's GitHub folder. |
+| Download | inline + menu | `AIToolsOrganizer.install` | Downloads the item to the configured install location. |
+| View Details | inline | `AIToolsOrganizer.viewDetails` | Opens the detail webview panel. |
+| Open in Browser | menu | `AIToolsOrganizer.openInBrowser` | Opens the item's GitHub folder. |
 
 ### AreaFileTreeItem (single-file items)
 
 | Action | Type | Command | Description |
 |---|---|---|---|
-| Download | inline + menu | `agentOrganizer.install` | Fetches the file from GitHub and writes it to the area's default download location. |
-| View Details | inline + click | `agentOrganizer.viewFileDetails` | Fetches file content and opens the detail panel. |
-| Open in Browser | menu | `agentOrganizer.openInBrowser` | Opens the file on GitHub (blob URL). |
+| Download | inline + menu | `AIToolsOrganizer.install` | Fetches the file from GitHub and writes it to the area's default download location. |
+| View Details | inline + click | `AIToolsOrganizer.viewFileDetails` | Fetches file content and opens the detail panel. |
+| Open in Browser | menu | `AIToolsOrganizer.openInBrowser` | Opens the file on GitHub (blob URL). |
 
 ### SkillsGroupTreeItem / AreaGroupTreeItem (area groups)
 
 | Action | Type | Command | Description |
 |---|---|---|---|
-| Open in Browser | menu | `agentOrganizer.openInBrowser` | Opens the area's directory on GitHub. |
+| Open in Browser | menu | `AIToolsOrganizer.openInBrowser` | Opens the area's directory on GitHub. |
 
 ### SourceTreeItem / FailedSourceTreeItem (repositories)
 
 | Action | Type | Command | Description |
 |---|---|---|---|
-| Delete | inline | `agentOrganizer.removeRepository` | Removes the repository from config. |
-| Open in Browser | menu | `agentOrganizer.openInBrowser` | Opens the repository on GitHub. |
+| Delete | inline | `AIToolsOrganizer.removeRepository` | Removes the repository from config. |
+| Open in Browser | menu | `AIToolsOrganizer.openInBrowser` | Opens the repository on GitHub. |
 
 ---
 
@@ -146,7 +146,7 @@ Results are cached in memory per `agentOrganizer.cacheTimeout` seconds.
 1. Prompt user for a GitHub URL.
 2. Parse URL into `{ owner, repo, branch? }`.
 3. If branch is missing, fetch default branch from GitHub API.
-4. Save `{ owner, repo, branch }` to `agentOrganizer.skillRepositories`.
+4. Save `{ owner, repo, branch }` to `AIToolsOrganizer.skillRepositories`.
 5. Area discovery and content fetching happen automatically on load.
 
 ---
@@ -158,7 +158,7 @@ Clicking a multi-file item (skill, plugin, hook) or single-file item (agent, ins
 - For markdown-based areas (Skills, single-file areas): the README tab shows the rendered markdown body; Raw Source shows the full file content.
 - For JSON-based multi-file areas (Hooks - GitHub, Plugins): the panel fetches `README.md` from the item's folder (also checks the item root if the definition file is nested). The README tab shows the rendered README markdown; Raw Source shows the raw README content. A third tab shows the raw definition file (e.g. `plugin.json`, `hooks.json`). Name and description are taken from the JSON definition file, with README frontmatter as fallback.
 - When no README.md is found for JSON-based areas, the README tab shows "No README.md found." instead of the generic "No additional details available."
-- For single-file items, the file content is fetched on demand via `agentOrganizer.viewFileDetails`.
+- For single-file items, the file content is fetched on demand via `AIToolsOrganizer.viewFileDetails`.
 
 ---
 

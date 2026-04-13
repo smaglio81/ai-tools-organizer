@@ -127,7 +127,7 @@ export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<
     private duplicateStatusMap: Map<string, SkillDuplicateStatus> = new Map();
     private readonly pathService: SkillPathService;
     private collapsedLocations: Set<string>;
-    private readonly COLLAPSED_STATE_KEY = 'agentOrganizer.collapsedLocations';
+    private readonly COLLAPSED_STATE_KEY = 'AIToolsOrganizer.collapsedLocations';
     private treeView?: vscode.TreeView<TreeNode>;
     private locationItems: Map<string, LocationTreeItem> = new Map();
     /** Active file watchers for duplicate status; disposed and recreated on refresh */
@@ -155,7 +155,7 @@ export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<
             this.initialLoading = false;
             // Signal that the initial scan is done so the welcome message switches
             // from "Loading ..." to "No skills installed yet"
-            vscode.commands.executeCommand('setContext', 'agentOrganizer:initialScanComplete', true);
+            vscode.commands.executeCommand('setContext', 'AIToolsOrganizer:initialScanComplete', true);
             await this.computeDuplicateStatuses();
             this._onDidChangeTreeData.fire();
         });
@@ -284,7 +284,7 @@ export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<
      * Update the context key for search active state
      */
     private updateSearchContext(): void {
-        vscode.commands.executeCommand('setContext', 'agentOrganizer:installedSearchActive', this.searchQuery.length > 0);
+        vscode.commands.executeCommand('setContext', 'AIToolsOrganizer:installedSearchActive', this.searchQuery.length > 0);
     }
 
     /**

@@ -1,6 +1,6 @@
 /**
- * Agent Organizer VS Code Extension
- * Provides a marketplace for browsing, installing, and managing Agent Organizer
+ * AI Tools Organizer VS Code Extension
+ * Provides a marketplace for browsing, installing, and managing AI Tools Organizer
  */
 
 import * as vscode from 'vscode';
@@ -234,14 +234,59 @@ async function updateJsonDefinitionName(fileUri: vscode.Uri, newName: string): P
     } catch { /* not valid JSON, skip */ }
 }
 
-export function activate(context: vscode.ExtensionContext) {
-    console.log('Agent Organizer extension is now active!');
+/**
+ * Migrate settings from the old "agentOrganizer" prefix to "AIToolsOrganizer".
+ * Runs once per install; uses a global state flag to avoid repeated migration.
+ */
+async function migrateSettings(context: vscode.ExtensionContext): Promise<void> {
+    const MIGRATION_KEY = 'AIToolsOrganizer.settingsMigrated';
+    if (context.globalState.get<boolean>(MIGRATION_KEY)) {
+        return;
+    }
+
+    const oldConfig = vscode.workspace.getConfiguration('agentOrganizer');
+    const newConfig = vscode.workspace.getConfiguration('AIToolsOrganizer');
+
+    const keysToMigrate = ['skillRepositories', 'installLocations', 'githubToken', 'cacheTimeout'] as const;
+    let migrated = false;
+
+    for (const key of keysToMigrate) {
+        const inspected = oldConfig.inspect(key);
+        const newInspected = newConfig.inspect(key);
+        // Migrate user-level (global) settings
+        if (inspected?.globalValue !== undefined && newInspected?.globalValue === undefined) {
+            await newConfig.update(key, inspected.globalValue, vscode.ConfigurationTarget.Global);
+            migrated = true;
+        }
+        // Migrate workspace-level settings
+        if (inspected?.workspaceValue !== undefined && newInspected?.workspaceValue === undefined) {
+            await newConfig.update(key, inspected.workspaceValue, vscode.ConfigurationTarget.Workspace);
+            migrated = true;
+        }
+    }
+
+    if (migrated) {
+        console.log('AI Tools Organizer: migrated settings from agentOrganizer prefix');
+    }
+
+    await context.globalState.update(MIGRATION_KEY, true);
+}
+
+export async function activate(context: vscode.ExtensionContext) {
+    console.log('AI Tools Organizer extension is now active!');
+
+    // Migrate settings from old prefix before anything else
+    try {
+        await migrateSettings(context);
+    } catch (err) {
+        console.error('AI Tools Organizer: settings migration failed', err);
+    }
 
     // ─── Section 1: Service initialization ───────────────────────────────
     const githubClient = new GitHubSkillsClient(context);
     const pathService = new SkillPathService();
     const installationService = new SkillInstallationService(githubClient, context, pathService);
-    const outputChannel = vscode.window.createOutputChannel('Agent Organizer');
+    const outputChannel = vscode.window.createOutputChannel('AI Tools Organizer');
     context.subscriptions.push(outputChannel);
 
     // ─── Section 2: View provider initialization ──────────────────────────
@@ -251,12 +296,12 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Create area view providers (excluding skills which has its own dedicated provider, and powers which is still planned)
     const areaViewIds: { area: ContentArea; viewId: string }[] = [
-        { area: 'agents', viewId: 'agentOrganizer.agents' },
-        { area: 'hooksGithub', viewId: 'agentOrganizer.hooksGithub' },
-        { area: 'hooksKiro', viewId: 'agentOrganizer.hooksKiro' },
-        { area: 'instructions', viewId: 'agentOrganizer.instructions' },
-        { area: 'plugins', viewId: 'agentOrganizer.plugins' },
-        { area: 'prompts', viewId: 'agentOrganizer.prompts' },
+        { area: 'agents', viewId: 'AIToolsOrganizer.agents' },
+        { area: 'hooksGithub', viewId: 'AIToolsOrganizer.hooksGithub' },
+        { area: 'hooksKiro', viewId: 'AIToolsOrganizer.hooksKiro' },
+        { area: 'instructions', viewId: 'AIToolsOrganizer.instructions' },
+        { area: 'plugins', viewId: 'AIToolsOrganizer.plugins' },
+        { area: 'prompts', viewId: 'AIToolsOrganizer.prompts' },
     ];
 
     const areaProviders = new Map<string, InstalledAreaTreeDataProvider>();
@@ -501,7 +546,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         if (selected.label === 'Custom...') {
             // Open the Settings UI filtered to the installLocations setting
-            await vscode.commands.executeCommand('workbench.action.openSettings', 'agentOrganizer.installLocations');
+            await vscode.commands.executeCommand('workbench.action.openSettings', 'AIToolsOrganizer.installLocations');
         } else {
             await pathService.setDefaultDownloadLocation(area, selected.label);
             // Refresh the relevant provider
@@ -744,7 +789,7 @@ export function activate(context: vscode.ExtensionContext) {
     // ─── Section 4: Tree view registration ─────────────────────────────
 
     // Register TreeViews
-    const marketplaceTreeView = vscode.window.createTreeView('agentOrganizer.marketplace', {
+    const marketplaceTreeView = vscode.window.createTreeView('AIToolsOrganizer.marketplace', {
         treeDataProvider: marketplaceProvider,
         showCollapseAll: true
     });
@@ -752,7 +797,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Pass tree view reference to marketplace provider for reveal operations
     marketplaceProvider.setTreeView(marketplaceTreeView);
 
-    const installedTreeView = vscode.window.createTreeView('agentOrganizer.skills', {
+    const installedTreeView = vscode.window.createTreeView('AIToolsOrganizer.skills', {
         treeDataProvider: installedProvider
     });
 
@@ -796,7 +841,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Register commands
     const commands = [
         // Search skills
-        vscode.commands.registerCommand('agentOrganizer.search', async () => {
+        vscode.commands.registerCommand('AIToolsOrganizer.search', async () => {
             const query = await vscode.window.showInputBox({
                 prompt: 'Search skills',
                 placeHolder: 'Enter skill name or keyword...'
@@ -807,12 +852,12 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Clear search
-        vscode.commands.registerCommand('agentOrganizer.clearSearch', () => {
+        vscode.commands.registerCommand('AIToolsOrganizer.clearSearch', () => {
             marketplaceProvider.clearSearch();
         }),
 
         // Search installed skills
-        vscode.commands.registerCommand('agentOrganizer.searchInstalled', async () => {
+        vscode.commands.registerCommand('AIToolsOrganizer.searchInstalled', async () => {
             const query = await vscode.window.showInputBox({
                 prompt: 'Search installed skills',
                 placeHolder: 'Enter skill name or keyword...'
@@ -823,18 +868,18 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Clear installed search
-        vscode.commands.registerCommand('agentOrganizer.clearSearchInstalled', () => {
+        vscode.commands.registerCommand('AIToolsOrganizer.clearSearchInstalled', () => {
             installedProvider.clearSearch();
         }),
 
         // Refresh marketplace only
-        vscode.commands.registerCommand('agentOrganizer.refresh', async () => {
+        vscode.commands.registerCommand('AIToolsOrganizer.refresh', async () => {
             await marketplaceProvider.refresh();
             marketplaceProvider.setInstalledSkills(installedProvider.getInstalledSkillNames());
         }),
 
         // Refresh installed skills only
-        vscode.commands.registerCommand('agentOrganizer.refreshInstalled', async () => {
+        vscode.commands.registerCommand('AIToolsOrganizer.refreshInstalled', async () => {
             await installedProvider.refresh();
             marketplaceProvider.setInstalledSkills(installedProvider.getInstalledSkillNames());
         }),
@@ -857,16 +902,16 @@ export function activate(context: vscode.ExtensionContext) {
 
         // Per-area sync and get-latest commands (delegate to the shared syncSkill/getLatestSkill handlers)
         ...(['Agent', 'Hook', 'Instruction', 'Plugin', 'Prompt'] as const).flatMap(suffix => [
-            vscode.commands.registerCommand(`agentOrganizer.sync${suffix}`, (item: AreaInstalledItemTreeItem) => {
-                vscode.commands.executeCommand('agentOrganizer.syncSkill', item);
+            vscode.commands.registerCommand(`AIToolsOrganizer.sync${suffix}`, (item: AreaInstalledItemTreeItem) => {
+                vscode.commands.executeCommand('AIToolsOrganizer.syncSkill', item);
             }),
-            vscode.commands.registerCommand(`agentOrganizer.getLatest${suffix}`, (item: AreaInstalledItemTreeItem) => {
-                vscode.commands.executeCommand('agentOrganizer.getLatestSkill', item);
+            vscode.commands.registerCommand(`AIToolsOrganizer.getLatest${suffix}`, (item: AreaInstalledItemTreeItem) => {
+                vscode.commands.executeCommand('AIToolsOrganizer.getLatestSkill', item);
             }),
         ]),
 
         // View skill details - opens in editor area as WebviewPanel
-        vscode.commands.registerCommand('agentOrganizer.viewDetails', (item: SkillTreeItem | Skill | unknown) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.viewDetails', (item: SkillTreeItem | Skill | unknown) => {
             if (!item) {
                 vscode.window.showErrorMessage('No skill selected.');
                 return;
@@ -899,7 +944,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // View details for a single-file area item (agents, instructions, prompts)
-        vscode.commands.registerCommand('agentOrganizer.viewFileDetails', async (item: AreaFileItem | AreaFileTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.viewFileDetails', async (item: AreaFileItem | AreaFileTreeItem) => {
             // Accept both the raw AreaFileItem (from click command) and AreaFileTreeItem (from inline button)
             const fileItem = item instanceof AreaFileTreeItem ? item.fileItem : item;
             if (!fileItem?.source) {
@@ -939,7 +984,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Install / download item
-        vscode.commands.registerCommand('agentOrganizer.install', async (item: SkillTreeItem | Skill | AreaFileTreeItem | AreaFileItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.install', async (item: SkillTreeItem | Skill | AreaFileTreeItem | AreaFileItem) => {
             // Handle single-file area items (agents, instructions, prompts)
             if (item instanceof AreaFileTreeItem || (item && 'filePath' in item && 'area' in item && !('skillPath' in item))) {
                 const fileItem: AreaFileItem = item instanceof AreaFileTreeItem ? item.fileItem : item as AreaFileItem;
@@ -1006,7 +1051,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Uninstall skill
-        vscode.commands.registerCommand('agentOrganizer.uninstall', async (item: InstalledSkillTreeItem | InstalledSkill | Skill | AreaInstalledItemTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.uninstall', async (item: InstalledSkillTreeItem | InstalledSkill | Skill | AreaInstalledItemTreeItem) => {
             // Handle area installed items — delete the file/folder directly
             if (item instanceof AreaInstalledItemTreeItem) {
                 try {
@@ -1045,7 +1090,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Open skill folder
-        vscode.commands.registerCommand('agentOrganizer.openSkillFolder', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.openSkillFolder', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
             if (item instanceof AreaInstalledItemTreeItem) {
                 const def = AREA_DEFINITIONS[item.area];
                 try {
@@ -1074,7 +1119,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Reveal item in system file explorer
-        vscode.commands.registerCommand('agentOrganizer.revealInFileExplorer', (item: LocationTreeItem | InstalledSkillTreeItem | SkillFolderTreeItem | SkillFileTreeItem | AreaLocationTreeItem | AreaInstalledItemTreeItem | AreaItemFolderTreeItem | AreaItemFileTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.revealInFileExplorer', (item: LocationTreeItem | InstalledSkillTreeItem | SkillFolderTreeItem | SkillFileTreeItem | AreaLocationTreeItem | AreaInstalledItemTreeItem | AreaItemFolderTreeItem | AreaItemFileTreeItem) => {
             let uri: vscode.Uri | undefined;
             if (item instanceof SkillFileTreeItem) {
                 uri = item.fileUri;
@@ -1101,7 +1146,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Add a new file inside a skill or skill subfolder
-        vscode.commands.registerCommand('agentOrganizer.addFile', async (item: InstalledSkillTreeItem | SkillFolderTreeItem | AreaInstalledItemTreeItem | AreaItemFolderTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.addFile', async (item: InstalledSkillTreeItem | SkillFolderTreeItem | AreaInstalledItemTreeItem | AreaItemFolderTreeItem) => {
             const fileName = await vscode.window.showInputBox({
                 prompt: 'File name',
                 validateInput: value => validateItemName(value, 'File name')
@@ -1118,7 +1163,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Add a new folder inside a skill or skill subfolder
-        vscode.commands.registerCommand('agentOrganizer.addFolder', async (item: InstalledSkillTreeItem | SkillFolderTreeItem | AreaInstalledItemTreeItem | AreaItemFolderTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.addFolder', async (item: InstalledSkillTreeItem | SkillFolderTreeItem | AreaInstalledItemTreeItem | AreaItemFolderTreeItem) => {
             const folderName = await vscode.window.showInputBox({
                 prompt: 'Folder name',
                 validateInput: value => validateItemName(value, 'Folder name')
@@ -1134,7 +1179,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Rename a file inside a skill or area folder
-        vscode.commands.registerCommand('agentOrganizer.renameFile', async (item: SkillFileTreeItem | AreaItemFileTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.renameFile', async (item: SkillFileTreeItem | AreaItemFileTreeItem) => {
             const oldName = item instanceof SkillFileTreeItem ? item.fileName : item.fileName;
             const fileUri = item instanceof SkillFileTreeItem ? item.fileUri : item.fileUri;
             const parentUri = fileUri.with({ path: fileUri.path.replace(/\/[^/]+$/, '') });
@@ -1154,7 +1199,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Delete a file inside a skill or area folder (moved to trash)
-        vscode.commands.registerCommand('agentOrganizer.deleteSkillFile', async (item: SkillFileTreeItem | AreaItemFileTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.deleteSkillFile', async (item: SkillFileTreeItem | AreaItemFileTreeItem) => {
             const fileUri = item instanceof SkillFileTreeItem ? item.fileUri : item.fileUri;
             await vscode.workspace.fs.delete(fileUri, { useTrash: true });
             if (item instanceof SkillFileTreeItem) {
@@ -1165,7 +1210,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Delete a subfolder inside a skill or area folder (moved to trash)
-        vscode.commands.registerCommand('agentOrganizer.deleteSkillFolder', async (item: SkillFolderTreeItem | AreaItemFolderTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.deleteSkillFolder', async (item: SkillFolderTreeItem | AreaItemFolderTreeItem) => {
             const folderUri = item instanceof SkillFolderTreeItem ? item.folderUri : item.folderUri;
             await vscode.workspace.fs.delete(folderUri, { recursive: true, useTrash: true });
             if (item instanceof SkillFolderTreeItem) {
@@ -1176,7 +1221,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Copy the item name to the clipboard
-        vscode.commands.registerCommand('agentOrganizer.copyItemName', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.copyItemName', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
             const name = item instanceof InstalledSkillTreeItem
                 ? item.installedSkill.name
                 : item.installedItem.name;
@@ -1185,7 +1230,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Duplicate an installed area item or skill with a new name
-        vscode.commands.registerCommand('agentOrganizer.duplicateItem', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.duplicateItem', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
             if (!item) { return; }
             const isSkill = item instanceof InstalledSkillTreeItem;
             const oldName = isSkill ? item.installedSkill.name : item.installedItem.name;
@@ -1248,7 +1293,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Copy the item's logical #{path} reference to the clipboard
-        vscode.commands.registerCommand('agentOrganizer.copyItemPath', async (item: PathReferenceTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.copyItemPath', async (item: PathReferenceTreeItem) => {
             const pathReference = item ? buildItemPathReference(item) : undefined;
             if (!pathReference) {
                 vscode.window.showErrorMessage('Unable to determine a path for this item.');
@@ -1260,7 +1305,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Copy the item's absolute filesystem path to the clipboard
-        vscode.commands.registerCommand('agentOrganizer.copyAbsolutePath', async (item: PathReferenceTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.copyAbsolutePath', async (item: PathReferenceTreeItem) => {
             if (!item) {
                 vscode.window.showErrorMessage('Unable to determine a path for this item.');
                 return;
@@ -1285,7 +1330,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Rename an installed area item or skill
-        vscode.commands.registerCommand('agentOrganizer.renameItem', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.renameItem', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
             if (!item) { return; }
             const isSkill = item instanceof InstalledSkillTreeItem;
             const oldName = isSkill ? item.installedSkill.name : item.installedItem.name;
@@ -1353,7 +1398,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Move skill to a different location
-        vscode.commands.registerCommand('agentOrganizer.moveSkill', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem | LocationTreeItem | AreaLocationTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.moveSkill', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem | LocationTreeItem | AreaLocationTreeItem) => {
             if (item instanceof AreaLocationTreeItem) {
                 await moveOrCopyAreaLocation(item, 'move');
             } else if (item instanceof LocationTreeItem) {
@@ -1369,7 +1414,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Copy skill to a different location
-        vscode.commands.registerCommand('agentOrganizer.copySkill', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem | LocationTreeItem | AreaLocationTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.copySkill', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem | LocationTreeItem | AreaLocationTreeItem) => {
             if (item instanceof AreaLocationTreeItem) {
                 await moveOrCopyAreaLocation(item, 'copy');
             } else if (item instanceof LocationTreeItem) {
@@ -1385,7 +1430,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Copy an item into a plugin's subfolder
-        vscode.commands.registerCommand('agentOrganizer.copyToPlugin', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.copyToPlugin', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
             // Determine the source area and the target plugin subfolder
             let sourceArea: ContentArea;
             let sourceUri: vscode.Uri;
@@ -1410,7 +1455,7 @@ export function activate(context: vscode.ExtensionContext) {
             }
 
             // Get all installed plugins from the plugins area provider
-            const pluginsProvider = areaProviders.get('agentOrganizer.plugins');
+            const pluginsProvider = areaProviders.get('AIToolsOrganizer.plugins');
             if (!pluginsProvider) { return; }
             const plugins = pluginsProvider.getInstalledItems();
 
@@ -1472,7 +1517,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Update all plugins that contain a copy of this item
-        vscode.commands.registerCommand('agentOrganizer.updatePlugins', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.updatePlugins', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
             let sourceArea: ContentArea;
             let sourceUri: vscode.Uri;
             let itemName: string;
@@ -1501,7 +1546,7 @@ export function activate(context: vscode.ExtensionContext) {
             }
 
             // Get all installed plugins
-            const pluginsProvider = areaProviders.get('agentOrganizer.plugins');
+            const pluginsProvider = areaProviders.get('AIToolsOrganizer.plugins');
             if (!pluginsProvider) { return; }
             const plugins = pluginsProvider.getInstalledItems();
 
@@ -1551,7 +1596,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Get latest copy of all AI tools in a plugin (agents, skills, commands, hooks)
-        vscode.commands.registerCommand('agentOrganizer.pluginGetLatestAll', async (item: AreaInstalledItemTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.pluginGetLatestAll', async (item: AreaInstalledItemTreeItem) => {
             if (!item || item.area !== 'plugins') { return; }
             const pluginUri = item.itemUri;
             const allResults: { area: string; name: string; updated: boolean; reason?: string }[] = [];
@@ -1599,7 +1644,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Get latest copies of all items in a plugin area subfolder
-        vscode.commands.registerCommand('agentOrganizer.pluginGetLatestFolder', async (item: AreaItemFolderTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.pluginGetLatestFolder', async (item: AreaItemFolderTreeItem) => {
             if (!item) { return; }
             const folderName = item.folderName;
             const area = PLUGIN_SUBFOLDER_TO_AREA[folderName];
@@ -1607,7 +1652,7 @@ export function activate(context: vscode.ExtensionContext) {
             if (!area) {
                 // Not an area subfolder — this is an individual item (e.g. a skill folder).
                 // Delegate to the single-item sync by invoking the same logic as pluginGetLatestItem.
-                await vscode.commands.executeCommand('agentOrganizer.pluginGetLatestItem', item);
+                await vscode.commands.executeCommand('AIToolsOrganizer.pluginGetLatestItem', item);
                 return;
             }
 
@@ -1648,7 +1693,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Get latest copy of a single item in a plugin area subfolder
-        vscode.commands.registerCommand('agentOrganizer.pluginGetLatestItem', async (item: AreaItemFileTreeItem | AreaItemFolderTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.pluginGetLatestItem', async (item: AreaItemFileTreeItem | AreaItemFolderTreeItem) => {
             if (!item) { return; }
 
             // Determine the item's URI and name
@@ -1716,7 +1761,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Copy an item from a plugin's area subfolder to the corresponding installed area location
-        vscode.commands.registerCommand('agentOrganizer.pluginCopyToArea', async (item: AreaItemFileTreeItem | AreaItemFolderTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.pluginCopyToArea', async (item: AreaItemFileTreeItem | AreaItemFolderTreeItem) => {
             if (!item) { return; }
 
             const itemUri = item instanceof AreaItemFileTreeItem ? item.fileUri : item.folderUri;
@@ -1790,7 +1835,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Update older copies of an item from the newest version
-        vscode.commands.registerCommand('agentOrganizer.syncSkill', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.syncSkill', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
             if (item instanceof AreaInstalledItemTreeItem) {
                 // Area item sync: copy this (newest) item to all other locations with the same name
                 const viewId = areaViewIds.find(a => a.area === item.area)?.viewId;
@@ -1834,7 +1879,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Get latest version of an item from the newest copy
-        vscode.commands.registerCommand('agentOrganizer.getLatestSkill', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.getLatestSkill', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
             if (item instanceof AreaInstalledItemTreeItem) {
                 // Area item get-latest: replace this (older) copy with the newest
                 const viewId = areaViewIds.find(a => a.area === item.area)?.viewId;
@@ -1867,7 +1912,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Delete all skills in a location folder
-        vscode.commands.registerCommand('agentOrganizer.deleteAllSkills', async (item: LocationTreeItem | AreaLocationTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.deleteAllSkills', async (item: LocationTreeItem | AreaLocationTreeItem) => {
             if (item instanceof AreaLocationTreeItem) {
                 // Delete all items in this area location
                 for (const areaItem of item.items) {
@@ -1894,7 +1939,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Show an installed skill in the Marketplace view
-        vscode.commands.registerCommand('agentOrganizer.showInMarketplace', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.showInMarketplace', async (item: InstalledSkillTreeItem | AreaInstalledItemTreeItem) => {
             if (item instanceof AreaInstalledItemTreeItem) {
                 await marketplaceProvider.revealItemByName(item.installedItem.name);
             } else if (item?.installedSkill) {
@@ -1903,33 +1948,33 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Focus marketplace view (used in welcome message)
-        vscode.commands.registerCommand('agentOrganizer.focusMarketplace', () => {
+        vscode.commands.registerCommand('AIToolsOrganizer.focusMarketplace', () => {
             marketplaceTreeView.reveal(undefined as unknown as SkillTreeItem, { focus: true });
         }),
 
         // Select install location (skills — legacy command, delegates to generic handler)
-        vscode.commands.registerCommand('agentOrganizer.selectInstallLocation', async () => {
+        vscode.commands.registerCommand('AIToolsOrganizer.selectInstallLocation', async () => {
             await selectDefaultDownloadLocation('skills');
         }),
 
         // Expand all installed skills locations
-        vscode.commands.registerCommand('agentOrganizer.expandAll', async () => {
+        vscode.commands.registerCommand('AIToolsOrganizer.expandAll', async () => {
             await installedProvider.expandAll();
         }),
 
         // Collapse all installed skills locations
-        vscode.commands.registerCommand('agentOrganizer.collapseAll', async () => {
+        vscode.commands.registerCommand('AIToolsOrganizer.collapseAll', async () => {
             await installedProvider.collapseAll();
             // Use the built-in command to actually collapse the tree widget,
             // since TreeDataProvider has no API to programmatically collapse nodes.
-            await vscode.commands.executeCommand('workbench.actions.treeView.agentOrganizer.skills.collapseAll');
+            await vscode.commands.executeCommand('workbench.actions.treeView.AIToolsOrganizer.skills.collapseAll');
         }),
 
         // New item from Skills toolbar
-        vscode.commands.registerCommand('agentOrganizer.newSkillItem', () => newItemFromToolbar('skills')),
+        vscode.commands.registerCommand('AIToolsOrganizer.newSkillItem', () => newItemFromToolbar('skills')),
 
         // New item from right-click on a location folder (area views)
-        vscode.commands.registerCommand('agentOrganizer.newItemAtLocation', async (item: AreaLocationTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.newItemAtLocation', async (item: AreaLocationTreeItem) => {
             if (!item) { return; }
             // Determine which area this location belongs to
             let targetArea: ContentArea | undefined;
@@ -1972,7 +2017,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // New item from right-click on a Skills location folder
-        vscode.commands.registerCommand('agentOrganizer.newSkillAtLocation', async (item: LocationTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.newSkillAtLocation', async (item: LocationTreeItem) => {
             if (!item) { return; }
             const wf = pathService.getWorkspaceFolderForLocation(item.location);
             const locationUri = pathService.resolveLocationToUri(item.location, wf);
@@ -1985,12 +2030,12 @@ export function activate(context: vscode.ExtensionContext) {
 
         // Per-area "Add {Area}" right-click commands on location folders
         ...([
-            ['agentOrganizer.newAgentAtLocation', 'agents'],
-            ['agentOrganizer.newHookGithubAtLocation', 'hooksGithub'],
-            ['agentOrganizer.newHookKiroAtLocation', 'hooksKiro'],
-            ['agentOrganizer.newInstructionAtLocation', 'instructions'],
-            ['agentOrganizer.newPluginAtLocation', 'plugins'],
-            ['agentOrganizer.newPromptAtLocation', 'prompts'],
+            ['AIToolsOrganizer.newAgentAtLocation', 'agents'],
+            ['AIToolsOrganizer.newHookGithubAtLocation', 'hooksGithub'],
+            ['AIToolsOrganizer.newHookKiroAtLocation', 'hooksKiro'],
+            ['AIToolsOrganizer.newInstructionAtLocation', 'instructions'],
+            ['AIToolsOrganizer.newPluginAtLocation', 'plugins'],
+            ['AIToolsOrganizer.newPromptAtLocation', 'prompts'],
         ] as const).map(([cmdId, area]) =>
             vscode.commands.registerCommand(cmdId, async (item: AreaLocationTreeItem) => {
                 if (!item) { return; }
@@ -2005,7 +2050,7 @@ export function activate(context: vscode.ExtensionContext) {
         ),
 
         // Remove a skill repository from the marketplace
-        vscode.commands.registerCommand('agentOrganizer.removeRepository', async (item: SourceTreeItem | FailedSourceTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.removeRepository', async (item: SourceTreeItem | FailedSourceTreeItem) => {
             const repo = item instanceof SourceTreeItem ? item.repo : item.failure.repo;
 
             const repositories = readRepositoriesConfig();
@@ -2024,7 +2069,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Open a skill repository in the default browser
-        vscode.commands.registerCommand('agentOrganizer.openInBrowser', (item: SourceTreeItem | FailedSourceTreeItem | SkillTreeItem | SkillsGroupTreeItem | AreaGroupTreeItem | AreaFileTreeItem) => {
+        vscode.commands.registerCommand('AIToolsOrganizer.openInBrowser', (item: SourceTreeItem | FailedSourceTreeItem | SkillTreeItem | SkillsGroupTreeItem | AreaGroupTreeItem | AreaFileTreeItem) => {
             if (item instanceof SkillTreeItem) {
                 const skill = item.skill;
                 const url = buildGitHubUrl(skill.source.owner, skill.source.repo, skill.source.branch, skill.skillPath);
@@ -2048,7 +2093,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
 
         // Add a new skill repository from a GitHub URL
-        vscode.commands.registerCommand('agentOrganizer.addRepository', async () => {
+        vscode.commands.registerCommand('AIToolsOrganizer.addRepository', async () => {
             const input = await vscode.window.showInputBox({
                 prompt: 'Enter a GitHub repository URL',
                 placeHolder: 'https://github.com/owner/repo',
@@ -2128,7 +2173,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Listen for configuration changes
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(e => {
-            if (e.affectsConfiguration('agentOrganizer.skillRepositories')) {
+            if (e.affectsConfiguration('AIToolsOrganizer.skillRepositories')) {
                 if (marketplaceProvider.shouldHandleConfigChange()) {
                     // External/manual config change — do a full refresh.
                     marketplaceProvider.refresh().then(() => {

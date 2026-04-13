@@ -1,10 +1,10 @@
 # Configuration
 
-Open VS Code Settings (`Ctrl+,` / `Cmd+,`) and search for "Agent Organizer".
+Open VS Code Settings (`Ctrl+,` / `Cmd+,`) and search for "AI Tools Organizer".
 
 ## Repositories
 
-**Setting**: `agentOrganizer.skillRepositories`
+**Setting**: `AIToolsOrganizer.skillRepositories`
 
 An array of GitHub repositories to browse in the Marketplace. Each entry has `owner`, `repo`, and `branch` fields. You can edit these directly in the Settings UI or add repositories using the **+** button in the Marketplace toolbar.
 
@@ -12,7 +12,7 @@ An array of GitHub repositories to browse in the Marketplace. Each entry has `ow
 
 ## Download locations
 
-**Setting**: `agentOrganizer.installLocations`
+**Setting**: `AIToolsOrganizer.installLocations`
 
 An object with a download path for each content area. Defaults to `~/.copilot/{area}` for each area. Hooks - Kiro is fixed to `.kiro/hooks`.
 
@@ -41,16 +41,16 @@ When the setting isn't configured, these default locations are scanned:
 | Workspace | `.agents/{area}`, `.claude/{area}`, `.github/{area}`, `.kiro/{area}` |
 | Home | `~/.agents/{area}`, `~/.claude/{area}`, `~/.copilot/{area}`, `~/.kiro/{area}` |
 
-The configured download location from `agentOrganizer.installLocations` is also always included in the scan.
+The configured download location from `AIToolsOrganizer.installLocations` is also always included in the scan.
 
 ## GitHub token
 
-**Setting**: `agentOrganizer.githubToken`
+**Setting**: `AIToolsOrganizer.githubToken`
 
 Optional. Provides higher GitHub API rate limits when browsing many repositories. Create a token at [GitHub Settings](https://github.com/settings/tokens) with `public_repo` scope.
 
 ## Cache timeout
 
-**Setting**: `agentOrganizer.cacheTimeout`
+**Setting**: `AIToolsOrganizer.cacheTimeout`
 
 How long (in seconds) to cache marketplace data. Default: 3600 (1 hour). Click Refresh in the Marketplace toolbar to bypass the cache.

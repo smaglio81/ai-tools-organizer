@@ -115,7 +115,7 @@ export class SkillPathService {
             return '.kiro/hooks';
         }
 
-        const config = vscode.workspace.getConfiguration('agentOrganizer');
+        const config = vscode.workspace.getConfiguration('AIToolsOrganizer');
         const locations = config.get<Record<string, string>>('installLocations');
         if (locations && locations[area]) {
             return locations[area];
@@ -130,18 +130,18 @@ export class SkillPathService {
      * Persist the default download location for an area.
      */
     async setDefaultDownloadLocation(area: ContentArea, location: string): Promise<void> {
-        const config = vscode.workspace.getConfiguration('agentOrganizer');
+        const config = vscode.workspace.getConfiguration('AIToolsOrganizer');
         const current = config.get<Record<string, string>>('installLocations') || {};
         const updated = { ...current, [area]: location };
         await config.update('installLocations', updated, vscode.ConfigurationTarget.Global);
     }
 
     /**
-     * Ensure `agentOrganizer.installLocations` exists in settings.
+     * Ensure `AIToolsOrganizer.installLocations` exists in settings.
      * If the setting is empty or missing, create it with defaults of ~/.copilot/{area} for each area.
      */
     async ensureInstallLocations(): Promise<void> {
-        const config = vscode.workspace.getConfiguration('agentOrganizer');
+        const config = vscode.workspace.getConfiguration('AIToolsOrganizer');
         const existing = config.get<Record<string, string>>('installLocations');
 
         // If the setting already has entries, nothing to do
