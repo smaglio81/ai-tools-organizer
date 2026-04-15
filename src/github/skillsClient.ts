@@ -9,7 +9,7 @@
  */
 
 import * as vscode from 'vscode';
-import { Skill, SkillRepository, SkillMetadata, CacheEntry, FailedRepository, readRepositoriesConfig, ContentArea, ALL_CONTENT_AREAS, AREA_DEFINITIONS, AreaFileItem, RepoContent, AreaPaths, isYamlBlockScalar, stripYamlQuotes, collectBlockScalarValue } from '../types';
+import { Skill, SkillRepository, SkillMetadata, CacheEntry, FailedRepository, readRepositoriesConfig, ContentArea, ALL_CONTENT_AREAS, AREA_DEFINITIONS, AreaFileItem, RepoContent, AreaPaths, isYamlBlockScalar, stripYamlQuotes } from '../types';
 
 /**
  * GitHub Git Tree item from Trees API
