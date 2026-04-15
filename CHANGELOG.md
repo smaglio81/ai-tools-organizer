@@ -4,6 +4,15 @@ All notable changes to the "ai-tools-organizer" extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.2.1]
+
+### Changed
+
+- YAML frontmatter parser now recognizes block scalar indicators (`>`, `|`, `>-`, `|-`) in description fields. Previously these were stored as the literal indicator character instead of collecting the multiline content below.
+- Description values surrounded by quotes (single or double) are now stripped, matching the existing behavior for skill names.
+- Skills view moved to second position (directly below Marketplace) in the sidebar.
+- On first install, only Marketplace and Skills views are expanded; all other area views start collapsed.
+
 ## [0.2.0]
 
 ### Changed

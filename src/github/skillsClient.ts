@@ -9,7 +9,7 @@
  */
 
 import * as vscode from 'vscode';
-import { Skill, SkillRepository, SkillMetadata, CacheEntry, FailedRepository, readRepositoriesConfig, ContentArea, ALL_CONTENT_AREAS, AREA_DEFINITIONS, AreaFileItem, RepoContent, AreaPaths } from '../types';
+import { Skill, SkillRepository, SkillMetadata, CacheEntry, FailedRepository, readRepositoriesConfig, ContentArea, ALL_CONTENT_AREAS, AREA_DEFINITIONS, AreaFileItem, RepoContent, AreaPaths, isYamlBlockScalar, stripYamlQuotes, collectBlockScalarValue } from '../types';
 
 /**
  * GitHub Git Tree item from Trees API
@@ -279,7 +279,8 @@ export class GitHubSkillsClient {
         let currentKey = '';
         let multilineValue = '';
         
-        for (const line of lines) {
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
             // Check for key: value pattern
             const keyMatch = line.match(/^(\w+(?:-\w+)*):\s*(.*)$/);
             
@@ -292,7 +293,13 @@ export class GitHubSkillsClient {
                 currentKey = keyMatch[1];
                 const value = keyMatch[2].trim();
                 
-                if (value) {
+                // Detect YAML block scalar indicators (>, |, >-, |-, >+, |+, >2, etc.)
+                if (isYamlBlockScalar(value)) {
+                    const collected = collectBlockScalarValue(lines, i, value);
+                    this.setMetadataValue(metadata, currentKey, collected);
+                    currentKey = '';
+                    multilineValue = '';
+                } else if (value) {
                     this.setMetadataValue(metadata, currentKey, value);
                     currentKey = '';
                     multilineValue = '';
@@ -315,11 +322,10 @@ export class GitHubSkillsClient {
     private setMetadataValue(metadata: SkillMetadata, key: string, value: string): void {
         switch (key) {
             case 'name':
-                // Strip surrounding quotes (single or double) from skill names
-                metadata.name = value.replace(/^['"]|['"]$/g, '');
+                metadata.name = stripYamlQuotes(value);
                 break;
             case 'description':
-                metadata.description = value;
+                metadata.description = stripYamlQuotes(value);
                 break;
             case 'license':
                 metadata.license = value;

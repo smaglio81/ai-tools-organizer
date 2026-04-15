@@ -176,6 +176,102 @@ export interface RepoContent {
 }
 
 /**
+ * Regex matching all valid YAML block scalar indicators.
+ * Covers folded (>) and literal (|) with optional chomping (+/-) and a single indentation digit (1-9),
+ * allowing the chomping and indentation indicators in either order.
+ */
+const BLOCK_SCALAR_RE = /^[>|](?:[+-]?[1-9]|[1-9]?[+-])?$/;
+
+/**
+ * Returns true if the value is a YAML block scalar indicator (e.g. >, |, >-, |-, >2, |+, >2-, |1+).
+ */
+export function isYamlBlockScalar(value: string): boolean {
+    return BLOCK_SCALAR_RE.test(value);
+}
+
+/**
+ * Strip surrounding single or double quotes from a YAML string value.
+ * Only strips when both sides use the same quote character.
+ */
+export function stripYamlQuotes(value: string): string {
+    if (value.length >= 2) {
+        const firstChar = value[0];
+        const lastChar = value[value.length - 1];
+        if ((firstChar === '"' || firstChar === "'") && firstChar === lastChar) {
+            return value.slice(1, -1);
+        }
+    }
+    return value;
+}
+
+/**
+ * Collect the multiline block scalar content following a key in YAML lines.
+ * Returns the joined text (space-joined for folded `>`, newline-joined for literal `|`).
+ * Blank lines within the block are preserved. Indentation is dedented by the block's
+ * base indentation level rather than fully trimmed.
+ * @param lines All YAML lines
+ * @param startIndex Index of the line containing the key (content starts at startIndex + 1)
+ * @param indicator The block scalar indicator character (first char: '>' or '|')
+ */
+export function collectBlockScalarValue(lines: string[], startIndex: number, indicator: string): string {
+    const parts: string[] = [];
+    let blockIndent: number | undefined;
+
+    for (let i = startIndex + 1; i < lines.length; i++) {
+        // Strip trailing \r from CRLF line endings
+        const line = lines[i].replace(/\r$/, '');
+
+        if (line.trim() === '') {
+            parts.push('');
+            continue;
+        }
+
+        const indentMatch = line.match(/^(\s+)/);
+        if (!indentMatch) {
+            break;
+        }
+
+        const indent = indentMatch[1].length;
+        if (blockIndent === undefined) {
+            blockIndent = indent;
+        }
+
+        if (indent < blockIndent) {
+            break;
+        }
+
+        parts.push(line.slice(blockIndent));
+    }
+
+    if (parts.length === 0) {
+        return '';
+    }
+
+    if (indicator.startsWith('|')) {
+        return parts.join('\n').trim();
+    }
+
+    // Folded block: join non-blank lines with spaces, preserve blank-line paragraph breaks
+    let result = '';
+    let pendingBlankLines = 0;
+    for (const part of parts) {
+        if (part === '') {
+            pendingBlankLines++;
+            continue;
+        }
+
+        if (result.length > 0) {
+            result += pendingBlankLines > 0 ? '\n'.repeat(pendingBlankLines + 1) : ' ';
+        }
+
+        result += part;
+        pendingBlankLines = 0;
+    }
+
+    return result.trim();
+}
+
+/**
  * Compare two SkillRepository configs for identity equality.
  * Compares owner, repo, and branch.
  */

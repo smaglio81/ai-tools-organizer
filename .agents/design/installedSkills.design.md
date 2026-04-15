@@ -29,7 +29,7 @@ Skills are displayed in a two-level tree grouped by their parent install locatio
 ### InstalledSkillTreeItem
 
 - Label: skill name (from `SKILL.md` frontmatter `name:`, or folder name as fallback)
-- Description: skill description (from `SKILL.md` frontmatter `description:`)
+- Description: skill description (from `SKILL.md` frontmatter `description:`). YAML block scalar indicators (`>`, `|`, `>-`, `|-`) are resolved to the multiline content below. Surrounding quotes (single or double) are stripped.
 - Icon: color-coded SVG based on duplicate status:
   - Purple (`skills-icon-purple.svg`) — unique skill, only one copy with that name
   - Green (`skills-icon-green.svg`) — newest copy among duplicates

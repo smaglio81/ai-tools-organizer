@@ -2,7 +2,7 @@
   "name": "agent-organizer",
   "displayName": "AI Tools Organizer",
   "description": "AI Tools Organizer and Marketplace",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "icon": "resources/logo.png",
   "publisher": "smaglio81",
   "engines": {
@@ -53,42 +53,50 @@
         {
           "id": "AIToolsOrganizer.marketplace",
           "name": "Marketplace",
-          "icon": "resources/activity-bar-icon.svg"
-        },
-        {
-          "id": "AIToolsOrganizer.agents",
-          "name": "Agents",
-          "icon": "resources/agents-icon.svg"
-        },
-        {
-          "id": "AIToolsOrganizer.hooksGithub",
-          "name": "Hooks - GitHub",
-          "icon": "resources/hooks-icon.svg"
-        },
-        {
-          "id": "AIToolsOrganizer.hooksKiro",
-          "name": "Hooks - Kiro",
-          "icon": "resources/hooks-icon.svg"
-        },
-        {
-          "id": "AIToolsOrganizer.instructions",
-          "name": "Instructions",
-          "icon": "resources/instructions-icon.svg"
-        },
-        {
-          "id": "AIToolsOrganizer.plugins",
-          "name": "Plugins",
-          "icon": "resources/plugins-icon.svg"
-        },
-        {
-          "id": "AIToolsOrganizer.prompts",
-          "name": "Prompts / Commands",
-          "icon": "resources/prompts-icon.svg"
+          "icon": "resources/activity-bar-icon.svg",
+          "visibility": "visible"
         },
         {
           "id": "AIToolsOrganizer.skills",
           "name": "Skills",
-          "icon": "resources/skills-icon.svg"
+          "icon": "resources/skills-icon.svg",
+          "visibility": "visible"
+        },
+        {
+          "id": "AIToolsOrganizer.agents",
+          "name": "Agents",
+          "icon": "resources/agents-icon.svg",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "AIToolsOrganizer.hooksGithub",
+          "name": "Hooks - GitHub",
+          "icon": "resources/hooks-icon.svg",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "AIToolsOrganizer.hooksKiro",
+          "name": "Hooks - Kiro",
+          "icon": "resources/hooks-icon.svg",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "AIToolsOrganizer.instructions",
+          "name": "Instructions",
+          "icon": "resources/instructions-icon.svg",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "AIToolsOrganizer.plugins",
+          "name": "Plugins",
+          "icon": "resources/plugins-icon.svg",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "AIToolsOrganizer.prompts",
+          "name": "Prompts / Commands",
+          "icon": "resources/prompts-icon.svg",
+          "visibility": "collapsed"
         }
       ]
     },

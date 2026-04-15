@@ -7,13 +7,13 @@ Browse, download, and manage AI tools from GitHub — agents, skills, hooks, ins
 AI Tools Organizer adds a sidebar panel to VS Code with views for each type of AI tool:
 
 - **Marketplace** — discover content from GitHub repositories
+- **Skills** — folders with `SKILL.md`
 - **Agents** — `*.agent.md` files
 - **Hooks - GitHub** — folder-based hooks with `hooks.json`
 - **Hooks - Kiro** — single-file JSON hooks
 - **Instructions** — `*.instructions.md` files
 - **Plugins** — folders with `plugin.json`
 - **Prompts / Commands** — `*.prompt.md` files
-- **Skills** — folders with `SKILL.md`
 
 Each view shows what you have installed locally, grouped by location. The Marketplace lets you browse repositories and download items with one click.
 
