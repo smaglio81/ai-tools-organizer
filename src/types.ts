@@ -218,7 +218,8 @@ export function collectBlockScalarValue(lines: string[], startIndex: number, ind
     let blockIndent: number | undefined;
 
     for (let i = startIndex + 1; i < lines.length; i++) {
-        const line = lines[i];
+        // Strip trailing \r from CRLF line endings
+        const line = lines[i].replace(/\r$/, '');
 
         if (line.trim() === '') {
             parts.push('');
