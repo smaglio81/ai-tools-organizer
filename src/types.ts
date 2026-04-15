@@ -176,6 +176,47 @@ export interface RepoContent {
 }
 
 /**
+ * Regex matching all valid YAML block scalar indicators.
+ * Covers folded (>) and literal (|) with optional chomping (+/-) and indentation digit.
+ */
+const BLOCK_SCALAR_RE = /^[>|][+-]?\d*$/;
+
+/**
+ * Returns true if the value is a YAML block scalar indicator (e.g. >, |, >-, |-, >2, |+).
+ */
+export function isYamlBlockScalar(value: string): boolean {
+    return BLOCK_SCALAR_RE.test(value);
+}
+
+/**
+ * Strip surrounding single or double quotes from a YAML string value.
+ */
+export function stripYamlQuotes(value: string): string {
+    return value.replace(/^['"]|['"]$/g, '');
+}
+
+/**
+ * Collect the multiline block scalar content following a key in YAML lines.
+ * Returns the joined text (space-joined for folded `>`, newline-joined for literal `|`).
+ * @param lines All YAML lines
+ * @param startIndex Index of the line containing the key (content starts at startIndex + 1)
+ * @param indicator The block scalar indicator character (first char: '>' or '|')
+ */
+export function collectBlockScalarValue(lines: string[], startIndex: number, indicator: string): string {
+    const parts: string[] = [];
+    for (let i = startIndex + 1; i < lines.length; i++) {
+        if (/^\s+/.test(lines[i])) {
+            parts.push(lines[i].trim());
+        } else {
+            break;
+        }
+    }
+    // Literal block (|) preserves newlines; folded block (>) joins with spaces
+    const separator = indicator.startsWith('|') ? '\n' : ' ';
+    return parts.join(separator).trim();
+}
+
+/**
  * Compare two SkillRepository configs for identity equality.
  * Compares owner, repo, and branch.
  */

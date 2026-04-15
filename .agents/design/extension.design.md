@@ -7,13 +7,15 @@ The AI Tools Organizer extension provides a VS Code interface for browsing, down
 The extension adds an **AI Tools Organizer** activity bar container with 8 tree views:
 
 - **Marketplace** — Browse and download content from configured GitHub repositories across all content areas.
+- **Skills** — View and manage installed skills (folders with `SKILL.md`). Has additional features: duplicate detection, move/copy, sync.
 - **Agents** — View and manage installed agent files (`*.agent.md`).
 - **Hooks - GitHub** — View and manage installed GitHub-style hooks (folders with `hooks.json`).
 - **Hooks - Kiro** — View and manage installed Kiro-style hooks (`*.json` files).
 - **Instructions** — View and manage installed instruction files (`*.instructions.md`).
 - **Plugins** — View and manage installed plugins (folders with `plugin.json`).
 - **Prompts / Commands** — View and manage installed prompt files (`*.prompt.md`).
-- **Skills** — View and manage installed skills (folders with `SKILL.md`). Has additional features: duplicate detection, move/copy, sync.
+
+On first install, only Marketplace and Skills are expanded; all other views start collapsed. Users can expand/collapse views freely and VS Code remembers their preference.
 
 ---
 
@@ -106,7 +108,7 @@ The Skills view uses its own dedicated `InstalledSkillsTreeDataProvider` with ad
 
 | Service | Responsibility |
 |---|---|
-| `GitHubSkillsClient` | Fetches content from GitHub. Uses Git Trees API for efficiency; `raw.githubusercontent.com` for file content (no rate limit). Discovers content areas via `discoverAreas()`. Fetches all area content via `fetchRepoContent()`. Parses `plugin.json`/`hooks.json` as JSON and markdown files via YAML frontmatter. For JSON-based areas, also fetches `README.md` for detail panel body content. Caches results per `AIToolsOrganizer.cacheTimeout`. |
+| `GitHubSkillsClient` | Fetches content from GitHub. Uses Git Trees API for efficiency; `raw.githubusercontent.com` for file content (no rate limit). Discovers content areas via `discoverAreas()`. Fetches all area content via `fetchRepoContent()`. Parses `plugin.json`/`hooks.json` as JSON and markdown files via YAML frontmatter. YAML parser handles block scalar indicators (`>`, `|`, `>-`, `|-`) for multiline values and strips surrounding quotes from description values. For JSON-based areas, also fetches `README.md` for detail panel body content. Caches results per `AIToolsOrganizer.cacheTimeout`. |
 | `SkillPathService` | Resolves location strings (including `~` home paths) to `vscode.Uri` values. Provides scan locations, per-area default download locations (`getDefaultDownloadLocation(area)`), and install target resolution. Manages `AIToolsOrganizer.installLocations` config (read, write, ensure defaults on activation). |
 | `SkillInstallationService` | Downloads, deletes, moves, copies, syncs skills. Uses area-specific download locations based on `skill.area`. Handles overwrite confirmation, progress notifications, and trash-based deletion. |
 | `PluginSyncService` | Handles "Get latest copy" and "Copy to area" operations for plugin subfolders. Maps plugin subfolder names to content areas (`agents→agents`, `skills→skills`, `commands→prompts`, `hooks→hooksGithub`). Provides `syncPluginItem()` with `SyncResult` including failure reasons. Also used by "Update Plugins" to push item changes to all plugins containing a copy. |

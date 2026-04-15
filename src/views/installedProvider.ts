@@ -4,7 +4,7 @@
 
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { InstalledSkill, SkillMetadata, normalizeSeparators } from '../types';
+import { InstalledSkill, SkillMetadata, normalizeSeparators, isYamlBlockScalar, stripYamlQuotes, collectBlockScalarValue } from '../types';
 import { SkillPathService } from '../services/skillPathService';
 import { DuplicateStatus, collectFileInfos, compareFiles, computeAllDuplicateStatuses, createLocationWatchers, FileInfo } from '../services/duplicateService';
 
@@ -556,10 +556,19 @@ export class InstalledSkillsTreeDataProvider implements vscode.TreeDataProvider<
         const descMatch = yaml.match(/^description:\s*(.+)$/m);
         
         if (nameMatch) {
-            metadata.name = nameMatch[1].trim();
+            metadata.name = stripYamlQuotes(nameMatch[1].trim());
         }
         if (descMatch) {
-            metadata.description = descMatch[1].trim();
+            const rawDesc = descMatch[1].trim();
+            if (isYamlBlockScalar(rawDesc)) {
+                const lines = yaml.split('\n');
+                const descIndex = lines.findIndex(l => l.startsWith('description:'));
+                if (descIndex >= 0) {
+                    metadata.description = collectBlockScalarValue(lines, descIndex, rawDesc);
+                }
+            } else {
+                metadata.description = stripYamlQuotes(rawDesc);
+            }
         }
 
         return metadata;
