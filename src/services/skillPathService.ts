@@ -51,29 +51,10 @@ const AREA_DIR_NAMES: Record<ContentArea, string> = {
 };
 
 export class SkillPathService {
-    private readonly DEFAULT_SCAN_LOCATIONS = [
-        '.agents/skills',
-        '.claude/skills',
-        '.github/skills',
-        '.kiro/skills',
-        '~/.agents/skills',
-        '~/.claude/skills',
-        '~/.copilot/skills',
-        '~/.kiro/skills'
-    ];
-
     constructor() {}
 
     getScanLocations(): string[] {
-        const config = vscode.workspace.getConfiguration('chat');
-        const locations = config.get<string[]>('agentSkillsLocations');
-        
-        // Use configured locations if available, otherwise fall back to defaults
-        if (locations && Array.isArray(locations) && locations.length > 0) {
-            return locations;
-        }
-        
-        return this.DEFAULT_SCAN_LOCATIONS;
+        return this.getDefaultDownloadLocations('skills');
     }
 
     /**
@@ -89,14 +70,37 @@ export class SkillPathService {
             return ['.kiro/hooks'];
         }
 
-        // Check for a configuration setting
+        // Check for a configuration setting.
+        // Supported shapes:
+        // - object map: paths are enabled unless explicitly set to false
+        // - legacy string array: all listed paths are treated as enabled
         const configKey = AREA_CONFIG_KEYS[area];
         if (configKey) {
             const [section, key] = configKey.split('.');
             const config = vscode.workspace.getConfiguration(section);
-            const locations = config.get<string[]>(key);
-            if (locations && Array.isArray(locations) && locations.length > 0) {
-                return locations;
+            const raw = config.get<unknown>(key);
+            
+            // Support old array format (backward compatibility)
+            if (Array.isArray(raw) && raw.length > 0) {
+                const strings = raw
+                    .filter((item): item is string => typeof item === 'string')
+                    .map(s => s.trim())
+                    .filter(s => s.length > 0);
+                if (strings.length > 0) {
+                    return strings;
+                }
+            }
+            
+            // Support new object map format: Record<string, unknown> (only `false` disables a path)
+            if (raw !== null && raw !== undefined && typeof raw === 'object' && !Array.isArray(raw)) {
+                const locationMap = raw as Record<string, unknown>;
+                const enabled = Object.entries(locationMap)
+                    .filter(([, value]) => value !== false)
+                    .map(([path]) => path.trim())
+                    .filter(p => p.length > 0);
+                if (enabled.length > 0) {
+                    return enabled;
+                }
             }
         }
 

@@ -2,7 +2,7 @@
   "name": "agent-organizer",
   "displayName": "AI Tools Organizer",
   "description": "AI Tools Organizer and Marketplace",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "icon": "resources/logo.png",
   "publisher": "smaglio81",
   "engines": {
