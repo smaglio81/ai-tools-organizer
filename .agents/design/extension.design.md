@@ -28,9 +28,9 @@ On first install, only Marketplace and Skills are expanded; all other views star
 | `AIToolsOrganizer.githubToken` | string | `""` | Optional GitHub personal access token for higher API rate limits. |
 | `AIToolsOrganizer.cacheTimeout` | number | `3600` | Seconds before cached marketplace data expires. |
 
-Each area's list of possible download locations is resolved from its `chat.*` configuration key (e.g., `chat.agentFilesLocations` for agents, `chat.pluginLocations` for plugins, `chat.agentSkillsLocations` for skills). If the config key is not set, a default list is generated from 8 template prefixes (`{.agents,.claude,.github,.kiro,~/.agents,~/.claude,~/.copilot,~/.kiro}/{area}`). Hooks - Kiro is fixed to `.kiro/hooks`.
+Each area's list of possible download locations is resolved from its `chat.*` configuration key (e.g., `chat.agentFilesLocations` for agents, `chat.pluginLocations` for plugins, `chat.agentSkillsLocations` for skills). These settings are objects in the format `{ "path/1": true, "path/2": false }`, where `false` disables a location. Only enabled locations (where the value is not `false`) are included. If the config key is not set or contains no enabled locations, a default list is generated from 8 template prefixes (`{.agents,.claude,.github,.kiro,~/.agents,~/.claude,~/.copilot,~/.kiro}/{area}`). Hooks - Kiro is fixed to `.kiro/hooks`.
 
-Related external settings: each area view scans locations from its own `chat.*` setting (e.g. `chat.agentFilesLocations` for agents, `chat.pluginLocations` for plugins). When the setting isn't configured, a default list is generated from the template prefixes. The configured download location from `AIToolsOrganizer.installLocations` is always included in the scan.
+Related external settings: each area view scans locations from its own `chat.*` setting (e.g. `chat.agentFilesLocations` for agents, `chat.pluginLocations` for plugins), filtering for enabled entries. When the setting isn't configured or has no enabled locations, a default list is generated from the template prefixes. The configured download location from `AIToolsOrganizer.installLocations` is always included in the scan.
 
 ---
 

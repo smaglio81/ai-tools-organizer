@@ -4,6 +4,12 @@ All notable changes to the "ai-tools-organizer" extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.2.2]
+
+### Changed
+
+- Area scan locations now respect the "enabled" flag in VS Code's `chat.*` settings. These settings use the format `{ "path/1": true, "path/2": false }`, where `false` disables a location from scanning. Only enabled locations (value not `false`) are included in scans.
+
 ## [0.2.1]
 
 ### Changed
