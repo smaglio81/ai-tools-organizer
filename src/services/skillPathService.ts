@@ -72,12 +72,24 @@ export class SkillPathService {
 
         // Check for a configuration setting.
         // VS Code stores these as Record<string, boolean> where false means disabled.
+        // Any value other than false is treated as enabled.
+        // Also support legacy array format for backward compatibility.
         const configKey = AREA_CONFIG_KEYS[area];
         if (configKey) {
             const [section, key] = configKey.split('.');
             const config = vscode.workspace.getConfiguration(section);
             const raw = config.get<unknown>(key);
-            if (raw !== null && raw !== undefined && !Array.isArray(raw) && typeof raw === 'object') {
+            
+            // Support old array format (backward compatibility)
+            if (Array.isArray(raw) && raw.length > 0) {
+                const strings = raw.filter((item): item is string => typeof item === 'string');
+                if (strings.length > 0) {
+                    return strings;
+                }
+            }
+            
+            // Support new object map format: Record<string, boolean>
+            if (raw !== null && raw !== undefined && typeof raw === 'object' && !Array.isArray(raw)) {
                 const locationMap = raw as Record<string, unknown>;
                 const enabled = Object.entries(locationMap)
                     .filter(([, value]) => value !== false)

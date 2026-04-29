@@ -1,0 +1,19 @@
+﻿{
+  repository(owner: "smaglio81", name: "ai-tools-organizer") {
+    pullRequest(number: 16) {
+      reviewThreads(first: 50) {
+        nodes {
+          id
+          isResolved
+          comments(first: 1) {
+            nodes {
+              databaseId
+              body
+              resourcePath
+            }
+          }
+        }
+      }
+    }
+  }
+}

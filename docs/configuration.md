@@ -22,7 +22,7 @@ You can also change the download location from each view's toolbar using the fol
 
 ### How locations are scanned
 
-Each area view checks its own `chat.*` setting for scan locations. These settings contain a map of paths with `true`/`false` values — only paths marked as `true` are scanned. If the setting isn't configured or has no enabled paths, a default list is generated from template prefixes.
+Each area view checks its own `chat.*` setting for scan locations. These settings contain a map of paths to enabled/disabled values — paths set to `false` are skipped, and any other value is treated as enabled and scanned. If the setting isn't configured or has no enabled paths, a default list is generated from template prefixes.
 
 | Area | Setting checked |
 |---|---|
