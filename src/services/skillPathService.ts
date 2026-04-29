@@ -88,7 +88,7 @@ export class SkillPathService {
                 }
             }
             
-            // Support new object map format: Record<string, boolean>
+            // Support new object map format: Record<string, unknown> (only `false` disables a path)
             if (raw !== null && raw !== undefined && typeof raw === 'object' && !Array.isArray(raw)) {
                 const locationMap = raw as Record<string, unknown>;
                 const enabled = Object.entries(locationMap)
