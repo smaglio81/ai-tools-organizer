@@ -632,45 +632,29 @@ suite('Extension Test Suite', () => {
 				};
 			}
 
-			getDefaultDownloadLocations(area: any): string[] {
-				// Simplified mock to avoid mocking entire vscode.workspace.getConfiguration
-				// This test focuses on the logic path regardless of the mock provider
-				const testCases: Record<string, unknown> = this.mockSettings;
-				const configKey = {
-					'agents': 'chat.agentFilesLocations',
-					'skills': 'chat.agentSkillsLocations'
-				}[area];
-
-				if (configKey && testCases[configKey] !== undefined) {
-					const raw = testCases[configKey];
-
-					// Support old array format
-					if (Array.isArray(raw) && raw.length > 0) {
-						const strings = raw.filter((item): item is string => typeof item === 'string');
-						if (strings.length > 0) {
-							return strings;
-						}
+			getDefaultDownloadLocationsWithMock(area: any): string[] {
+				const originalGetConfiguration = vscode.workspace.getConfiguration;
+				(vscode.workspace as any).getConfiguration = ((section?: string, scope?: any) => {
+					if (section === 'chat') {
+						return {
+							get: (key: string, defaultValue?: unknown) => {
+								const fullKey = `chat.${key}`;
+								if (Object.prototype.hasOwnProperty.call(this.mockSettings, fullKey)) {
+									return this.mockSettings[fullKey];
+								}
+								return originalGetConfiguration.call(vscode.workspace, section, scope).get(key, defaultValue);
+							}
+						};
 					}
 
-					// Support new object map format
-					if (raw !== null && raw !== undefined && typeof raw === 'object' && !Array.isArray(raw)) {
-						const locationMap = raw as Record<string, unknown>;
-						const enabled = Object.entries(locationMap)
-							.filter(([, value]) => value !== false)
-							.map(([path]) => path.trim())
-							.filter(p => p.length > 0);
-						if (enabled.length > 0) {
-							return enabled;
-						}
-					}
+					return originalGetConfiguration.call(vscode.workspace, section, scope);
+				}) as typeof vscode.workspace.getConfiguration;
+
+				try {
+					return super.getDefaultDownloadLocations(area);
+				} finally {
+					(vscode.workspace as any).getConfiguration = originalGetConfiguration;
 				}
-
-				// Fall back to defaults
-				const defaults: Record<string, string[]> = {
-					'agents': ['~/.copilot/agents', '.github/agents'],
-					'skills': ['~/.copilot/skills', '.github/skills']
-				};
-				return defaults[area] || [];
 			}
 		}
 
@@ -681,7 +665,7 @@ suite('Extension Test Suite', () => {
 				'.github/agents': false
 			});
 
-			const result = service.getDefaultDownloadLocations('agents');
+			const result = service.getDefaultDownloadLocationsWithMock('agents');
 			assert.deepStrictEqual(result, ['~/.copilot/agents'], 'Should return only enabled locations');
 		});
 
@@ -693,7 +677,7 @@ suite('Extension Test Suite', () => {
 				'.local/agents': 1                 // non-false, should be included
 			});
 
-			const result = service.getDefaultDownloadLocations('agents');
+			const result = service.getDefaultDownloadLocationsWithMock('agents');
 			assert.strictEqual(result.length, 3, 'Should include all non-false values');
 			assert.ok(result.includes('~/.copilot/agents'));
 			assert.ok(result.includes('.github/agents'));
@@ -707,7 +691,7 @@ suite('Extension Test Suite', () => {
 				'  .github/agents  ': false
 			});
 
-			const result = service.getDefaultDownloadLocations('agents');
+			const result = service.getDefaultDownloadLocationsWithMock('agents');
 			assert.deepStrictEqual(result, ['~/.copilot/agents'], 'Should trim paths and filter disabled');
 		});
 
@@ -718,23 +702,25 @@ suite('Extension Test Suite', () => {
 				'.github/agents': false
 			});
 
-			const result = service.getDefaultDownloadLocations('agents');
-			assert.deepStrictEqual(result, ['~/.copilot/agents', '.github/agents'], 'Should use defaults when all disabled');
+			const result = service.getDefaultDownloadLocationsWithMock('agents');
+			assert.ok(result.includes('~/.copilot/agents'), 'Should include copilot default path');
+			assert.ok(result.includes('.github/agents'), 'Should include workspace default path');
 		});
 
 		test('supports backward-compatible array format', () => {
 			const service = new MockConfigSkillPathService();
 			service.setMockSetting('chat.agentFilesLocations', ['~/.copilot/agents', '.github/agents']);
 
-			const result = service.getDefaultDownloadLocations('agents');
+			const result = service.getDefaultDownloadLocationsWithMock('agents');
 			assert.deepStrictEqual(result, ['~/.copilot/agents', '.github/agents'], 'Should support legacy array format');
 		});
 
 		test('falls back to defaults when setting is unconfigured', () => {
 			const service = new MockConfigSkillPathService();
 
-			const result = service.getDefaultDownloadLocations('agents');
-			assert.deepStrictEqual(result, ['~/.copilot/agents', '.github/agents'], 'Should return defaults for unconfigured setting');
+			const result = service.getDefaultDownloadLocationsWithMock('agents');
+			assert.ok(result.includes('~/.copilot/agents'), 'Should include copilot default path');
+			assert.ok(result.includes('.github/agents'), 'Should include workspace default path');
 		});
 
 		test('filters empty paths from object map', () => {
@@ -746,7 +732,7 @@ suite('Extension Test Suite', () => {
 				'.github/agents': false
 			});
 
-			const result = service.getDefaultDownloadLocations('agents');
+			const result = service.getDefaultDownloadLocationsWithMock('agents');
 			assert.deepStrictEqual(result, ['~/.copilot/agents'], 'Should filter out empty paths');
 		});
 	});
