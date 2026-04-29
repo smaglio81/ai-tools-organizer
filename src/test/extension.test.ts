@@ -614,12 +614,6 @@ suite('Extension Test Suite', () => {
 
 	suite('SkillPathService.getDefaultDownloadLocations chat.* settings handling', () => {
 		class MockConfigSkillPathService extends SkillPathService {
-			private mockSettings: Record<string, unknown> = {};
-
-			setMockSetting(key: string, value: unknown): void {
-				this.mockSettings[key] = value;
-			}
-
 			override getHomeDirectory(): string {
 				return '/home/user';
 			}
@@ -631,53 +625,53 @@ suite('Extension Test Suite', () => {
 					index: 0
 				};
 			}
+		}
 
-			getDefaultDownloadLocationsWithMock(area: any): string[] {
-				const originalGetConfiguration = vscode.workspace.getConfiguration;
-				(vscode.workspace as any).getConfiguration = ((section?: string, scope?: any) => {
-					if (section === 'chat') {
-						return {
-							get: (key: string, defaultValue?: unknown) => {
-								const fullKey = `chat.${key}`;
-								if (Object.prototype.hasOwnProperty.call(this.mockSettings, fullKey)) {
-									return this.mockSettings[fullKey];
-								}
-								return originalGetConfiguration.call(vscode.workspace, section, scope).get(key, defaultValue);
+		function withMockChatConfig<T>(mockSettings: Record<string, unknown>, callback: () => T): T {
+			const originalGetConfiguration = vscode.workspace.getConfiguration;
+			(vscode.workspace as any).getConfiguration = ((section?: string, scope?: any) => {
+				if (section === 'chat') {
+					return {
+						get: (key: string, defaultValue?: unknown) => {
+							const fullKey = `chat.${key}`;
+							if (Object.prototype.hasOwnProperty.call(mockSettings, fullKey)) {
+								return mockSettings[fullKey];
 							}
-						};
-					}
-
-					return originalGetConfiguration.call(vscode.workspace, section, scope);
-				}) as typeof vscode.workspace.getConfiguration;
-
-				try {
-					return super.getDefaultDownloadLocations(area);
-				} finally {
-					(vscode.workspace as any).getConfiguration = originalGetConfiguration;
+							return originalGetConfiguration.call(vscode.workspace, section, scope).get(key, defaultValue);
+						}
+					};
 				}
+
+				return originalGetConfiguration.call(vscode.workspace, section, scope);
+			}) as typeof vscode.workspace.getConfiguration;
+
+			try {
+				return callback();
+			} finally {
+				(vscode.workspace as any).getConfiguration = originalGetConfiguration;
 			}
 		}
 
 		test('returns enabled locations from object map (new format)', () => {
 			const service = new MockConfigSkillPathService();
-			service.setMockSetting('chat.agentFilesLocations', {
-				'~/.copilot/agents': true,
-				'.github/agents': false
-			});
-
-			const result = service.getDefaultDownloadLocationsWithMock('agents');
+			const result = withMockChatConfig({
+				'chat.agentFilesLocations': {
+					'~/.copilot/agents': true,
+					'.github/agents': false
+				}
+			}, () => service.getDefaultDownloadLocations('agents'));
 			assert.deepStrictEqual(result, ['~/.copilot/agents'], 'Should return only enabled locations');
 		});
 
 		test('treats non-false values as enabled in object map', () => {
 			const service = new MockConfigSkillPathService();
-			service.setMockSetting('chat.agentFilesLocations', {
-				'~/.copilot/agents': true,
-				'.github/agents': 'some-string',  // non-false, should be included
-				'.local/agents': 1                 // non-false, should be included
-			});
-
-			const result = service.getDefaultDownloadLocationsWithMock('agents');
+			const result = withMockChatConfig({
+				'chat.agentFilesLocations': {
+					'~/.copilot/agents': true,
+					'.github/agents': 'some-string',
+					'.local/agents': 1
+				}
+			}, () => service.getDefaultDownloadLocations('agents'));
 			assert.strictEqual(result.length, 3, 'Should include all non-false values');
 			assert.ok(result.includes('~/.copilot/agents'));
 			assert.ok(result.includes('.github/agents'));
@@ -686,53 +680,52 @@ suite('Extension Test Suite', () => {
 
 		test('trims whitespace from paths in object map', () => {
 			const service = new MockConfigSkillPathService();
-			service.setMockSetting('chat.agentFilesLocations', {
-				'  ~/.copilot/agents  ': true,
-				'  .github/agents  ': false
-			});
-
-			const result = service.getDefaultDownloadLocationsWithMock('agents');
+			const result = withMockChatConfig({
+				'chat.agentFilesLocations': {
+					'  ~/.copilot/agents  ': true,
+					'  .github/agents  ': false
+				}
+			}, () => service.getDefaultDownloadLocations('agents'));
 			assert.deepStrictEqual(result, ['~/.copilot/agents'], 'Should trim paths and filter disabled');
 		});
 
 		test('falls back to defaults when setting has no enabled locations', () => {
 			const service = new MockConfigSkillPathService();
-			service.setMockSetting('chat.agentFilesLocations', {
-				'~/.copilot/agents': false,
-				'.github/agents': false
-			});
-
-			const result = service.getDefaultDownloadLocationsWithMock('agents');
+			const result = withMockChatConfig({
+				'chat.agentFilesLocations': {
+					'~/.copilot/agents': false,
+					'.github/agents': false
+				}
+			}, () => service.getDefaultDownloadLocations('agents'));
 			assert.ok(result.includes('~/.copilot/agents'), 'Should include copilot default path');
 			assert.ok(result.includes('.github/agents'), 'Should include workspace default path');
 		});
 
 		test('supports backward-compatible array format', () => {
 			const service = new MockConfigSkillPathService();
-			service.setMockSetting('chat.agentFilesLocations', ['~/.copilot/agents', '.github/agents']);
-
-			const result = service.getDefaultDownloadLocationsWithMock('agents');
+			const result = withMockChatConfig({
+				'chat.agentFilesLocations': ['~/.copilot/agents', '.github/agents']
+			}, () => service.getDefaultDownloadLocations('agents'));
 			assert.deepStrictEqual(result, ['~/.copilot/agents', '.github/agents'], 'Should support legacy array format');
 		});
 
 		test('falls back to defaults when setting is unconfigured', () => {
 			const service = new MockConfigSkillPathService();
-
-			const result = service.getDefaultDownloadLocationsWithMock('agents');
+			const result = withMockChatConfig({}, () => service.getDefaultDownloadLocations('agents'));
 			assert.ok(result.includes('~/.copilot/agents'), 'Should include copilot default path');
 			assert.ok(result.includes('.github/agents'), 'Should include workspace default path');
 		});
 
 		test('filters empty paths from object map', () => {
 			const service = new MockConfigSkillPathService();
-			service.setMockSetting('chat.agentFilesLocations', {
-				'~/.copilot/agents': true,
-				'': true,
-				'  ': true,
-				'.github/agents': false
-			});
-
-			const result = service.getDefaultDownloadLocationsWithMock('agents');
+			const result = withMockChatConfig({
+				'chat.agentFilesLocations': {
+					'~/.copilot/agents': true,
+					'': true,
+					'  ': true,
+					'.github/agents': false
+				}
+			}, () => service.getDefaultDownloadLocations('agents'));
 			assert.deepStrictEqual(result, ['~/.copilot/agents'], 'Should filter out empty paths');
 		});
 	});

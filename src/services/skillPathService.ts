@@ -71,9 +71,9 @@ export class SkillPathService {
         }
 
         // Check for a configuration setting.
-        // VS Code stores these as Record<string, boolean> where false means disabled.
-        // Any value other than false is treated as enabled.
-        // Also support legacy array format for backward compatibility.
+        // Supported shapes:
+        // - object map: paths are enabled unless explicitly set to false
+        // - legacy string array: all listed paths are treated as enabled
         const configKey = AREA_CONFIG_KEYS[area];
         if (configKey) {
             const [section, key] = configKey.split('.');
