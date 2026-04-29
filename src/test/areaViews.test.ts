@@ -403,7 +403,10 @@ suite('Area Views Test Suite', () => {
                     return { uri: vscode.Uri.file(WORKSPACE), name: 'test-workspace', index: 0 };
                 }
                 override getScanLocations(): string[] {
-                    return ['~/.copilot/skills', '~/.claude/skills'];
+                    return ['~/.copilot/agents', '~/.claude/agents'];
+                }
+                override getDefaultDownloadLocations(_area: ContentArea): string[] {
+                    return ['~/.copilot/agents', '~/.claude/agents'];
                 }
                 override getDefaultDownloadLocation(_a: ContentArea): string {
                     return '~/.copilot/agents';
