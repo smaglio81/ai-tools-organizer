@@ -82,7 +82,10 @@ export class SkillPathService {
             
             // Support old array format (backward compatibility)
             if (Array.isArray(raw) && raw.length > 0) {
-                const strings = raw.filter((item): item is string => typeof item === 'string');
+                const strings = raw
+                    .filter((item): item is string => typeof item === 'string')
+                    .map(s => s.trim())
+                    .filter(s => s.length > 0);
                 if (strings.length > 0) {
                     return strings;
                 }

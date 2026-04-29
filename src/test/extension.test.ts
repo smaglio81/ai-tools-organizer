@@ -709,6 +709,14 @@ suite('Extension Test Suite', () => {
 			assert.deepStrictEqual(result, ['~/.copilot/agents', '.github/agents'], 'Should support legacy array format');
 		});
 
+		test('trims whitespace and filters empty paths in backward-compatible array format', () => {
+			const service = new MockConfigSkillPathService();
+			const result = withMockChatConfig({
+				'chat.agentFilesLocations': ['  ~/.copilot/agents  ', '', ' ', '.github/agents']
+			}, () => service.getDefaultDownloadLocations('agents'));
+			assert.deepStrictEqual(result, ['~/.copilot/agents', '.github/agents'], 'Should trim paths and filter empty entries in legacy array format');
+		});
+
 		test('falls back to defaults when setting is unconfigured', () => {
 			const service = new MockConfigSkillPathService();
 			const result = withMockChatConfig({}, () => service.getDefaultDownloadLocations('agents'));
