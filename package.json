@@ -1,10 +1,10 @@
 {
-  "name": "agent-organizer-cursor",
-  "displayName": "AI Tools Organizer (Cursor)",
+  "name": "agent-organizer",
+  "displayName": "AI Tools Organizer",
   "description": "AI Tools Organizer and Marketplace",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "icon": "resources/logo.png",
-  "publisher": "smhc",
+  "publisher": "smaglio81",
   "engines": {
     "vscode": "^1.105.1"
   },
@@ -25,12 +25,13 @@
     "kiro"
   ],
   "bugs": {
-    "url": "https://github.com/smhc/ai-tools-organizer/issues"
+    "url": "https://github.com/smaglio81/ai-tools-organizer/issues",
+    "email": "smaglio81@gmail.com"
   },
-  "homepage": "https://github.com/smhc/ai-tools-organizer/blob/main/README.md",
+  "homepage": "https://github.com/smaglio81/ai-tools-organizer/blob/main/README.md",
   "repository": {
     "type": "git",
-    "url": "https://github.com/smhc/ai-tools-organizer.git"
+    "url": "https://github.com/smaglio81/ai-tools-organizer.git"
   },
   "activationEvents": [
     "onView:AIToolsOrganizer.marketplace",
