@@ -4,6 +4,12 @@ All notable changes to the "ai-tools-organizer" extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.3.3]
+
+### Fixed
+
+- Restored upstream extension identity (`publisher`, `name`, repository/bugs/homepage URLs) after fork merge. The extension continues to ship under the `smaglio81.agent-organizer` identifier on the VS Code Marketplace.
+
 ## [0.3.2]
 
 > Contributed by [@smhc](https://github.com/smhc) via [PR #19](https://github.com/smaglio81/ai-tools-organizer/pull/19).
