@@ -18,6 +18,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Description values surrounded by quotes (single or double) are now stripped, matching the existing behavior for skill names.
 - Skills view moved to second position (directly below Marketplace) in the sidebar.
 - On first install, only Marketplace and Skills views are expanded; all other area views start collapsed.
+- Scan locations from `chat.*` settings now respect the `enabled` property. Entries with `enabled: false` are excluded from scanning. Entries may be plain strings or objects with `path` and `enabled` properties; both formats are supported.
 
 ## [0.2.0]
 

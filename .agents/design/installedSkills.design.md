@@ -48,6 +48,8 @@ Skills are displayed in a two-level tree grouped by their parent install locatio
 
 The view scans the locations defined by the `chat.agentSkillsLocations` VS Code setting (maintained by VS Code / another extension). If that setting is not configured or is empty, the following default locations are used as a fallback:
 
+Configuration entries may be plain strings or objects with `path` and `enabled` properties. Entries with `enabled: false` are excluded from scanning.
+
 | Location | Scope |
 |---|---|
 | `.agents/skills` | Current workspace |
