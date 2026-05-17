@@ -377,6 +377,7 @@ export class MarketplaceTreeDataProvider implements vscode.TreeDataProvider<Mark
      */
     setSearchQuery(query: string): void {
         this.searchQuery = query.toLowerCase();
+        if (this.treeView) { this.treeView.description = query; }
         this._onDidChangeTreeData.fire();
         this.updateSearchContext();
     }
@@ -386,6 +387,7 @@ export class MarketplaceTreeDataProvider implements vscode.TreeDataProvider<Mark
      */
     clearSearch(): void {
         this.searchQuery = '';
+        if (this.treeView) { this.treeView.description = ''; }
         this._onDidChangeTreeData.fire();
         this.updateSearchContext();
     }

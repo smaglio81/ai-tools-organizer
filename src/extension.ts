@@ -1321,10 +1321,16 @@ export async function activate(context: vscode.ExtensionContext) {
                 vscode.window.showErrorMessage('Unable to determine a path for this item.');
                 return;
             }
-            let absPath = normalizeSeparators(uri.fsPath);
-            // Capitalize Windows drive letter (e.g. c:/ → C:/)
-            if (/^[a-z]:\//.test(absPath)) {
-                absPath = absPath[0].toUpperCase() + absPath.slice(1);
+            let absPath = uri.fsPath;
+            // On Windows, ensure backslashes (native); on other OS, ensure forward slashes
+            if (process.platform === 'win32') {
+                absPath = absPath.replace(/\//g, '\\');
+                // Capitalize Windows drive letter (e.g. c:\ → C:\)
+                if (/^[a-z]:\\/.test(absPath)) {
+                    absPath = absPath[0].toUpperCase() + absPath.slice(1);
+                }
+            } else {
+                absPath = normalizeSeparators(absPath);
             }
             await vscode.env.clipboard.writeText(absPath);
         }),

@@ -4,6 +4,15 @@ All notable changes to the "ai-tools-organizer" extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.2.3]
+
+### Changed
+
+- Search filter text is now displayed in the view title bar when a search is active, across all views (Marketplace, Skills, and area views).
+- Copy Absolute Path now uses native path separators (backslashes on Windows, forward slashes elsewhere).
+- Documentation updated to accurately describe the `chat.*` location setting formats and fallback behavior.
+- Added `.env*`, `.agents/**`, and `.github/**` to `.vscodeignore` to reduce extension package size.
+
 ## [0.2.2]
 
 ### Changed
