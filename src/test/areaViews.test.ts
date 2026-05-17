@@ -20,12 +20,18 @@ import {
     MOCK_INSTRUCTIONS_DIR,
     MOCK_PLUGINS_DIR,
     MOCK_PROMPTS_DIR,
+    MOCK_CURSOR_PLUGINS_DIR,
+    MOCK_RULES_DIR,
+    MOCK_AGENTS_MULTISUFFIX_DIR,
     EXPECTED_AGENTS,
     EXPECTED_HOOKS_GITHUB,
     EXPECTED_HOOKS_KIRO,
     EXPECTED_INSTRUCTIONS,
     EXPECTED_PLUGINS,
     EXPECTED_PROMPTS,
+    EXPECTED_CURSOR_PLUGINS,
+    EXPECTED_RULES,
+    EXPECTED_AGENTS_MULTISUFFIX,
 } from './fixtures/installedAreaMocks';
 
 // ─── Test helpers ────────────────────────────────────────────────────────────
@@ -73,7 +79,7 @@ function getConventionalDir(area: ContentArea): string {
     const map: Record<string, string> = {
         agents: 'agents', hooksGithub: 'hooks', hooksKiro: 'hooks',
         instructions: 'instructions', plugins: 'plugins',
-        prompts: 'prompts', skills: 'skills'
+        prompts: 'prompts', rules: 'rules', skills: 'skills'
     };
     return map[area] || area;
 }
@@ -195,6 +201,146 @@ suite('Area Views Test Suite', () => {
         test('skills area provider is not used (skills have dedicated provider)', () => {
             // This is a placeholder — skills scanning is tested via InstalledSkillsTreeDataProvider
             assert.ok(true);
+        });
+    });
+
+    // ─── Rules area (*.mdc) ──────────────────────────────────────────────
+
+    suite('Rules area scan', () => {
+        function buildCursorRulesMockFs(areaDir: MockDirectory): MockFileSystem {
+            return new MockFileSystem({
+                'home': { type: 'directory', children: {
+                    'testuser': { type: 'directory', children: {
+                        '.cursor': { type: 'directory', children: {
+                            'rules': areaDir
+                        }}
+                    }}
+                }}
+            });
+        }
+
+        function createRulesPathService(mockFs: MockFileSystem): SkillPathService {
+            class RulesPathService extends SkillPathService {
+                override getFileSystem(): vscode.FileSystem { return mockFs; }
+                override getHomeDirectory(): string { return HOME; }
+                override getWorkspaceFolder(): vscode.WorkspaceFolder | undefined {
+                    return { uri: vscode.Uri.file(WORKSPACE), name: 'test-workspace', index: 0 };
+                }
+                override getDefaultDownloadLocation(_a: ContentArea): string {
+                    return '~/.cursor/rules';
+                }
+            }
+            return new RulesPathService();
+        }
+
+        test('discovers *.mdc rule files including nested subfolders', async () => {
+            const mockFs = buildCursorRulesMockFs(MOCK_RULES_DIR);
+            const pathService = createRulesPathService(mockFs);
+            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'rules', 'AIToolsOrganizer.rules');
+            const items = await provider.scanInstalledItems();
+            assertItemsMatch(items, EXPECTED_RULES);
+        });
+
+        test('strips .mdc suffix from display name', async () => {
+            const mockFs = buildCursorRulesMockFs(MOCK_RULES_DIR);
+            const pathService = createRulesPathService(mockFs);
+            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'rules', 'AIToolsOrganizer.rules');
+            const items = await provider.scanInstalledItems();
+            for (const item of items) {
+                assert.ok(!item.name.endsWith('.mdc'), `Display name "${item.name}" should not contain .mdc suffix`);
+                assert.ok(!item.name.endsWith('.md'), `Display name "${item.name}" should not contain .md suffix`);
+            }
+        });
+    });
+
+    // ─── Cursor plugin install path (.cursor/plugins/local) ─────────────
+
+    suite('Cursor plugin path (.cursor-plugin/plugin.json)', () => {
+        function buildCursorPluginsMockFs(areaDir: MockDirectory): MockFileSystem {
+            return new MockFileSystem({
+                'home': { type: 'directory', children: {
+                    'testuser': { type: 'directory', children: {
+                        '.cursor': { type: 'directory', children: {
+                            'plugins': { type: 'directory', children: {
+                                'local': areaDir
+                            }}
+                        }}
+                    }}
+                }}
+            });
+        }
+
+        function createCursorPluginsPathService(mockFs: MockFileSystem): SkillPathService {
+            class CursorPluginsPathService extends SkillPathService {
+                override getFileSystem(): vscode.FileSystem { return mockFs; }
+                override getHomeDirectory(): string { return HOME; }
+                override getWorkspaceFolder(): vscode.WorkspaceFolder | undefined {
+                    return { uri: vscode.Uri.file(WORKSPACE), name: 'test-workspace', index: 0 };
+                }
+                override getDefaultDownloadLocation(_a: ContentArea): string {
+                    return '~/.cursor/plugins/local';
+                }
+                protected override isCursor(): boolean {
+                    return true;
+                }
+            }
+            return new CursorPluginsPathService();
+        }
+
+        test('discovers Cursor plugin using .cursor-plugin/plugin.json manifest', async () => {
+            const mockFs = buildCursorPluginsMockFs(MOCK_CURSOR_PLUGINS_DIR);
+            const pathService = createCursorPluginsPathService(mockFs);
+            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'plugins', 'AIToolsOrganizer.plugins');
+            const items = await provider.scanInstalledItems();
+            assertItemsMatch(items, EXPECTED_CURSOR_PLUGINS);
+        });
+    });
+
+    // ─── Multi-suffix agents (*.agent.md + *.agent.mdc + *.mdc) ────────
+
+    suite('Multi-suffix agents area scan', () => {
+        test('discovers agents with .agent.md, .agent.mdc, and .mdc suffixes', async () => {
+            const mockFs = buildMockFs('agents', MOCK_AGENTS_MULTISUFFIX_DIR);
+            const pathService = createTestPathService(mockFs, 'agents');
+            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'agents', 'AIToolsOrganizer.agents');
+            const items = await provider.scanInstalledItems();
+            assertItemsMatch(items, EXPECTED_AGENTS_MULTISUFFIX);
+        });
+
+        test('deduplicates by display name, preferring more-specific suffix first', async () => {
+            const mockFs = buildMockFs('agents', MOCK_AGENTS_MULTISUFFIX_DIR);
+            const pathService = createTestPathService(mockFs, 'agents');
+            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'agents', 'AIToolsOrganizer.agents');
+            const items = await provider.scanInstalledItems();
+            // 'review' must appear exactly once (from review.agent.md, not review.agent.mdc)
+            const reviewItems = items.filter(i => i.name === 'review');
+            assert.strictEqual(reviewItems.length, 1, 'review should appear exactly once');
+            assert.ok(reviewItems[0].location.endsWith('review.agent.md'), 'review should resolve to .agent.md (higher priority)');
+        });
+
+        test('deduplicates correctly even when lower-priority suffix appears first in filesystem order', async () => {
+            // Reverses the insertion order so review.agent.mdc comes before review.agent.md,
+            // simulating a filesystem that returns entries in a different order.
+            const reverseOrderDir: MockDirectory = {
+                type: 'directory',
+                children: {
+                    'review.agent.mdc': {
+                        type: 'file',
+                        content: '---\nname: review\ndescription: Duplicate agent\n---\nDuplicate.',
+                    },
+                    'review.agent.md': {
+                        type: 'file',
+                        content: '---\nname: review\ndescription: Code review agent\n---\nReview code.',
+                    },
+                },
+            };
+            const mockFs = buildMockFs('agents', reverseOrderDir);
+            const pathService = createTestPathService(mockFs, 'agents');
+            const provider = new InstalledAreaTreeDataProvider(mockContext, pathService, 'agents', 'AIToolsOrganizer.agents');
+            const items = await provider.scanInstalledItems();
+            const reviewItems = items.filter(i => i.name === 'review');
+            assert.strictEqual(reviewItems.length, 1, 'review should appear exactly once');
+            assert.ok(reviewItems[0].location.endsWith('review.agent.md'), 'review should resolve to .agent.md (higher priority) regardless of filesystem order');
         });
     });
 

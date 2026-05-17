@@ -4,6 +4,58 @@ All notable changes to the "ai-tools-organizer" extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.3.2]
+
+> Contributed by [@smhc](https://github.com/smhc) via [PR #19](https://github.com/smaglio81/ai-tools-organizer/pull/19).
+
+### Added
+
+- **`repositoryUrl` on marketplace sources**: Adding a repository from a URL now stores a canonical `repositoryUrl` (credentials stripped). Settings and docs describe how it is used for Azure DevOps detection.
+- **Azure DevOps identity from URL**: When `repositoryUrl` is a `dev.azure.com` or `*.visualstudio.com` `/_git/` URL, the extension restores `owner`, `project`, and `repo` from that URL if they are missing or incomplete in stored settings, so the Azure DevOps transport is still selected even when the `project` field was dropped by sync or manual edits.
+- **PAT guidance before ADO add**: Adding an Azure DevOps repository without a configured PAT shows an actionable error with a shortcut to open `AIToolsOrganizer.azureDevOpsPat`.
+- **PAT reminder on marketplace load**: If any configured source is Azure DevOps and no PAT is available, a single error explains settings vs `AZURE_DEVOPS_EXT_PAT` and offers to open the PAT setting.
+
+### Changed
+
+- **Azure DevOps URL parsing**: `parseAzureDevOpsGitUrl` and credential stripping live in `src/git/azureDevOpsUrl.ts` for reuse across the extension and repository resolution.
+- **`.cursor-plugin` marketplace paths**: Plugin directory paths from `marketplace.json` normalize leading `./` (and similar) so declared subtrees such as `./plugins/...` fetch the correct prefix instead of being treated as a repository-root scope.
+
+### Fixed
+
+- **Azure DevOps auth errors**: When a PAT is configured but rejected (401/403), the error message now only suggests token problems instead of implying no PAT was set.
+
+## [0.3.1]
+
+> Contributed by [@smhc](https://github.com/smhc) via [PR #19](https://github.com/smaglio81/ai-tools-organizer/pull/19).
+
+### Added
+
+- **Cursor default install paths**: When the extension runs in Cursor (`vscode.env.appName`), per-area download defaults and first-time `AIToolsOrganizer.installLocations` seeding (only when that setting is still empty) now use `~/.cursor/<area>` (with existing exceptions for plugins at `~/.cursor/plugins/local` and rules at `~/.cursor/rules`) instead of `~/.copilot/...`. Other hosts keep the `~/.copilot/...` defaults.
+
+### Fixed
+
+- **`.github` in marketplace repos**: `.github` is back on the scoped subtree allowlist for Git tree discovery, so content under `.github/` (for example agents or nested plugin manifests) is fetched and shown again after it was omitted in 0.3.0.
+- **Installed single-file deduplication**: When two definition files in the same folder resolve to the same display name (for example `review.agent.md` and `review.agent.mdc`), the chosen file no longer depends on `readDirectory` order; the extension picks the filename whose suffix wins per the area’s configured priority list.
+- **Marketplace fetch logs (Azure DevOps)**: `GitHubSkillsClient` fetch failures and subtree warnings now log `formatRepoLabel(repo)` (for example `org/project/repo` on Azure DevOps) instead of a GitHub-style `owner/repo` string that omitted the project segment.
+
+## [0.3.0]
+
+> Contributed by [@smhc](https://github.com/smhc) via [PR #19](https://github.com/smaglio81/ai-tools-organizer/pull/19).
+
+### Added
+
+- **Fork / provenance**: This build is a fork of [smaglio81/ai-tools-organizer](https://github.com/smaglio81/ai-tools-organizer), published for the Cursor marketplace with Cursor-specific packaging and features.
+- **Azure DevOps Git URLs**: Marketplace repositories can be added with Azure DevOps clone URLs (`https://dev.azure.com/{organization}/{project}/_git/{repository}`, including optional branch query parameters). Tree and file content use the Azure DevOps Git Items API. Authentication uses `AIToolsOrganizer.azureDevOpsPat` or the `AZURE_DEVOPS_EXT_PAT` environment variable when the setting is unset.
+- **Cursor plugin support**: Repositories are scanned for `.cursor-plugin/` (and `marketplace.json` when present) alongside `.cursor` and `.claude`; declared plugin directories participate in scoped tree fetching so Cursor plugins are discovered without listing the entire repository.
+- **Rules area**: New "Rules" content area for Cursor rules (for example `.mdc` files), including marketplace discovery, installed view, default download location under `~/.cursor/rules`, and integration with the scoped subtree list.
+
+### Changed
+
+- Repository tree fetching is now scoped: instead of one full recursive listing of the entire repo, the extension performs a non-recursive root listing and then fetches only "interesting" top-level subtrees (`.cursor`, `.claude`, `.cursor-plugin`, plus conventional area directories such as `skills`, `agents`, `hooks`, `rules`, `instructions`, `plugins`, `prompts`). This significantly reduces API calls and payload size for large repositories that contain only a small number of AI tools.
+- `.github` is no longer scanned. Content previously discoverable via `.github/agents/` or similar paths will not appear in the Marketplace. Items published under conventional top-level directories or `.cursor`/`.claude` layouts continue to work as before.
+- When a `.cursor-plugin/marketplace.json` is present, each plugin directory declared in it is added to the scoped fetch set automatically, so plugins are always discovered without requiring a full repo tree.
+- `fetchSkillFiles` (used when downloading multi-file items) now fetches only the subtree under the item's top-level directory rather than the full repo tree.
+
 ## [0.2.3]
 
 ### Changed

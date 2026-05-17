@@ -12,6 +12,7 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
-.env*
-.agents/**
 .github/**
+.cursor/**
+.agents/**
+.env*

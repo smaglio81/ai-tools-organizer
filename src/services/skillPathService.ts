@@ -18,6 +18,7 @@ const AREA_CONFIG_KEYS: Partial<Record<ContentArea, string>> = {
     instructions: 'chat.instructionsFilesLocations',
     plugins: 'chat.pluginLocations',
     prompts: 'chat.promptFilesLocations',
+    // rules: no VS Code/Cursor chat.* setting exists yet for rule file locations
     skills: 'chat.agentSkillsLocations',
 };
 
@@ -28,11 +29,13 @@ const AREA_CONFIG_KEYS: Partial<Record<ContentArea, string>> = {
 const DEFAULT_LOCATION_PREFIXES = [
     '.agents',
     '.claude',
+    '.cursor',
     '.github',
     '.kiro',
     '~/.agents',
     '~/.claude',
     '~/.copilot',
+    '~/.cursor',
     '~/.kiro',
 ];
 
@@ -47,7 +50,19 @@ const AREA_DIR_NAMES: Record<ContentArea, string> = {
     plugins: 'plugins',
     powers: 'powers',
     prompts: 'prompts',
+    rules: 'rules',
     skills: 'skills',
+};
+
+/**
+ * Areas with a Cursor-specific install root that differs from the generic
+ * `~/.cursor/<dirName>` pattern produced by the default prefix list.
+ * Values are appended (deduped) to whatever the config or default list produces.
+ */
+const CURSOR_EXTRA_LOCATIONS: Partial<Record<ContentArea, string[]>> = {
+    // Cursor user plugins are installed under ~/.cursor/plugins/local/<plugin-name>
+    // The scan parent must be "local", not "plugins", to avoid treating "local" itself as a plugin.
+    plugins: ['~/.cursor/plugins/local'],
 };
 
 export class SkillPathService {
@@ -106,12 +121,39 @@ export class SkillPathService {
 
         // Build default list from template prefixes
         const dirName = AREA_DIR_NAMES[area];
-        return DEFAULT_LOCATION_PREFIXES.map(prefix => `${prefix}/${dirName}`);
+        const defaults = DEFAULT_LOCATION_PREFIXES.map(prefix => `${prefix}/${dirName}`);
+
+        // Append any Cursor-specific extra locations (deduped) only when running in Cursor
+        if (this.isCursor()) {
+            const extras = CURSOR_EXTRA_LOCATIONS[area];
+            if (extras) {
+                for (const extra of extras) {
+                    if (!defaults.includes(extra)) {
+                        defaults.push(extra);
+                    }
+                }
+            }
+
+            // Under ~/.cursor/plugins, real user plugins live in the `local` subdirectory.
+            // Treating `~/.cursor/plugins` as a scan root mis-classifies `local` as a plugin folder.
+            if (area === 'plugins') {
+                return defaults.filter(p => p !== '~/.cursor/plugins' && p !== '.cursor/plugins');
+            }
+        }
+
+        return defaults;
+    }
+
+    /**
+     * Returns true when the extension is running inside Cursor.
+     */
+    protected isCursor(): boolean {
+        return vscode.env.appName === 'Cursor';
     }
 
     /**
      * Get the currently configured default download location for an area.
-     * Falls back to ~/.copilot/{area}.
+     * Falls back to ~/.cursor/{area} in Cursor, or ~/.copilot/{area} elsewhere.
      */
     getDefaultDownloadLocation(area: ContentArea): string {
         // hooksKiro is fixed
@@ -125,9 +167,19 @@ export class SkillPathService {
             return locations[area];
         }
 
-        // Fallback: ~/.copilot/{area}
+        // Cursor-native areas use their own install roots rather than ~/.copilot
+        if (this.isCursor()) {
+            if (area === 'plugins') {
+                return '~/.cursor/plugins/local';
+            }
+            if (area === 'rules') {
+                return '~/.cursor/rules';
+            }
+        }
+
+        // Fallback: Cursor → ~/.cursor/{area}, others → ~/.copilot/{area}
         const dirName = AREA_DIR_NAMES[area];
-        return `~/.copilot/${dirName}`;
+        return this.isCursor() ? `~/.cursor/${dirName}` : `~/.copilot/${dirName}`;
     }
 
     /**
@@ -142,25 +194,33 @@ export class SkillPathService {
 
     /**
      * Ensure `AIToolsOrganizer.installLocations` exists in settings.
-     * If the setting is empty or missing, create it with defaults of ~/.copilot/{area} for each area.
+     * If the setting is empty or missing, create it with per-IDE defaults:
+     * Cursor → ~/.cursor/{area}, others → ~/.copilot/{area}.
      */
     async ensureInstallLocations(): Promise<void> {
         const config = vscode.workspace.getConfiguration('AIToolsOrganizer');
-        const existing = config.get<Record<string, string>>('installLocations');
+        const existing = config.get<Record<string, string>>('installLocations') ?? {};
 
-        // If the setting already has entries, nothing to do
-        if (existing && Object.keys(existing).length > 0) {
+        // If the user (or workspace) already persisted any paths, do not overwrite.
+        // Empty `{}` from package.json defaults → seed per-IDE paths on first activation.
+        if (Object.keys(existing).length > 0) {
             return;
         }
 
-        // Build defaults: ~/.copilot/{area} for each area (hooksKiro is fixed to .kiro/hooks)
+        const cursor = this.isCursor();
+
+        // Build defaults per area.
         const defaults: Record<string, string> = {};
         for (const area of ALL_CONTENT_AREAS) {
             if (area === 'hooksKiro') {
                 defaults[area] = '.kiro/hooks';
+            } else if (cursor && area === 'plugins') {
+                defaults[area] = '~/.cursor/plugins/local';
+            } else if (cursor && area === 'rules') {
+                defaults[area] = '~/.cursor/rules';
             } else {
                 const dirName = AREA_DIR_NAMES[area];
-                defaults[area] = `~/.copilot/${dirName}`;
+                defaults[area] = cursor ? `~/.cursor/${dirName}` : `~/.copilot/${dirName}`;
             }
         }
 

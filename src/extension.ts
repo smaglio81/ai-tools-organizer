@@ -11,7 +11,9 @@ import { InstalledAreaTreeDataProvider, AreaInstalledItemTreeItem, AreaLocationT
 import { SkillDetailPanel } from './views/skillDetailPanel';
 import { SkillInstallationService } from './services/installationService';
 import { SkillPathService } from './services/skillPathService';
-import { Skill, InstalledSkill, SkillRepository, isSameRepository, normalizeSeparators, buildGitHubUrl, readRepositoriesConfig, writeRepositoriesConfig, AreaFileItem, ContentArea, AREA_DEFINITIONS } from './types';
+import { Skill, InstalledSkill, SkillRepository, isSameRepository, normalizeSeparators, buildRepoWebUrl, formatRepoLabel, readRepositoriesConfig, writeRepositoriesConfig, AreaFileItem, ContentArea, AREA_DEFINITIONS, deriveItemName, fileMatchesArea } from './types';
+import { parseAzureDevOpsGitUrl, stripGitCredentialPrefix } from './git/azureDevOpsUrl';
+import { getResolvedAzureDevOpsPat } from './repos/azureDevOpsRepoTransport';
 import { PLUGIN_SUBFOLDER_TO_AREA, PLUGIN_AREA_SUBFOLDERS, AREA_TO_PLUGIN_SUBFOLDER, resolveInstalledItemUri, syncPluginItem } from './services/pluginSyncService';
 
 /**
@@ -302,6 +304,7 @@ export async function activate(context: vscode.ExtensionContext) {
         { area: 'instructions', viewId: 'AIToolsOrganizer.instructions' },
         { area: 'plugins', viewId: 'AIToolsOrganizer.plugins' },
         { area: 'prompts', viewId: 'AIToolsOrganizer.prompts' },
+        { area: 'rules', viewId: 'AIToolsOrganizer.rules' },
     ];
 
     const areaProviders = new Map<string, InstalledAreaTreeDataProvider>();
@@ -625,7 +628,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 const readmeMd = `---\nname: ${name}\ndescription: \nmetadata:\n  version: "${todayStamp()}"\n---\n`;
                 const readmeUri = vscode.Uri.joinPath(folderUri, 'README.md');
                 await vscode.workspace.fs.writeFile(readmeUri, new TextEncoder().encode(readmeMd));
-                // plugin.json
+                // plugin.json (root-level, for Copilot/GitHub compatibility)
                 const pluginJson = JSON.stringify({
                     name,
                     description: '',
@@ -639,17 +642,32 @@ export async function activate(context: vscode.ExtensionContext) {
                 // .mcp.json
                 const mcpJson = JSON.stringify({ mcpServers: {} }, null, 2) + '\n';
                 await vscode.workspace.fs.writeFile(vscode.Uri.joinPath(folderUri, '.mcp.json'), new TextEncoder().encode(mcpJson));
-                // .claude-plugin/plugin.json symlink — VS Code FS API doesn't support symlinks,
-                // so create a copy with a comment noting it mirrors the root plugin.json
+                // .claude-plugin/plugin.json — copy for Claude compatibility (VS Code FS has no symlink API)
                 const claudePluginDir = vscode.Uri.joinPath(folderUri, '.claude-plugin');
                 await vscode.workspace.fs.createDirectory(claudePluginDir);
                 await vscode.workspace.fs.copy(vscode.Uri.joinPath(folderUri, 'plugin.json'), vscode.Uri.joinPath(claudePluginDir, 'plugin.json'));
-                await vscode.commands.executeCommand('vscode.open', vscode.Uri.joinPath(folderUri, 'plugin.json'));
+                // .cursor-plugin/plugin.json — Cursor's canonical manifest location
+                const cursorPluginDir = vscode.Uri.joinPath(folderUri, '.cursor-plugin');
+                await vscode.workspace.fs.createDirectory(cursorPluginDir);
+                await vscode.workspace.fs.copy(vscode.Uri.joinPath(folderUri, 'plugin.json'), vscode.Uri.joinPath(cursorPluginDir, 'plugin.json'));
+                // rules/ — empty directory with a placeholder rule file for Cursor's default layout
+                const rulesDir = vscode.Uri.joinPath(folderUri, 'rules');
+                await vscode.workspace.fs.createDirectory(rulesDir);
+                const placeholderRule = `---\ndescription: ${name} coding standards\nalwaysApply: false\n---\n\n# ${name} rules\n\nAdd your Cursor rules here.\n`;
+                await vscode.workspace.fs.writeFile(vscode.Uri.joinPath(rulesDir, `${name}.mdc`), new TextEncoder().encode(placeholderRule));
+                await vscode.commands.executeCommand('vscode.open', vscode.Uri.joinPath(cursorPluginDir, 'plugin.json'));
                 break;
             }
             case 'prompts': {
                 const fileUri = vscode.Uri.joinPath(locationUri, `${name}.prompt.md`);
                 const content = `---\nname: ${name}\ndescription: \n---\n`;
+                await vscode.workspace.fs.writeFile(fileUri, new TextEncoder().encode(content));
+                await vscode.commands.executeCommand('vscode.open', fileUri);
+                break;
+            }
+            case 'rules': {
+                const fileUri = vscode.Uri.joinPath(locationUri, `${name}.mdc`);
+                const content = `---\ndescription: \nalwaysApply: false\n---\n`;
                 await vscode.workspace.fs.writeFile(fileUri, new TextEncoder().encode(content));
                 await vscode.commands.executeCommand('vscode.open', fileUri);
                 break;
@@ -1626,8 +1644,8 @@ export async function activate(context: vscode.ExtensionContext) {
                     for (const [name] of entries) {
                         const itemUri = vscode.Uri.joinPath(subfolderUri, name);
                         const def = AREA_DEFINITIONS[area];
-                        const itemName = def.kind === 'singleFile' && def.fileSuffix && name.endsWith(def.fileSuffix)
-                            ? name.substring(0, name.length - def.fileSuffix.length)
+                        const itemName = def.kind === 'singleFile' && fileMatchesArea(name, def)
+                            ? deriveItemName(name, def)
                             : name;
                         const resolveUri = (i: InstalledSkill) => resolveInstalledItemUri(i, pathService);
                         const result = await syncPluginItem(itemUri, itemName, sourceItems, resolveUri);
@@ -1678,8 +1696,8 @@ export async function activate(context: vscode.ExtensionContext) {
                 for (const [name] of entries) {
                     const itemUri = vscode.Uri.joinPath(item.folderUri, name);
                     const def = AREA_DEFINITIONS[area];
-                    const itemName = def.kind === 'singleFile' && def.fileSuffix && name.endsWith(def.fileSuffix)
-                        ? name.substring(0, name.length - def.fileSuffix.length)
+                    const itemName = def.kind === 'singleFile' && fileMatchesArea(name, def)
+                        ? deriveItemName(name, def)
                         : name;
 
                     const resolveUri = (i: InstalledSkill) => resolveInstalledItemUri(i, pathService);
@@ -1751,8 +1769,8 @@ export async function activate(context: vscode.ExtensionContext) {
             }
 
             const def = AREA_DEFINITIONS[area];
-            const itemName = def.kind === 'singleFile' && def.fileSuffix && itemFileName.endsWith(def.fileSuffix)
-                ? itemFileName.substring(0, itemFileName.length - def.fileSuffix.length)
+            const itemName = def.kind === 'singleFile' && fileMatchesArea(itemFileName, def)
+                ? deriveItemName(itemFileName, def)
                 : itemFileName;
 
             const resolveUri = (i: InstalledSkill) => resolveInstalledItemUri(i, pathService);
@@ -2042,6 +2060,7 @@ export async function activate(context: vscode.ExtensionContext) {
             ['AIToolsOrganizer.newInstructionAtLocation', 'instructions'],
             ['AIToolsOrganizer.newPluginAtLocation', 'plugins'],
             ['AIToolsOrganizer.newPromptAtLocation', 'prompts'],
+            ['AIToolsOrganizer.newRuleAtLocation', 'rules'],
         ] as const).map(([cmdId, area]) =>
             vscode.commands.registerCommand(cmdId, async (item: AreaLocationTreeItem) => {
                 if (!item) { return; }
@@ -2078,61 +2097,98 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('AIToolsOrganizer.openInBrowser', (item: SourceTreeItem | FailedSourceTreeItem | SkillTreeItem | SkillsGroupTreeItem | AreaGroupTreeItem | AreaFileTreeItem) => {
             if (item instanceof SkillTreeItem) {
                 const skill = item.skill;
-                const url = buildGitHubUrl(skill.source.owner, skill.source.repo, skill.source.branch, skill.skillPath);
+                const url = buildRepoWebUrl(skill.source, { kind: 'tree', path: skill.skillPath });
                 vscode.env.openExternal(vscode.Uri.parse(url));
             } else if (item instanceof SkillsGroupTreeItem || item instanceof AreaGroupTreeItem) {
                 const repo = item.parentSource.repo;
-                const url = buildGitHubUrl(repo.owner, repo.repo, repo.branch, item.areaPath);
+                const url = buildRepoWebUrl(repo, { kind: 'tree', path: item.areaPath });
                 vscode.env.openExternal(vscode.Uri.parse(url));
             } else if (item instanceof AreaFileTreeItem) {
                 const fi = item.fileItem;
-                // Use blob URL for files instead of tree URL
-                const safeBranch = encodeURIComponent(fi.source.branch);
-                const safePath = fi.filePath.split('/').map(encodeURIComponent).join('/');
-                const url = `https://github.com/${encodeURIComponent(fi.source.owner)}/${encodeURIComponent(fi.source.repo)}/blob/${safeBranch}/${safePath}`;
+                const url = buildRepoWebUrl(fi.source, { kind: 'blob', path: fi.filePath });
                 vscode.env.openExternal(vscode.Uri.parse(url));
             } else {
                 const repo = item instanceof SourceTreeItem ? item.repo : item.failure.repo;
-                const url = buildGitHubUrl(repo.owner, repo.repo, repo.branch, '');
+                const url = buildRepoWebUrl(repo, { kind: 'tree', path: '' });
                 vscode.env.openExternal(vscode.Uri.parse(url));
             }
         }),
 
-        // Add a new skill repository from a GitHub URL
+        // Add a new skill repository from a GitHub or Azure DevOps URL
         vscode.commands.registerCommand('AIToolsOrganizer.addRepository', async () => {
             const input = await vscode.window.showInputBox({
-                prompt: 'Enter a GitHub repository URL',
-                placeHolder: 'https://github.com/owner/repo',
+                prompt: 'Repository URL (GitHub or Azure DevOps Git)',
+                placeHolder: 'https://github.com/org/repo  or  https://dev.azure.com/org/project/_git/repo',
                 validateInput: value => {
                     if (!value?.trim()) { return 'URL is required'; }
-                    return parseGitHubUrl(value) ? undefined : 'Could not parse a GitHub repository URL from that input';
+                    return (parseGitHubUrl(value) || parseAzureDevOpsGitUrl(value))
+                        ? undefined
+                        : 'Use a GitHub URL (https://github.com/org/repo) or an Azure DevOps Git URL (https://dev.azure.com/org/project/_git/repo, or org.visualstudio.com/project/_git/repo). Include https:// if your paste omits it.';
                 }
             });
             if (!input) { return; }
 
-            const parsed = parseGitHubUrl(input)!;
+            const canonicalRepoUrl = stripGitCredentialPrefix(input);
 
-            // Resolve the actual default branch when it wasn't in the URL
+            const ghParsed = parseGitHubUrl(input);
+            const adoParsed = parseAzureDevOpsGitUrl(input);
+
+            let newRepo: SkillRepository;
             let branch: string;
-            try {
-                branch = parsed.branch ?? await githubClient.fetchDefaultBranch(parsed.owner, parsed.repo);
-            } catch {
-                vscode.window.showErrorMessage('Failed to fetch repository information. Please check the URL and your network connection.');
-                return;
-            }
 
-            const newRepo: SkillRepository = {
-                owner: parsed.owner,
-                repo: parsed.repo,
-                branch
-            };
+            if (adoParsed) {
+                if (!getResolvedAzureDevOpsPat()) {
+                    const choice = await vscode.window.showWarningMessage(
+                        'No Azure DevOps Personal Access Token configured. Public projects may work without one, but private projects require a PAT. ' +
+                        'Set AIToolsOrganizer.azureDevOpsPat in User Settings, or set AZURE_DEVOPS_EXT_PAT in the environment.',
+                        'Open PAT setting',
+                        'Continue anyway'
+                    );
+                    if (choice === 'Open PAT setting') {
+                        void vscode.commands.executeCommand('workbench.action.openSettings', 'AIToolsOrganizer.azureDevOpsPat');
+                        return;
+                    }
+                    if (choice !== 'Continue anyway') {
+                        return;
+                    }
+                }
+                // Build a temporary repo object for the ADO client call
+                const tempRepo: SkillRepository = {
+                    owner: adoParsed.owner,
+                    project: adoParsed.project,
+                    repo: adoParsed.repo,
+                    branch: adoParsed.branch ?? 'main'
+                };
+                try {
+                    branch = adoParsed.branch ?? await githubClient.fetchDefaultBranch(tempRepo);
+                } catch {
+                    vscode.window.showErrorMessage('Failed to fetch repository information from Azure DevOps. Check the URL, your network connection, and AIToolsOrganizer.azureDevOpsPat or AZURE_DEVOPS_EXT_PAT.');
+                    return;
+                }
+                newRepo = {
+                    owner: adoParsed.owner,
+                    project: adoParsed.project,
+                    repo: adoParsed.repo,
+                    branch,
+                    repositoryUrl: canonicalRepoUrl,
+                };
+            } else {
+                const parsed = ghParsed!;
+                try {
+                    branch = parsed.branch ?? await githubClient.fetchDefaultBranch({ owner: parsed.owner, repo: parsed.repo, branch: 'main' });
+                } catch {
+                    vscode.window.showErrorMessage('Failed to fetch repository information. Please check the URL and your network connection.');
+                    return;
+                }
+                newRepo = { owner: parsed.owner, repo: parsed.repo, branch, repositoryUrl: canonicalRepoUrl };
+            }
 
             const repositories = readRepositoriesConfig();
 
             const isDuplicate = repositories.some(r => isSameRepository(r, newRepo));
             if (isDuplicate) {
                 vscode.window.showWarningMessage(
-                    `${newRepo.owner}/${newRepo.repo} is already in the marketplace.`
+                    `${formatRepoLabel(newRepo)} is already in the marketplace.`
                 );
                 return;
             }
@@ -2142,7 +2198,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 await writeRepositoriesConfig([...repositories, newRepo]);
                 await marketplaceProvider.addRepoToMarketplace(newRepo);
                 marketplaceProvider.setInstalledSkills(installedProvider.getInstalledSkillNames());
-                vscode.window.showInformationMessage(`Added ${newRepo.owner}/${newRepo.repo} to the marketplace.`);
+                vscode.window.showInformationMessage(`Added ${formatRepoLabel(newRepo)} to the marketplace.`);
             } catch (e) {
                 // Reset suppression so external config changes aren't silently ignored
                 marketplaceProvider.shouldHandleConfigChange();

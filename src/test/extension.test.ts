@@ -12,6 +12,8 @@ import { SkillPathService } from '../services/skillPathService';
 import { Skill, SkillRepository, InstalledSkill } from '../types';
 import { GitHubSkillsClient } from '../github/skillsClient';
 import { buildItemPathReference, parseGitHubUrl } from '../extension';
+import { parseAzureDevOpsGitUrl } from '../git/azureDevOpsUrl';
+import { isAdoRepository, resolveSkillRepositoryFromConfig } from '../types';
 import { AreaInstalledItemTreeItem, AreaItemFileTreeItem, AreaItemFolderTreeItem } from '../views/installedAreaProvider';
 import { InstalledSkillTreeItem, SkillFileTreeItem, SkillFolderTreeItem } from '../views/installedProvider';
 // import * as myExtension from '../../extension';
@@ -612,10 +614,104 @@ suite('Extension Test Suite', () => {
 		});
 	});
 
+	suite('parseAzureDevOpsGitUrl', () => {
+		test('parses plain dev.azure.com URL', () => {
+			const result = parseAzureDevOpsGitUrl('https://dev.azure.com/myOrg/myProject/_git/myRepo');
+			assert.deepStrictEqual(result, { owner: 'myOrg', project: 'myProject', repo: 'myRepo', branch: undefined });
+		});
+
+		test('strips credential prefix (user@)', () => {
+			const result = parseAzureDevOpsGitUrl('https://myUser@dev.azure.com/myOrg/myProject/_git/myRepo');
+			assert.deepStrictEqual(result, { owner: 'myOrg', project: 'myProject', repo: 'myRepo', branch: undefined });
+		});
+
+		test('parses org-named user before host (common ADO clone URL)', () => {
+			const result = parseAzureDevOpsGitUrl(
+				'https://CSGDevOpsAutomation@dev.azure.com/CSGDevOpsAutomation/RMDM-DWMS-SingleviewSolutions/_git/ec-agent-plugins'
+			);
+			assert.deepStrictEqual(result, {
+				owner: 'CSGDevOpsAutomation',
+				project: 'RMDM-DWMS-SingleviewSolutions',
+				repo: 'ec-agent-plugins',
+				branch: undefined
+			});
+		});
+
+		test('accepts dev.azure.com URL without https:// prefix', () => {
+			const result = parseAzureDevOpsGitUrl('dev.azure.com/myOrg/myProject/_git/myRepo');
+			assert.deepStrictEqual(result, { owner: 'myOrg', project: 'myProject', repo: 'myRepo', branch: undefined });
+		});
+
+		test('parses visualstudio.com project URL', () => {
+			const result = parseAzureDevOpsGitUrl('https://myOrg.visualstudio.com/MyProject/_git/MyRepo');
+			assert.deepStrictEqual(result, { owner: 'myorg', project: 'MyProject', repo: 'MyRepo', branch: undefined });
+		});
+
+		test('parses visualstudio.com URL with DefaultCollection segment', () => {
+			const result = parseAzureDevOpsGitUrl(
+				'https://myorg.visualstudio.com/DefaultCollection/MyProject/_git/MyRepo'
+			);
+			assert.deepStrictEqual(result, { owner: 'myorg', project: 'MyProject', repo: 'MyRepo', branch: undefined });
+		});
+
+		test('extracts branch from version=GB query param', () => {
+			const result = parseAzureDevOpsGitUrl('https://dev.azure.com/myOrg/myProject/_git/myRepo?version=GBdevelop');
+			assert.deepStrictEqual(result, { owner: 'myOrg', project: 'myProject', repo: 'myRepo', branch: 'develop' });
+		});
+
+		test('strips .git suffix from repo name', () => {
+			const result = parseAzureDevOpsGitUrl('https://dev.azure.com/myOrg/myProject/_git/myRepo.git');
+			assert.deepStrictEqual(result, { owner: 'myOrg', project: 'myProject', repo: 'myRepo', branch: undefined });
+		});
+
+		test('returns undefined for GitHub URL', () => {
+			assert.strictEqual(parseAzureDevOpsGitUrl('https://github.com/owner/repo'), undefined);
+		});
+
+		test('returns undefined for non-_git ADO URL', () => {
+			assert.strictEqual(parseAzureDevOpsGitUrl('https://dev.azure.com/myOrg/myProject/_boards/board'), undefined);
+		});
+
+		test('returns undefined for empty string', () => {
+			assert.strictEqual(parseAzureDevOpsGitUrl(''), undefined);
+		});
+
+		test('returns undefined for random string', () => {
+			assert.strictEqual(parseAzureDevOpsGitUrl('not a url at all'), undefined);
+		});
+	});
+
+	suite('resolveSkillRepositoryFromConfig / isAdoRepository', () => {
+		const adoUrl = 'https://dev.azure.com/myOrg/myProject/_git/myRepo';
+
+		test('ADO identity is restored from repositoryUrl when project is missing', () => {
+			const raw = {
+				owner: 'wrongOwner',
+				repo: 'wrongRepo',
+				branch: 'main',
+				repositoryUrl: adoUrl
+			};
+			const resolved = resolveSkillRepositoryFromConfig(raw);
+			assert.strictEqual(resolved.owner, 'myOrg');
+			assert.strictEqual(resolved.project, 'myProject');
+			assert.strictEqual(resolved.repo, 'myRepo');
+			assert.ok(isAdoRepository(raw));
+		});
+
+		test('GitHub-shaped entry without project stays non-ADO', () => {
+			const raw = { owner: 'octocat', repo: 'Hello-World', branch: 'main' };
+			assert.ok(!isAdoRepository(raw));
+		});
+	});
+
 	suite('SkillPathService.getDefaultDownloadLocations chat.* settings handling', () => {
 		class MockConfigSkillPathService extends SkillPathService {
 			override getHomeDirectory(): string {
 				return '/home/user';
+			}
+
+			protected override isCursor(): boolean {
+				return true;
 			}
 
 			override getWorkspaceFolder(): vscode.WorkspaceFolder | undefined {
@@ -735,6 +831,18 @@ suite('Extension Test Suite', () => {
 				}
 			}, () => service.getDefaultDownloadLocations('agents'));
 			assert.deepStrictEqual(result, ['~/.copilot/agents'], 'Should filter out empty paths');
+		});
+
+		test('plugins default locations include ~/.cursor/plugins/local', () => {
+			const service = new MockConfigSkillPathService();
+			const result = withMockChatConfig({}, () => service.getDefaultDownloadLocations('plugins'));
+			assert.ok(result.includes('~/.cursor/plugins/local'), 'Should include Cursor user plugin install root');
+		});
+
+		test('rules default locations include ~/.cursor/rules', () => {
+			const service = new MockConfigSkillPathService();
+			const result = withMockChatConfig({}, () => service.getDefaultDownloadLocations('rules'));
+			assert.ok(result.includes('~/.cursor/rules'), 'Should include Cursor rules directory');
 		});
 	});
 });

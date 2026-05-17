@@ -1,6 +1,6 @@
 # Marketplace & Downloading
 
-The Marketplace view lets you browse AI tools from configured GitHub repositories.
+The Marketplace view lets you browse AI tools from configured GitHub or Azure DevOps repositories.
 
 ## Browsing
 
@@ -25,9 +25,25 @@ Downloaded items appear in the corresponding area view and get a green check in 
 
 ## Adding repositories
 
-Click the **+** button in the Marketplace toolbar and paste a GitHub URL. The extension parses the URL and resolves the default branch automatically.
+Click the **+** button in the Marketplace toolbar and paste a GitHub or Azure DevOps URL. The extension parses the URL and resolves the default branch automatically.
 
-You can also add repositories in Settings under `AIToolsOrganizer.skillRepositories`.
+Supported URL formats:
+- **GitHub**: `https://github.com/owner/repo` or `https://github.com/owner/repo/tree/branch`
+- **Azure DevOps**: `https://dev.azure.com/org/project/_git/repo`
+
+You can also add repositories in Settings under `AIToolsOrganizer.skillRepositories`. For Azure DevOps repositories, set the `project` field in addition to `owner`, `repo`, and `branch`.
+
+## How repository scanning works
+
+To avoid loading the entire file tree of large repositories, the extension uses a scoped two-phase approach:
+
+1. **Root listing** — one non-recursive API call retrieves the top-level entries.
+2. **Targeted subtree fetches** — only directories that match a known allowlist are recursively fetched. The allowlist includes:
+   - Dot-tooling roots: `.cursor`, `.claude`, `.cursor-plugin`, `.github`, `.kiro`
+   - Conventional area directory names: `skills`, `agents`, `hooks`, `rules`, `instructions`, `plugins`, `prompts`
+3. **Marketplace augmentation** — if `.cursor-plugin/marketplace.json` is present, each declared plugin directory is also fetched.
+
+Directories such as `node_modules`, `docs`, or any other unrecognised folder are **never** recursed into. This keeps loading fast even for large monorepos where only a small subset of the tree contains AI tools.
 
 ## Searching
 

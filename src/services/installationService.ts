@@ -3,7 +3,7 @@
  */
 
 import * as vscode from 'vscode';
-import { Skill, InstalledSkill, normalizeSeparators, buildGitHubUrl } from '../types';
+import { Skill, InstalledSkill, normalizeSeparators, buildRepoWebUrl } from '../types';
 import { GitHubSkillsClient } from '../github/skillsClient';
 import { SkillPathService } from './skillPathService';
 
@@ -452,7 +452,7 @@ export class SkillInstallationService {
      * before the closing `---`. If no frontmatter exists, wraps the content with new frontmatter.
      */
     private injectSourceFrontmatter(content: string, skill: Skill): string {
-        const sourceUrl = buildGitHubUrl(skill.source.owner, skill.source.repo, skill.source.branch, skill.skillPath);
+        const sourceUrl = buildRepoWebUrl(skill.source, { kind: 'tree', path: skill.skillPath });
         const frontmatterMatch = content.match(/^(---\r?\n)([\s\S]*?)(\r?\n---)/);
 
         if (frontmatterMatch) {

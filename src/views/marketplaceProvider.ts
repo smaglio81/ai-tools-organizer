@@ -3,7 +3,8 @@
  */
 
 import * as vscode from 'vscode';
-import { Skill, FailedRepository, SkillRepository, isSameRepository, readRepositoriesConfig, ContentArea, AREA_DEFINITIONS, AreaFileItem } from '../types';
+import { Skill, FailedRepository, SkillRepository, isSameRepository, readRepositoriesConfig, ContentArea, AREA_DEFINITIONS, AreaFileItem, formatRepoLabel } from '../types';
+import { notifyAzureDevOpsPatMissingIfNeeded } from '../repos/azureDevOpsRepoTransport';
 import { GitHubSkillsClient } from '../github/skillsClient';
 
 let extensionUri: vscode.Uri | undefined;
@@ -63,7 +64,7 @@ export class SkillTreeItem extends vscode.TreeItem {
         if (skill.license) {
             this.tooltip.appendMarkdown(`*License: ${skill.license}*\n\n`);
         }
-        this.tooltip.appendMarkdown(`Source: \`${skill.source.owner}/${skill.source.repo}\``);
+        this.tooltip.appendMarkdown(`Source: \`${formatRepoLabel(skill.source)}\``);
         
         this.iconPath = isInstalled
             ? new vscode.ThemeIcon('check', new vscode.ThemeColor('testing.iconPassed'))
@@ -106,7 +107,7 @@ export class SourceTreeItem extends vscode.TreeItem {
  * when they help distinguish multiple configs of the same repo.
  */
 function repoLabel(repo: SkillRepository): string {
-    const base = `${repo.owner}/${repo.repo}`;
+    const base = formatRepoLabel(repo);
     const branchSuffix = repo.branch && repo.branch !== 'main' ? `@${repo.branch}` : '';
     return `${base}${branchSuffix}`;
 }
@@ -186,7 +187,7 @@ export class AreaFileTreeItem extends vscode.TreeItem {
     ) {
         super(fileItem.name, vscode.TreeItemCollapsibleState.None);
         this.description = fileItem.description || '';
-        this.tooltip = `${fileItem.name}\nSource: ${fileItem.source.owner}/${fileItem.source.repo}`;
+        this.tooltip = `${fileItem.name}\nSource: ${formatRepoLabel(fileItem.source)}`;
         this.iconPath = isInstalled
             ? new vscode.ThemeIcon('check', new vscode.ThemeColor('testing.iconPassed'))
             : getItemIcon(fileItem.area, 'default');
@@ -237,7 +238,7 @@ export class MarketplaceTreeDataProvider implements vscode.TreeDataProvider<Mark
      */
     private skillCacheKey(skill: Skill): string {
         const s = skill.source;
-        return `${s.owner}/${s.repo}@${s.branch || 'main'}/${skill.skillPath}`;
+        return `${formatRepoLabel(s)}@${s.branch || 'main'}/${skill.skillPath}`;
     }
 
     /**
@@ -268,7 +269,9 @@ export class MarketplaceTreeDataProvider implements vscode.TreeDataProvider<Mark
         this._onDidChangeTreeData.fire();
 
         try {
-            const discovered = await this.githubClient.discoverAreas(repo.owner, repo.repo, repo.branch || 'main');
+            notifyAzureDevOpsPatMissingIfNeeded([repo]);
+
+            const discovered = await this.githubClient.discoverAreas(repo);
 
             if (Object.keys(discovered).length > 0) {
                 const content = await this.githubClient.fetchRepoContent(repo, discovered);
@@ -317,6 +320,8 @@ export class MarketplaceTreeDataProvider implements vscode.TreeDataProvider<Mark
     private async loadRepositoriesProgressively(clearCache: boolean): Promise<void> {
         const repositories = readRepositoriesConfig();
 
+        notifyAzureDevOpsPatMissingIfNeeded(repositories);
+
         const generation = ++this.loadGeneration;
 
         if (clearCache) {
@@ -348,7 +353,7 @@ export class MarketplaceTreeDataProvider implements vscode.TreeDataProvider<Mark
                 if (generation !== this.loadGeneration) { return; }
                 const repo = queue.shift()!;
                 try {
-                    const discovered = await this.githubClient.discoverAreas(repo.owner, repo.repo, repo.branch || 'main');
+                    const discovered = await this.githubClient.discoverAreas(repo);
                     if (generation !== this.loadGeneration) { return; }
 
                     if (Object.keys(discovered).length > 0) {
@@ -616,13 +621,13 @@ export class MarketplaceTreeDataProvider implements vscode.TreeDataProvider<Mark
             const failureItems = this.searchQuery
                 ? [] // hide failed entries when a search is active
                 : [...this.failures]
-                    .sort((a, b) => `${a.repo.owner}/${a.repo.repo}`.localeCompare(`${b.repo.owner}/${b.repo.repo}`))
+                    .sort((a, b) => formatRepoLabel(a.repo).localeCompare(formatRepoLabel(b.repo)))
                     .map(f => new FailedSourceTreeItem(f));
 
             const loadingItems = this.searchQuery
                 ? [] // hide loading entries when a search is active
                 : [...this.loadingRepos]
-                    .sort((a, b) => `${a.owner}/${a.repo}`.localeCompare(`${b.owner}/${b.repo}`))
+                    .sort((a, b) => formatRepoLabel(a).localeCompare(formatRepoLabel(b)))
                     .map(r => new LoadingSourceTreeItem(r));
 
             if (this.groupBySource) {
@@ -764,27 +769,28 @@ export class MarketplaceTreeDataProvider implements vscode.TreeDataProvider<Mark
 
     /**
      * Build a stable grouping key for a SkillRepository that includes
-     * owner, repo, path, and branch so distinct configs stay separate.
+     * owner, project (for ADO), repo, and branch so distinct configs stay separate.
      */
     private repoGroupKey(repo: SkillRepository): string {
-        return `${repo.owner}/${repo.repo}@${repo.branch || 'main'}`;
+        const projectSegment = repo.project ? `/${repo.project}` : '';
+        return `${repo.owner}${projectSegment}/${repo.repo}@${repo.branch || 'main'}`;
     }
 
     /**
      * Build a disambiguated label for a source group.
-     * Uses just owner/repo when unique; appends path and/or branch
-     * only when needed to distinguish from other configs of the same repo.
+     * Uses formatRepoLabel when unique; appends branch only when needed
+     * to distinguish from other configs of the same repo.
      */
     private buildSourceLabel(
         repo: SkillRepository,
         groups: Map<string, { skills: Skill[]; fileItems: AreaFileItem[]; repo: SkillRepository }>
     ): string {
-        const base = `${repo.owner}/${repo.repo}`;
+        const base = formatRepoLabel(repo);
 
-        // Collect all configs sharing the same owner/repo
+        // Collect all configs sharing the same logical repo identity (owner/project/repo)
         const siblings: SkillRepository[] = [];
         for (const [, { repo: r }] of groups) {
-            if (`${r.owner}/${r.repo}` === base) {
+            if (formatRepoLabel(r) === base) {
                 siblings.push(r);
             }
         }

@@ -1,12 +1,12 @@
 {
-  "name": "agent-organizer",
-  "displayName": "AI Tools Organizer",
+  "name": "agent-organizer-cursor",
+  "displayName": "AI Tools Organizer (Cursor)",
   "description": "AI Tools Organizer and Marketplace",
-  "version": "0.2.3",
+  "version": "0.3.2",
   "icon": "resources/logo.png",
-  "publisher": "smaglio81",
+  "publisher": "smhc",
   "engines": {
-    "vscode": "^1.107.0"
+    "vscode": "^1.105.1"
   },
   "categories": [
     "AI"
@@ -25,13 +25,12 @@
     "kiro"
   ],
   "bugs": {
-    "url": "https://github.com/smaglio81/ai-tools-organizer/issues",
-    "email": "smaglio81@gmail.com"
+    "url": "https://github.com/smhc/ai-tools-organizer/issues"
   },
-  "homepage": "https://github.com/smaglio81/ai-tools-organizer/blob/main/README.md",
+  "homepage": "https://github.com/smhc/ai-tools-organizer/blob/main/README.md",
   "repository": {
     "type": "git",
-    "url": "https://github.com/smaglio81/ai-tools-organizer.git"
+    "url": "https://github.com/smhc/ai-tools-organizer.git"
   },
   "activationEvents": [
     "onView:AIToolsOrganizer.marketplace",
@@ -96,6 +95,12 @@
           "id": "AIToolsOrganizer.prompts",
           "name": "Prompts / Commands",
           "icon": "resources/prompts-icon.svg",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "AIToolsOrganizer.rules",
+          "name": "Rules",
+          "icon": "resources/rules-icon.svg",
           "visibility": "collapsed"
         }
       ]
@@ -170,6 +175,16 @@
         "view": "AIToolsOrganizer.prompts",
         "contents": "No prompts found.",
         "when": "AIToolsOrganizer.prompts:initialScanComplete"
+      },
+      {
+        "view": "AIToolsOrganizer.rules",
+        "contents": "Loading ...",
+        "when": "!AIToolsOrganizer.rules:initialScanComplete"
+      },
+      {
+        "view": "AIToolsOrganizer.rules",
+        "contents": "No rules found.",
+        "when": "AIToolsOrganizer.rules:initialScanComplete"
       }
     ],
     "commands": [
@@ -426,6 +441,21 @@
         "icon": "$(close)"
       },
       {
+        "command": "AIToolsOrganizer.rules.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "AIToolsOrganizer.rules.search",
+        "title": "Search",
+        "icon": "$(search)"
+      },
+      {
+        "command": "AIToolsOrganizer.rules.clearSearch",
+        "title": "Clear Search",
+        "icon": "$(close)"
+      },
+      {
         "command": "AIToolsOrganizer.agents.expandAll",
         "title": "Expand All",
         "icon": "$(expand-all)"
@@ -456,6 +486,11 @@
         "icon": "$(expand-all)"
       },
       {
+        "command": "AIToolsOrganizer.rules.expandAll",
+        "title": "Expand All",
+        "icon": "$(expand-all)"
+      },
+      {
         "command": "AIToolsOrganizer.agents.selectDefaultDownloadLocation",
         "title": "Default Download Location",
         "icon": "$(folder)"
@@ -482,6 +517,11 @@
       },
       {
         "command": "AIToolsOrganizer.prompts.selectDefaultDownloadLocation",
+        "title": "Default Download Location",
+        "icon": "$(folder)"
+      },
+      {
+        "command": "AIToolsOrganizer.rules.selectDefaultDownloadLocation",
         "title": "Default Download Location",
         "icon": "$(folder)"
       },
@@ -542,6 +582,10 @@
         "title": "Add Prompt"
       },
       {
+        "command": "AIToolsOrganizer.newRuleAtLocation",
+        "title": "Add Rule"
+      },
+      {
         "command": "AIToolsOrganizer.agents.newItem",
         "title": "Add Agent",
         "icon": "$(add)"
@@ -569,6 +613,11 @@
       {
         "command": "AIToolsOrganizer.prompts.newItem",
         "title": "Add Prompt",
+        "icon": "$(add)"
+      },
+      {
+        "command": "AIToolsOrganizer.rules.newItem",
+        "title": "Add Rule",
         "icon": "$(add)"
       },
       {
@@ -858,6 +907,36 @@
           "command": "AIToolsOrganizer.prompts.expandAll",
           "when": "view == AIToolsOrganizer.prompts",
           "group": "navigation@5"
+        },
+        {
+          "command": "AIToolsOrganizer.rules.search",
+          "when": "view == AIToolsOrganizer.rules",
+          "group": "navigation@1"
+        },
+        {
+          "command": "AIToolsOrganizer.rules.clearSearch",
+          "when": "view == AIToolsOrganizer.rules && AIToolsOrganizer.rules:searchActive",
+          "group": "navigation@1"
+        },
+        {
+          "command": "AIToolsOrganizer.rules.refresh",
+          "when": "view == AIToolsOrganizer.rules",
+          "group": "navigation@2"
+        },
+        {
+          "command": "AIToolsOrganizer.rules.selectDefaultDownloadLocation",
+          "when": "view == AIToolsOrganizer.rules",
+          "group": "navigation@3"
+        },
+        {
+          "command": "AIToolsOrganizer.rules.newItem",
+          "when": "view == AIToolsOrganizer.rules",
+          "group": "navigation@4"
+        },
+        {
+          "command": "AIToolsOrganizer.rules.expandAll",
+          "when": "view == AIToolsOrganizer.rules",
+          "group": "navigation@5"
         }
       ],
       "view/item/context": [
@@ -1129,6 +1208,11 @@
         {
           "command": "AIToolsOrganizer.newPromptAtLocation",
           "when": "viewItem == areaLocation && view == AIToolsOrganizer.prompts",
+          "group": "0_add@1"
+        },
+        {
+          "command": "AIToolsOrganizer.newRuleAtLocation",
+          "when": "viewItem == areaLocation && view == AIToolsOrganizer.rules",
           "group": "0_add@1"
         },
         {
@@ -1423,80 +1507,39 @@
       "properties": {
         "AIToolsOrganizer.skillRepositories": {
           "type": "array",
-          "default": [
-            {
-              "owner": "anthropics",
-              "repo": "claude-code",
-              "branch": "main"
-            },
-            {
-              "owner": "anthropics",
-              "repo": "skills",
-              "branch": "main"
-            },
-            {
-              "owner": "github",
-              "repo": "awesome-copilot",
-              "branch": "main"
-            },
-            {
-              "owner": "formulahendry",
-              "repo": "agent-skill-code-runner",
-              "branch": "main"
-            },
-            {
-              "owner": "iamaanahmad",
-              "repo": "everything-kiro-ide",
-              "branch": "main"
-            },
-            {
-              "owner": "microsoftdocs",
-              "repo": "mcp",
-              "branch": "main"
-            },
-            {
-              "owner": "openai",
-              "repo": "skills",
-              "branch": "main"
-            },
-            {
-              "owner": "pytorch",
-              "repo": "pytorch",
-              "branch": "main"
-            }
-          ],
-          "markdownDescription": "GitHub repositories to fetch content from. Use the **Add Repository** button in the Marketplace view to add repos from a GitHub URL.",
+          "default": [],
+          "markdownDescription": "Repositories to fetch content from. Supports **GitHub** and **Azure DevOps** repositories. Use the **Add Repository** button in the Marketplace view to add repos from a URL.\n\n- GitHub: `{ \"owner\": \"...\", \"repo\": \"...\", \"branch\": \"main\", \"repositoryUrl\": \"https://github.com/...\" }`\n- Azure DevOps: `{ \"owner\": \"org\", \"project\": \"project\", \"repo\": \"repo\", \"branch\": \"main\", \"repositoryUrl\": \"https://dev.azure.com/...\" }` — if `repositoryUrl` is a `dev.azure.com` / `*.visualstudio.com` Git URL, the Azure DevOps transport is used even when `project` is missing.",
           "items": {
             "type": "object",
             "properties": {
               "owner": {
                 "type": "string",
-                "description": "GitHub repository owner"
+                "description": "GitHub owner or Azure DevOps organization name"
               },
               "repo": {
                 "type": "string",
-                "description": "GitHub repository name"
+                "description": "Repository name"
               },
               "branch": {
                 "type": "string",
                 "default": "main",
                 "description": "Branch name"
+              },
+              "project": {
+                "type": "string",
+                "description": "Azure DevOps project name (set this to use an Azure DevOps repository instead of GitHub)"
+              },
+              "repositoryUrl": {
+                "type": "string",
+                "description": "Canonical repo URL without credentials (set automatically when adding via URL). Used to detect Azure DevOps when project is missing from settings."
               }
             }
           }
         },
         "AIToolsOrganizer.installLocations": {
           "type": "object",
-          "default": {
-            "agents": "~/.copilot/agents",
-            "hooksGithub": "~/.copilot/hooks",
-            "hooksKiro": ".kiro/hooks",
-            "instructions": "~/.copilot/instructions",
-            "plugins": "~/.copilot/plugins",
-            "prompts": "~/.copilot/prompts",
-            "skills": "~/.copilot/skills"
-          },
-          "description": "Per-area default download locations. Keys are area identifiers (agents, hooksGithub, hooksKiro, instructions, plugins, prompts, skills). Values are path strings.",
+          "default": {},
+          "description": "Per-area default download locations. Keys: agents, hooksGithub, hooksKiro, instructions, plugins, prompts, rules, skills. An empty object uses runtime defaults on first activation (Cursor vs other hosts differ; see SkillPathService.ensureInstallLocations).",
           "properties": {
             "agents": { "type": "string", "description": "Default download location for agents" },
             "hooksGithub": { "type": "string", "description": "Default download location for GitHub hooks" },
@@ -1504,6 +1547,7 @@
             "instructions": { "type": "string", "description": "Default download location for instructions" },
             "plugins": { "type": "string", "description": "Default download location for plugins" },
             "prompts": { "type": "string", "description": "Default download location for prompts" },
+            "rules": { "type": "string", "description": "Default download location for Cursor rules (.mdc files)" },
             "skills": { "type": "string", "description": "Default download location for skills" }
           },
           "additionalProperties": false
@@ -1512,6 +1556,12 @@
           "type": "string",
           "default": "",
           "description": "GitHub personal access token for higher API rate limits (optional)",
+          "scope": "application"
+        },
+        "AIToolsOrganizer.azureDevOpsPat": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Azure DevOps Personal Access Token for accessing ADO Git repositories. Requires **Code (read)** permission. Only needed when using Azure DevOps repositories in `#AIToolsOrganizer.skillRepositories#`. If empty, the extension also uses the `AZURE_DEVOPS_EXT_PAT` environment variable (e.g. set in your shell profile or CI).",
           "scope": "application"
         },
         "AIToolsOrganizer.cacheTimeout": {
@@ -1530,6 +1580,7 @@
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
     "package": "npm run check-types && npm run lint && node esbuild.js --production",
     "package:vsix": "npx vsce package",
+    "publish:ovsx": "npx ovsx publish",
     "install:vsix": "npx vsce package && npm run install:vsix:only",
     "install:vsix:only": "node -e \"const fs=require('fs'); const files=fs.readdirSync('.').filter(f=>f.startsWith('agent-organizer-')&&f.endsWith('.vsix')).sort(); if(files.length) require('child_process').execSync('code-insiders --install-extension '+files[files.length-1], {stdio:'inherit'});\"",
     "uninstall:vsix": "code-insiders --uninstall-extension smaglio81.agent-organizer",
@@ -1549,7 +1600,7 @@
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
-    "@types/vscode": "^1.107.0",
+    "@types/vscode": "^1.105.1",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.7.1",

@@ -4,13 +4,14 @@
  * Simulates the directory structures and file contents that the area views
  * would find on disk when scanning for installed items.
  *
- * The mock covers all 7 active content areas:
- *   - agents (singleFile, *.agent.md)
+ * The mock covers all active content areas:
+ *   - agents (singleFile, *.agent.md + *.agent.mdc + *.mdc multi-suffix)
  *   - hooksGithub (multiFile, hooks.json)
  *   - hooksKiro (singleFile, *.json in hooks/)
  *   - instructions (singleFile, *.instructions.md)
- *   - plugins (multiFile, plugin.json)
- *   - prompts (singleFile, *.prompt.md)
+ *   - plugins (multiFile, plugin.json + .cursor-plugin/plugin.json)
+ *   - prompts (singleFile, *.prompt.md + *.mdc multi-suffix)
+ *   - rules (singleFile, *.mdc)
  *   - skills (multiFile, SKILL.md)
  *
  * Usage: build a mock vscode.FileSystem using these structures to drive
@@ -221,6 +222,88 @@ export const MOCK_PLUGINS_DIR: MockDirectory = {
     },
 };
 
+// ─── Plugins with .cursor-plugin/plugin.json ─────────────────────────────────
+
+/** ~/.cursor/plugins/local/ — Cursor-native plugin install location */
+export const MOCK_CURSOR_PLUGINS_DIR: MockDirectory = {
+    type: 'directory',
+    children: {
+        'cursor-native-plugin': {
+            type: 'directory',
+            children: {
+                // Cursor-canonical manifest at .cursor-plugin/plugin.json
+                '.cursor-plugin': {
+                    type: 'directory',
+                    children: {
+                        'plugin.json': {
+                            type: 'file',
+                            content: JSON.stringify({
+                                name: 'Cursor Native Plugin',
+                                description: 'A plugin using the Cursor manifest layout',
+                                version: '1.0.0'
+                            }),
+                        },
+                    },
+                },
+                'README.md': { type: 'file', content: '# Cursor Native Plugin' },
+            },
+        },
+    },
+};
+
+// ─── Rules (singleFile: *.mdc) ───────────────────────────────────────────────
+
+/** ~/.cursor/rules/ */
+export const MOCK_RULES_DIR: MockDirectory = {
+    type: 'directory',
+    children: {
+        'prefer-const.mdc': {
+            type: 'file',
+            content: '---\ndescription: Prefer const over let\nalwaysApply: true\n---\n\nAlways use const.',
+        },
+        'no-any.mdc': {
+            type: 'file',
+            content: '---\ndescription: Avoid TypeScript any type\nalwaysApply: true\n---\n\nAvoid using any.',
+        },
+        'style': {
+            type: 'directory',
+            children: {
+                'naming.mdc': {
+                    type: 'file',
+                    content: '---\ndescription: Naming conventions\nalwaysApply: false\n---\n\nUse camelCase.',
+                },
+            },
+        },
+    },
+};
+
+// ─── Agents with .mdc suffix (multi-suffix test) ─────────────────────────────
+
+/** ~/.copilot/agents/ — includes .agent.mdc and bare .mdc files alongside .agent.md */
+export const MOCK_AGENTS_MULTISUFFIX_DIR: MockDirectory = {
+    type: 'directory',
+    children: {
+        'review.agent.md': {
+            type: 'file',
+            content: '---\nname: review\ndescription: Code review agent\n---\nReview code.',
+        },
+        'security.agent.mdc': {
+            type: 'file',
+            content: '---\nname: security\ndescription: Security review agent\n---\nCheck for security issues.',
+        },
+        // bare .mdc Cursor-style agent
+        'formatter.mdc': {
+            type: 'file',
+            content: '---\nname: formatter\ndescription: Code formatter agent\n---\nFormat code.',
+        },
+        // Duplicate: same display name as review.agent.md — should be skipped
+        'review.agent.mdc': {
+            type: 'file',
+            content: '---\nname: review\ndescription: Duplicate agent\n---\nDuplicate.',
+        },
+    },
+};
+
 // ─── Prompts (singleFile: *.prompt.md) ───────────────────────────────────────
 
 /** ~/.copilot/prompts/ */
@@ -338,6 +421,26 @@ export const EXPECTED_INSTRUCTIONS = [
 export const EXPECTED_PLUGINS = [
     { name: 'Automate This', description: 'Automation plugin for repetitive tasks', location: '~/.copilot/plugins/automate-this' },
     { name: 'Code Review Helper', description: 'Assists with code review workflows', location: '~/.copilot/plugins/code-review-helper' },
+];
+
+/** Expected InstalledSkill[] from scanning MOCK_CURSOR_PLUGINS_DIR at ~/.cursor/plugins/local */
+export const EXPECTED_CURSOR_PLUGINS = [
+    { name: 'Cursor Native Plugin', description: 'A plugin using the Cursor manifest layout', location: '~/.cursor/plugins/local/cursor-native-plugin' },
+];
+
+/** Expected InstalledSkill[] from scanning MOCK_RULES_DIR at ~/.cursor/rules */
+export const EXPECTED_RULES = [
+    { name: 'prefer-const', description: '', location: '~/.cursor/rules/prefer-const.mdc' },
+    { name: 'no-any', description: '', location: '~/.cursor/rules/no-any.mdc' },
+    { name: 'naming', description: '', location: '~/.cursor/rules/style/naming.mdc' },
+];
+
+/** Expected InstalledSkill[] from scanning MOCK_AGENTS_MULTISUFFIX_DIR (multi-suffix dedup) */
+export const EXPECTED_AGENTS_MULTISUFFIX = [
+    { name: 'review', description: '', location: '~/.copilot/agents/review.agent.md' },
+    { name: 'security', description: '', location: '~/.copilot/agents/security.agent.mdc' },
+    { name: 'formatter', description: '', location: '~/.copilot/agents/formatter.mdc' },
+    // review.agent.mdc is skipped — 'review' was already seen from review.agent.md
 ];
 
 /** Expected InstalledSkill[] from scanning MOCK_PROMPTS_DIR at ~/.copilot/prompts */

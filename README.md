@@ -1,27 +1,30 @@
 # AI Tools Organizer
 
-Browse, download, and manage AI tools from GitHub — agents, skills, hooks, instructions, plugins, and prompts — all from a single VS Code sidebar.
+Browse, download, and manage AI tools from **GitHub** and **Azure DevOps** (`dev.azure.com`) — agents, skills, hooks, instructions, Cursor-style plugins and marketplaces, rules, and prompts — all from a single sidebar in **VS Code** or **Cursor**.
 
 ## What it does
 
-AI Tools Organizer adds a sidebar panel to VS Code with views for each type of AI tool:
+AI Tools Organizer adds a sidebar panel with views for each type of AI tool:
 
-- **Marketplace** — discover content from GitHub repositories
+- **Marketplace** — discover content from configured GitHub and Azure DevOps repositories, including repos that publish a **Cursor plugin index** via `.cursor-plugin/marketplace.json`
 - **Skills** — folders with `SKILL.md`
-- **Agents** — `*.agent.md` files
+- **Agents** — `*.agent.md` (and other agent file layouts Cursor accepts)
 - **Hooks - GitHub** — folder-based hooks with `hooks.json`
 - **Hooks - Kiro** — single-file JSON hooks
 - **Instructions** — `*.instructions.md` files
-- **Plugins** — folders with `plugin.json`
-- **Prompts / Commands** — `*.prompt.md` files
+- **Plugins** — folders with `plugin.json` at the root **or** under `.cursor-plugin/plugin.json` (Cursor’s canonical manifest location)
+- **Rules** — `.mdc` / `.md` rule files (often under `.cursor/rules`)
+- **Prompts / Commands** — `*.prompt.md` and related command file types
 
 Each view shows what you have installed locally, grouped by location. The Marketplace lets you browse repositories and download items with one click.
+
+The extension scans conventional paths under your workspace and home directory, including **`.cursor/{area}`** (for example `.cursor/skills`, `.cursor/plugins`) alongside `.agents`, `.claude`, `.github`, `.copilot`, and `.kiro` layouts. Default download targets use **`~/.cursor/plugins/local`** for plugins and **`~/.cursor/rules`** for rules when you have not chosen another location; other areas default under `~/.copilot/…` unless you change them in settings.
 
 ![AI Tools Organizer](resources/ai-tools-organizer.png)
 
 ## Getting started
 
-1. Install the extension from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=smaglio81.agent-organizer)
+1. Install the extension from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=smaglio81.agent-organizer) (works in Cursor as well)
 2. Open the **AI Tools Organizer** panel in the Activity Bar
 3. Browse the Marketplace and click the download button on any item
 4. Your downloaded items appear in the corresponding area view
@@ -34,13 +37,15 @@ Each view shows what you have installed locally, grouped by location. The Market
 
 **Copy #{path} for chat** — right-click an installed item, folder, or file and choose **Copy #{path}** to copy a chat-ready reference you can paste into conversation prompts. **Copy Absolute Path** is also available for the full filesystem path.
 
-**Download from GitHub** — browse multiple repositories, view README documentation, and download any item to your configured location.
+**Download from GitHub or Azure DevOps** — browse multiple repositories, view README documentation, and download any item to your configured location. Paste a repo URL from GitHub or `https://dev.azure.com/{org}/{project}/_git/{repo}` to add it to the Marketplace; use a [Personal Access Token](docs/configuration.md#azure-devops-token) for private Azure DevOps projects.
+
+**Cursor plugins and marketplaces** — detects per-plugin manifests at `plugin.json` or `.cursor-plugin/plugin.json`, and can expand multi-plugin catalogs described by `.cursor-plugin/marketplace.json`.
 
 **Duplicate detection** — when the same item exists in multiple locations, color-coded icons show which copy is newest (green), older (orange), identical (blue), or unique (purple).
 
 **Plugin sync** — keep plugin subfolders (`/agents`, `/skills`, `/commands`, `/hooks`) in sync with your latest installed items. Use "Get latest copy" to pull updates into a plugin, or "Update Plugins" to push changes out to all plugins that contain a copy.
 
-**Flexible locations** — each area has its own configurable download location. Scans workspace folders and home directories automatically. Locations marked as disabled in your `chat.*` settings are skipped (the configured download location is always included regardless; falls back to defaults if no enabled paths remain).
+**Flexible locations** — each area has its own configurable download location. Scans workspace folders and home directories automatically, including `.cursor`-based paths. Locations marked as disabled in your `chat.*` settings are skipped (the configured download location is always included regardless; falls back to defaults if no enabled paths remain).
 
 **Green check indicators** — items you've already downloaded show a green check in the Marketplace.
 
@@ -51,29 +56,14 @@ For detailed guides, see the [docs](docs/) folder:
 - [Plugin workflows](docs/plugins.md)
 - [Configuration](docs/configuration.md)
 
-## Default repositories
-
-The extension comes pre-configured with these GitHub repositories:
-
-| Repository | Content |
-|---|---|
-| anthropics/claude-code | Claude Code tools |
-| anthropics/skills | Anthropic's official skills |
-| github/awesome-copilot | Community agents, hooks, instructions, plugins, prompts, skills |
-| formulahendry/agent-skill-code-runner | Code runner skill |
-| iamaanahmad/everything-kiro-ide | Kiro IDE hooks and tools |
-| microsoftdocs/mcp | Microsoft MCP documentation |
-| openai/skills | OpenAI curated skills |
-| pytorch/pytorch | PyTorch skills |
-
-Add your own repositories from the Marketplace toolbar or in Settings.
+Add **GitHub** or **Azure DevOps** repositories from the Marketplace toolbar (paste the clone or web URL) or in Settings. For Azure DevOps, each entry needs `owner` (organization), `project`, `repo`, and `branch` — see [Configuration](docs/configuration.md#repositories).
 
 ## For Skill Developers
 
 To create skills compatible with this extension:
 
 1. **Follow the SKILL.md specification** with proper YAML frontmatter
-2. **Store skills in a public GitHub repository**
+2. **Store skills in a public GitHub repository** or a public **Azure DevOps** Git repo that allows anonymous read, or ensure consumers configure a PAT for private orgs
 3. **Organize skills** in a directory structure with one skill per folder
 4. **Document thoroughly** with clear README and usage examples
 5. **Include metadata** (license, compatibility, description)
@@ -84,7 +74,8 @@ Users can then discover and install your skills through this marketplace!
 
 - [Agent Skills Specification](https://agentskills.io)
 - [VS Code Extension Documentation](https://code.visualstudio.com/api)
-- [GitHub API Documentation](https://docs.github.com/en/rest)
+- [GitHub REST API](https://docs.github.com/en/rest)
+- [Azure DevOps REST API](https://learn.microsoft.com/en-us/rest/api/azure/devops/)
 
 ## Issues & Feedback
 

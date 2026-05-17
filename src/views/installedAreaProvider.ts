@@ -4,7 +4,7 @@
  */
 
 import * as vscode from 'vscode';
-import { InstalledSkill, normalizeSeparators, ContentArea, AREA_DEFINITIONS } from '../types';
+import { InstalledSkill, normalizeSeparators, ContentArea, AREA_DEFINITIONS, deriveItemName, fileMatchesArea, getAreaFileSuffixes } from '../types';
 import { SkillPathService } from '../services/skillPathService';
 import { DuplicateStatus, computeAllDuplicateStatuses, createLocationWatchers, FileInfo } from '../services/duplicateService';
 
@@ -330,14 +330,17 @@ export class InstalledAreaTreeDataProvider implements vscode.TreeDataProvider<Tr
                     return [{ relativePath: '', mtime: stat.mtime, content }];
                 } catch { return []; }
             } else if (def.definitionFile) {
-                // Multi-file: compare the definition file
-                const defFileUri = await this.findDefinitionFile(uri, def.definitionFile);
-                if (!defFileUri) { return []; }
-                try {
-                    const content = new TextDecoder().decode(await fs.readFile(defFileUri));
-                    const stat = await fs.stat(defFileUri);
-                    return [{ relativePath: def.definitionFile, mtime: stat.mtime, content }];
-                } catch { return []; }
+                // Multi-file: compare the definition file (try primary then alternates)
+                const candidates = [def.definitionFile, ...(def.alternateDefinitionFiles ?? [])];
+                for (const candidate of candidates) {
+                    const defFileUri = await this.findDefinitionFile(uri, candidate);
+                    if (!defFileUri) { continue; }
+                    try {
+                        const content = new TextDecoder().decode(await fs.readFile(defFileUri));
+                        const stat = await fs.stat(defFileUri);
+                        return [{ relativePath: candidate, mtime: stat.mtime, content }];
+                    } catch { continue; }
+                }
             }
             return [];
         };
@@ -380,11 +383,17 @@ export class InstalledAreaTreeDataProvider implements vscode.TreeDataProvider<Tr
                     for (const [name, type] of entries) {
                         if (type !== vscode.FileType.Directory) { continue; }
                         const itemUri = vscode.Uri.joinPath(areaUri, name);
-                        // Search recursively for the definition file (it may be nested)
-                        const defFileUri = await this.findDefinitionFile(itemUri, def.definitionFile);
+                        // Try primary definition file first, then alternates
+                        const defCandidates = [def.definitionFile, ...(def.alternateDefinitionFiles ?? [])];
+                        let defFileUri: vscode.Uri | undefined;
+                        let resolvedDefFile = def.definitionFile;
+                        for (const candidate of defCandidates) {
+                            defFileUri = await this.findDefinitionFile(itemUri, candidate);
+                            if (defFileUri) { resolvedDefFile = candidate; break; }
+                        }
                         if (!defFileUri) { continue; }
                         try {
-                            const metadata = await this.parseDefinitionFile(defFileUri, def.definitionFile);
+                            const metadata = await this.parseDefinitionFile(defFileUri, resolvedDefFile);
                             items.push({
                                 name: metadata.name || name,
                                 description: metadata.description || '',
@@ -398,9 +407,9 @@ export class InstalledAreaTreeDataProvider implements vscode.TreeDataProvider<Tr
                 } catch {
                     // Can't read directory
                 }
-            } else if (def.kind === 'singleFile' && def.fileSuffix) {
+            } else if (def.kind === 'singleFile') {
                 try {
-                    await this.scanSingleFiles(areaUri, areaLocation, def.fileSuffix, items);
+                    await this.scanSingleFiles(areaUri, areaLocation, items);
                 } catch {
                     // Can't read directory
                 }
@@ -410,24 +419,47 @@ export class InstalledAreaTreeDataProvider implements vscode.TreeDataProvider<Tr
         return items;
     }
 
-    private async scanSingleFiles(dirUri: vscode.Uri, baseLoc: string, suffix: string, items: InstalledSkill[]): Promise<void> {
+    private async scanSingleFiles(dirUri: vscode.Uri, baseLoc: string, items: InstalledSkill[]): Promise<void> {
         const fs = this.pathService.getFileSystem();
+        const def = AREA_DEFINITIONS[this.area];
         const entries = await fs.readDirectory(dirUri);
+        const suffixes = getAreaFileSuffixes(def);
+
+        // Recurse into subdirectories first.
         for (const [name, type] of entries) {
             if (type === vscode.FileType.Directory) {
-                // Recurse into subdirectories
                 const subUri = vscode.Uri.joinPath(dirUri, name);
-                await this.scanSingleFiles(subUri, `${baseLoc}/${name}`, suffix, items);
-            } else if (type === vscode.FileType.File && name.endsWith(suffix)) {
-                const itemName = name.substring(0, name.length - suffix.length);
-                const normalizedLoc = normalizeSeparators(`${baseLoc}/${name}`);
-                items.push({
-                    name: itemName,
-                    description: '',
-                    location: normalizedLoc,
-                    installedAt: new Date().toISOString()
-                });
+                await this.scanSingleFiles(subUri, `${baseLoc}/${name}`, items);
             }
+        }
+
+        // Collect all matching files at this level, then deduplicate by display name
+        // choosing the file whose suffix has the lowest index in the priority list.
+        // This avoids depending on filesystem-order to resolve suffix conflicts.
+        const candidates = new Map<string, string>(); // displayName → filename
+        for (const [name, type] of entries) {
+            if (type !== vscode.FileType.File || !fileMatchesArea(name, def)) { continue; }
+            const itemName = deriveItemName(name, def);
+            const existing = candidates.get(itemName);
+            if (!existing) {
+                candidates.set(itemName, name);
+            } else {
+                // Pick whichever filename's suffix appears earlier in the priority list.
+                const existingPriority = suffixes.findIndex(s => existing.endsWith(s));
+                const newPriority = suffixes.findIndex(s => name.endsWith(s));
+                if (newPriority !== -1 && (existingPriority === -1 || newPriority < existingPriority)) {
+                    candidates.set(itemName, name);
+                }
+            }
+        }
+
+        for (const [itemName, fileName] of candidates) {
+            items.push({
+                name: itemName,
+                description: '',
+                location: normalizeSeparators(`${baseLoc}/${fileName}`),
+                installedAt: new Date().toISOString()
+            });
         }
     }
 
@@ -610,19 +642,30 @@ export class InstalledAreaTreeDataProvider implements vscode.TreeDataProvider<Tr
         const defaultDownload = normalizeSeparators(this.pathService.getDefaultDownloadLocation(this.area));
         areaLocsSet.add(defaultDownload);
 
-        // Determine the file pattern for this area
-        let filePattern: string;
+        // Determine the file pattern(s) for this area
+        const filePatterns: string[] = [];
         if (def.kind === 'multiFile' && def.definitionFile) {
-            filePattern = `**/${def.definitionFile}`;
-        } else {
-            filePattern = `**/*${def.fileSuffix}`;
+            filePatterns.push(`**/${def.definitionFile}`);
+            // Also watch alternate definition file paths (e.g. .cursor-plugin/plugin.json)
+            for (const alt of def.alternateDefinitionFiles ?? []) {
+                filePatterns.push(`**/${alt}`);
+            }
+        } else if (def.kind === 'singleFile') {
+            const suffixes = def.fileSuffixes && def.fileSuffixes.length > 0
+                ? def.fileSuffixes
+                : (def.fileSuffix ? [def.fileSuffix] : []);
+            for (const suffix of suffixes) {
+                filePatterns.push(`**/*${suffix}`);
+            }
         }
 
-        const watchers = createLocationWatchers(
-            [...areaLocsSet], this.pathService, filePattern,
-            () => this.onFileChanged()
-        );
-        this.activeWatchers.push(...watchers);
+        for (const filePattern of filePatterns) {
+            const watchers = createLocationWatchers(
+                [...areaLocsSet], this.pathService, filePattern,
+                () => this.onFileChanged()
+            );
+            this.activeWatchers.push(...watchers);
+        }
     }
 
     /**
