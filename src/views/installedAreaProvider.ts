@@ -275,12 +275,14 @@ export class InstalledAreaTreeDataProvider implements vscode.TreeDataProvider<Tr
 
     setSearchQuery(query: string): void {
         this.searchQuery = query.toLowerCase();
+        if (this.treeView) { this.treeView.description = query; }
         this._onDidChangeTreeData.fire();
         vscode.commands.executeCommand('setContext', `${this.viewId}:searchActive`, this.searchQuery.length > 0);
     }
 
     clearSearch(): void {
         this.searchQuery = '';
+        if (this.treeView) { this.treeView.description = ''; }
         this._onDidChangeTreeData.fire();
         vscode.commands.executeCommand('setContext', `${this.viewId}:searchActive`, false);
     }

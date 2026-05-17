@@ -50,6 +50,15 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - When a `.cursor-plugin/marketplace.json` is present, each plugin directory declared in it is added to the scoped fetch set automatically, so plugins are always discovered without requiring a full repo tree.
 - `fetchSkillFiles` (used when downloading multi-file items) now fetches only the subtree under the item's top-level directory rather than the full repo tree.
 
+## [0.2.3]
+
+### Changed
+
+- Search filter text is now displayed in the view title bar when a search is active, across all views (Marketplace, Skills, and area views).
+- Copy Absolute Path now uses native path separators (backslashes on Windows, forward slashes elsewhere).
+- Documentation updated to accurately describe the `chat.*` location setting formats and fallback behavior.
+- Added `.env*`, `.agents/**`, and `.github/**` to `.vscodeignore` to reduce extension package size.
+
 ## [0.2.2]
 
 ### Changed

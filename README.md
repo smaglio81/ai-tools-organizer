@@ -45,7 +45,7 @@ The extension scans conventional paths under your workspace and home directory, 
 
 **Plugin sync** — keep plugin subfolders (`/agents`, `/skills`, `/commands`, `/hooks`) in sync with your latest installed items. Use "Get latest copy" to pull updates into a plugin, or "Update Plugins" to push changes out to all plugins that contain a copy.
 
-**Flexible locations** — each area has its own configurable download location. Scans workspace folders and home directories automatically, including `.cursor`-based paths.
+**Flexible locations** — each area has its own configurable download location. Scans workspace folders and home directories automatically, including `.cursor`-based paths. Locations marked as disabled in your `chat.*` settings are skipped (the configured download location is always included regardless; falls back to defaults if no enabled paths remain).
 
 **Green check indicators** — items you've already downloaded show a green check in the Marketplace.
 
