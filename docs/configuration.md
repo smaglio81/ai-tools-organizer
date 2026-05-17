@@ -24,8 +24,6 @@ You can also change the download location from each view's toolbar using the fol
 
 Each area view checks its own `chat.*` setting for scan locations. These settings normally contain a map of paths to enabled/disabled values — paths set to `false` are skipped, and any other value is treated as enabled and scanned. For backward compatibility, legacy array values are also accepted and treated as an enabled list. If the setting isn't configured or has no enabled paths, a default list is generated from template prefixes.
 
-Location entries can be plain strings or objects with a `path` and `enabled` property. Locations with `enabled: false` are skipped during scanning — only enabled locations are checked for installed items.
-
 | Area | Setting checked |
 |---|---|
 | Agents | `chat.agentFilesLocations` |

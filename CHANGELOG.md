@@ -4,6 +4,14 @@ All notable changes to the "ai-tools-organizer" extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.2.3]
+
+### Changed
+
+- Search filter text is now displayed in the view title bar when a search is active, across all views (Marketplace, Skills, and area views).
+- Copy Absolute Path now uses native path separators (backslashes on Windows, forward slashes elsewhere).
+- Scan locations from `chat.*` settings now support the object-map format (`{ "path/1": true, "path/2": false }`) where paths set to `false` are excluded from scanning. Legacy string arrays are also supported for backward compatibility.
+
 ## [0.2.2]
 
 ### Changed
@@ -18,7 +26,6 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Description values surrounded by quotes (single or double) are now stripped, matching the existing behavior for skill names.
 - Skills view moved to second position (directly below Marketplace) in the sidebar.
 - On first install, only Marketplace and Skills views are expanded; all other area views start collapsed.
-- Scan locations from `chat.*` settings now respect the `enabled` property. Entries with `enabled: false` are excluded from scanning. Entries may be plain strings or objects with `path` and `enabled` properties; both formats are supported.
 
 ## [0.2.0]
 
