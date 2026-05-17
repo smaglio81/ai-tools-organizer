@@ -32,7 +32,7 @@ import { AzureDevOpsRepoTransport, notifyAzureDevOpsPatMissingIfNeeded } from '.
  * Fixed dot-tooling root directories that are always included in the interesting-prefix
  * allowlist when they appear at the repo root.
  */
-const DOT_TOOL_DIRS: ReadonlySet<string> = new Set(['.cursor', '.claude', '.cursor-plugin', '.github']);
+const DOT_TOOL_DIRS: ReadonlySet<string> = new Set(['.cursor', '.claude', '.cursor-plugin', '.github', '.kiro']);
 
 /**
  * Derive the set of conventional top-level directory names from AREA_DEFINITIONS.
