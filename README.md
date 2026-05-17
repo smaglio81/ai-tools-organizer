@@ -40,7 +40,7 @@ Each view shows what you have installed locally, grouped by location. The Market
 
 **Plugin sync** — keep plugin subfolders (`/agents`, `/skills`, `/commands`, `/hooks`) in sync with your latest installed items. Use "Get latest copy" to pull updates into a plugin, or "Update Plugins" to push changes out to all plugins that contain a copy.
 
-**Flexible locations** — each area has its own configurable download location. Scans workspace folders and home directories automatically. Locations marked as disabled in your `chat.*` settings are skipped.
+**Flexible locations** — each area has its own configurable download location. Scans workspace folders and home directories automatically. Locations marked as disabled in your `chat.*` settings are skipped (falls back to defaults if all are disabled).
 
 **Green check indicators** — items you've already downloaded show a green check in the Marketplace.
 
