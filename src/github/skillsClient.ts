@@ -339,15 +339,16 @@ export class GitHubSkillsClient {
         }
 
         // Filter to files under this skill's path
+        const skillPrefix = skill.skillPath ? skill.skillPath + '/' : '';
         const skillFiles = subtreeItems.filter(item =>
             item.type === 'blob' &&
-            item.path.startsWith(skill.skillPath + '/')
+            (skillPrefix ? item.path.startsWith(skillPrefix) : true)
         );
 
         // Fetch all file contents in parallel
         const files = await Promise.all(
             skillFiles.map(async (item) => {
-                const relativePath = item.path.substring(skill.skillPath.length + 1);
+                const relativePath = skillPrefix ? item.path.substring(skillPrefix.length) : item.path;
                 const content = await this.fetchRawContent(skill.source, item.path);
                 return { path: relativePath, content };
             })
@@ -663,7 +664,7 @@ export class GitHubSkillsClient {
                 const defFiles = tree.filter(item =>
                     item.type === 'blob' &&
                     item.path.startsWith(prefix) &&
-                    defCandidates.some(d => item.path.endsWith(`/${d}`)) &&
+                    defCandidates.some(d => item.path.endsWith(`/${d}`) || item.path === d) &&
                     !otherPrefixes.some(op => item.path.startsWith(op))
                 );
 

@@ -123,20 +123,22 @@ export class SkillPathService {
         const dirName = AREA_DIR_NAMES[area];
         const defaults = DEFAULT_LOCATION_PREFIXES.map(prefix => `${prefix}/${dirName}`);
 
-        // Append any Cursor-specific extra locations (deduped)
-        const extras = CURSOR_EXTRA_LOCATIONS[area];
-        if (extras) {
-            for (const extra of extras) {
-                if (!defaults.includes(extra)) {
-                    defaults.push(extra);
+        // Append any Cursor-specific extra locations (deduped) only when running in Cursor
+        if (this.isCursor()) {
+            const extras = CURSOR_EXTRA_LOCATIONS[area];
+            if (extras) {
+                for (const extra of extras) {
+                    if (!defaults.includes(extra)) {
+                        defaults.push(extra);
+                    }
                 }
             }
-        }
 
-        // Under ~/.cursor/plugins, real user plugins live in the `local` subdirectory.
-        // Treating `~/.cursor/plugins` as a scan root mis-classifies `local` as a plugin folder.
-        if (area === 'plugins') {
-            return defaults.filter(p => p !== '~/.cursor/plugins' && p !== '.cursor/plugins');
+            // Under ~/.cursor/plugins, real user plugins live in the `local` subdirectory.
+            // Treating `~/.cursor/plugins` as a scan root mis-classifies `local` as a plugin folder.
+            if (area === 'plugins') {
+                return defaults.filter(p => p !== '~/.cursor/plugins' && p !== '.cursor/plugins');
+            }
         }
 
         return defaults;
