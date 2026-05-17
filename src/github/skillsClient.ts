@@ -239,7 +239,7 @@ export class GitHubSkillsClient {
     async fetchSkillMetadataRaw(repo: SkillRepository, skillName: string, skillPath: string, area: ContentArea = 'skills'): Promise<Skill | null> {
         const def = AREA_DEFINITIONS[area];
         const defFile = def.definitionFile || 'SKILL.md';
-        const defFilePath = `${skillPath}/${defFile}`;
+        const defFilePath = skillPath ? `${skillPath}/${defFile}` : defFile;
 
         try {
             const content = await this.fetchRawContent(repo, defFilePath);

@@ -166,11 +166,13 @@ export class SkillPathService {
         }
 
         // Cursor-native areas use their own install roots rather than ~/.copilot
-        if (area === 'plugins') {
-            return '~/.cursor/plugins/local';
-        }
-        if (area === 'rules') {
-            return '~/.cursor/rules';
+        if (this.isCursor()) {
+            if (area === 'plugins') {
+                return '~/.cursor/plugins/local';
+            }
+            if (area === 'rules') {
+                return '~/.cursor/rules';
+            }
         }
 
         // Fallback: Cursor → ~/.cursor/{area}, others → ~/.copilot/{area}
@@ -210,9 +212,9 @@ export class SkillPathService {
         for (const area of ALL_CONTENT_AREAS) {
             if (area === 'hooksKiro') {
                 defaults[area] = '.kiro/hooks';
-            } else if (area === 'plugins') {
+            } else if (cursor && area === 'plugins') {
                 defaults[area] = '~/.cursor/plugins/local';
-            } else if (area === 'rules') {
+            } else if (cursor && area === 'rules') {
                 defaults[area] = '~/.cursor/rules';
             } else {
                 const dirName = AREA_DIR_NAMES[area];

@@ -167,6 +167,7 @@ export interface SkillRepository {
  * Branch from settings wins unless unset (then URL `version=GB` is used, else `main`).
  */
 export function resolveSkillRepositoryFromConfig(repo: SkillRepository): SkillRepository {
+    const rawBranch = repo.branch?.trim();
     const n = normalizeRepository(repo);
     const url = n.repositoryUrl?.trim();
     if (!url) {
@@ -181,7 +182,7 @@ export function resolveSkillRepositoryFromConfig(repo: SkillRepository): SkillRe
         owner: parsed.owner,
         project: parsed.project,
         repo: parsed.repo,
-        branch: n.branch || parsed.branch || 'main',
+        branch: rawBranch || parsed.branch || 'main',
     };
 }
 

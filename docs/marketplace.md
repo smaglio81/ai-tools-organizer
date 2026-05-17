@@ -39,11 +39,11 @@ To avoid loading the entire file tree of large repositories, the extension uses 
 
 1. **Root listing** — one non-recursive API call retrieves the top-level entries.
 2. **Targeted subtree fetches** — only directories that match a known allowlist are recursively fetched. The allowlist includes:
-   - Dot-tooling roots: `.cursor`, `.claude`, `.cursor-plugin`
+   - Dot-tooling roots: `.cursor`, `.claude`, `.cursor-plugin`, `.github`, `.kiro`
    - Conventional area directory names: `skills`, `agents`, `hooks`, `rules`, `instructions`, `plugins`, `prompts`
 3. **Marketplace augmentation** — if `.cursor-plugin/marketplace.json` is present, each declared plugin directory is also fetched.
 
-Directories such as `.github`, `node_modules`, `docs`, or any other unrecognised folder are **never** recursed into. This keeps loading fast even for large monorepos where only a small subset of the tree contains AI tools.
+Directories such as `node_modules`, `docs`, or any other unrecognised folder are **never** recursed into. This keeps loading fast even for large monorepos where only a small subset of the tree contains AI tools.
 
 ## Searching
 

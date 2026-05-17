@@ -2138,17 +2138,19 @@ export async function activate(context: vscode.ExtensionContext) {
 
             if (adoParsed) {
                 if (!getResolvedAzureDevOpsPat()) {
-                    void vscode.window.showErrorMessage(
-                        'Azure DevOps requires a Personal Access Token before this repository can be fetched. ' +
-                        'Set AIToolsOrganizer.azureDevOpsPat in User Settings, or set AZURE_DEVOPS_EXT_PAT in the environment and fully restart Cursor. ' +
-                        'Create the PAT in Azure DevOps with Code (read).',
-                        'Open PAT setting'
-                    ).then(choice => {
-                        if (choice === 'Open PAT setting') {
-                            void vscode.commands.executeCommand('workbench.action.openSettings', 'AIToolsOrganizer.azureDevOpsPat');
-                        }
-                    });
-                    return;
+                    const choice = await vscode.window.showWarningMessage(
+                        'No Azure DevOps Personal Access Token configured. Public projects may work without one, but private projects require a PAT. ' +
+                        'Set AIToolsOrganizer.azureDevOpsPat in User Settings, or set AZURE_DEVOPS_EXT_PAT in the environment.',
+                        'Open PAT setting',
+                        'Continue anyway'
+                    );
+                    if (choice === 'Open PAT setting') {
+                        void vscode.commands.executeCommand('workbench.action.openSettings', 'AIToolsOrganizer.azureDevOpsPat');
+                        return;
+                    }
+                    if (choice !== 'Continue anyway') {
+                        return;
+                    }
                 }
                 // Build a temporary repo object for the ADO client call
                 const tempRepo: SkillRepository = {

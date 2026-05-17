@@ -67,7 +67,20 @@ export function notifyAzureDevOpsPatMissingIfNeeded(repositories: SkillRepositor
 }
 
 export class AzureDevOpsRepoTransport implements RepoTransport {
+    private authErrorShown = new Set<string>();
     constructor(private readonly cache: Map<string, CacheEntry<unknown>>) {}
+
+    /** Show auth error once per repo per session. */
+    private showAuthError(repo: SkillRepository, status: number): void {
+        if (!getResolvedAzureDevOpsPat()) { return; }
+        const repoKey = `${repo.owner}/${repo.project}/${repo.repo}`;
+        if (this.authErrorShown.has(repoKey)) { return; }
+        this.authErrorShown.add(repoKey);
+        vscode.window.showErrorMessage(
+            `Azure DevOps authentication failed for ${repoKey} (${status}). ` +
+            'Verify your PAT has Code (read) scope, or try a new token in AIToolsOrganizer.azureDevOpsPat / AZURE_DEVOPS_EXT_PAT.'
+        );
+    }
 
     /**
      * Fetch only the immediate children of the repository root (one level deep).
@@ -92,12 +105,7 @@ export class AzureDevOpsRepoTransport implements RepoTransport {
 
         if (!response.ok) {
             if (response.status === 401 || response.status === 403) {
-                if (getResolvedAzureDevOpsPat()) {
-                    vscode.window.showErrorMessage(
-                        `Azure DevOps authentication failed (${response.status}). ` +
-                        'Verify your PAT has Code (read) scope, or try a new token in AIToolsOrganizer.azureDevOpsPat / AZURE_DEVOPS_EXT_PAT.'
-                    );
-                }
+                this.showAuthError(repo, response.status);
             }
             if (response.status === 404) {
                 throw new Error(`Azure DevOps repository or branch not found: ${repo.owner}/${repo.project}/${repo.repo}@${branch}`);
@@ -138,12 +146,7 @@ export class AzureDevOpsRepoTransport implements RepoTransport {
                 return [];
             }
             if (response.status === 401 || response.status === 403) {
-                if (getResolvedAzureDevOpsPat()) {
-                    vscode.window.showErrorMessage(
-                        `Azure DevOps authentication failed (${response.status}). ` +
-                        'Verify your PAT has Code (read) scope, or try a new token in AIToolsOrganizer.azureDevOpsPat / AZURE_DEVOPS_EXT_PAT.'
-                    );
-                }
+                this.showAuthError(repo, response.status);
             }
             throw new Error(`Azure DevOps API error fetching subtree ${prefixPath}: ${response.status} ${response.statusText}`);
         }
@@ -192,12 +195,7 @@ export class AzureDevOpsRepoTransport implements RepoTransport {
 
         if (!response.ok) {
             if (response.status === 401 || response.status === 403) {
-                if (getResolvedAzureDevOpsPat()) {
-                    vscode.window.showErrorMessage(
-                        `Azure DevOps authentication failed (${response.status}). ` +
-                        'Verify your PAT has Code (read) scope, or try a new token in AIToolsOrganizer.azureDevOpsPat / AZURE_DEVOPS_EXT_PAT.'
-                    );
-                }
+                this.showAuthError(repo, response.status);
             }
             throw new Error(`Failed to fetch file from Azure DevOps: ${response.status}`);
         }
