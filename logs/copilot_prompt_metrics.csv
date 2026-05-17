@@ -9,3 +9,9 @@ datetime,summary_lt_10_words,wall_clock_time,premium_usage,estimated_human_time,
 2026-05-17 10:02:53,Use versioned VSIX filename in workflow,00:02:30,unknown,00:10:00,GPT-5.3-Codex
 2026-05-17 10:06:08,Gate publish by commit message version,00:03:30,unknown,00:12:00,GPT-5.3-Codex
 2026-05-17 10:08:37,Create v0.3.3 tag and release,00:03:00,unknown,00:08:00,GPT-5.3-Codex
+2026-05-17 10:22:19,Fix release step when tag exists,00:02:30,unknown,00:10:00,GPT-5.3-Codex
+2026-05-17 10:23:46,Explain whether two commits share tag,00:01:00,unknown,00:03:00,GPT-5.3-Codex
+2026-05-17 10:26:42,Explain protected branch commit warning,00:01:30,unknown,00:05:00,GPT-5.3-Codex
+2026-05-17 10:29:33,Check matching GitHub branch protection rule,00:02:00,unknown,00:06:00,GPT-5.3-Codex
+2026-05-17 10:30:39,Why protected warning appears now,00:02:30,unknown,00:08:00,GPT-5.3-Codex
+2026-05-17 10:31:57,Purpose of protected branch warning,00:01:00,unknown,00:03:00,GPT-5.3-Codex

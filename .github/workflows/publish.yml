@@ -83,21 +83,11 @@ jobs:
           registryUrl: https://open-vsx.org
           extensionFile: ai-tools-organizer-v${{ steps.pkg.outputs.version }}.vsix
 
-      - name: Check whether tag exists
-        id: tagcheck
-        run: |
-          tag="v${{ steps.pkg.outputs.version }}"
-          if git ls-remote --exit-code --tags origin "$tag" >/dev/null 2>&1; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Create GitHub release and upload VSIX
-        if: steps.tagcheck.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.pkg.outputs.version }}
           name: v${{ steps.pkg.outputs.version }}
           generate_release_notes: true
+          overwrite_files: true
           files: ai-tools-organizer-v${{ steps.pkg.outputs.version }}.vsix
