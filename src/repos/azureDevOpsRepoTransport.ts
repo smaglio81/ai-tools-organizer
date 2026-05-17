@@ -48,11 +48,14 @@ export function getResolvedAzureDevOpsPat(): string {
 /**
  * When any configured repo is Azure DevOps and no PAT is available, show one actionable error.
  * (Still allows fetch to proceed for anonymously readable projects.)
+ * Only shown once per session to avoid repeated popups on refresh.
  */
+let patMissingNotified = false;
 export function notifyAzureDevOpsPatMissingIfNeeded(repositories: SkillRepository[]): void {
-    if (!repositories.length || !repositories.some(r => isAdoRepository(r)) || getResolvedAzureDevOpsPat()) {
+    if (patMissingNotified || !repositories.length || !repositories.some(r => isAdoRepository(r)) || getResolvedAzureDevOpsPat()) {
         return;
     }
+    patMissingNotified = true;
     void vscode.window.showErrorMessage(
         'Azure DevOps marketplace sources need a Personal Access Token, but none is configured. ' +
         'Set AIToolsOrganizer.azureDevOpsPat in User Settings (PATs are stored with application scope), ' +

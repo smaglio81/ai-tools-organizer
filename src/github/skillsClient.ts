@@ -686,7 +686,7 @@ export class GitHubSkillsClient {
                                 skill.skillPath = itemDir;
                                 if (!skill.bodyContent && defParentDir !== itemDir) {
                                     try {
-                                        const readmePath = `${itemDir}/README.md`;
+                                        const readmePath = itemDir ? `${itemDir}/README.md` : 'README.md';
                                         const readmeContent = await this.fetchRawContent(repo, readmePath);
                                         const readmeParsed = this.parseSkillMd(readmeContent);
                                         skill.bodyContent = readmeParsed.body || readmeContent;
