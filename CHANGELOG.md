@@ -6,6 +6,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [0.3.2]
 
+> Contributed by [@smhc](https://github.com/smhc) via [PR #19](https://github.com/smaglio81/ai-tools-organizer/pull/19).
+
 ### Added
 
 - **`repositoryUrl` on marketplace sources**: Adding a repository from a URL now stores a canonical `repositoryUrl` (credentials stripped). Settings and docs describe how it is used for Azure DevOps detection.
@@ -24,6 +26,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [0.3.1]
 
+> Contributed by [@smhc](https://github.com/smhc) via [PR #19](https://github.com/smaglio81/ai-tools-organizer/pull/19).
+
 ### Added
 
 - **Cursor default install paths**: When the extension runs in Cursor (`vscode.env.appName`), per-area download defaults and first-time `AIToolsOrganizer.installLocations` seeding (only when that setting is still empty) now use `~/.cursor/<area>` (with existing exceptions for plugins at `~/.cursor/plugins/local` and rules at `~/.cursor/rules`) instead of `~/.copilot/...`. Other hosts keep the `~/.copilot/...` defaults.
@@ -35,6 +39,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - **Marketplace fetch logs (Azure DevOps)**: `GitHubSkillsClient` fetch failures and subtree warnings now log `formatRepoLabel(repo)` (for example `org/project/repo` on Azure DevOps) instead of a GitHub-style `owner/repo` string that omitted the project segment.
 
 ## [0.3.0]
+
+> Contributed by [@smhc](https://github.com/smhc) via [PR #19](https://github.com/smaglio81/ai-tools-organizer/pull/19).
 
 ### Added
 
