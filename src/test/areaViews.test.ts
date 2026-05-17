@@ -280,6 +280,9 @@ suite('Area Views Test Suite', () => {
                 override getDefaultDownloadLocation(_a: ContentArea): string {
                     return '~/.cursor/plugins/local';
                 }
+                protected override isCursor(): boolean {
+                    return true;
+                }
             }
             return new CursorPluginsPathService();
         }

@@ -664,7 +664,7 @@ export class GitHubSkillsClient {
                 const defFiles = tree.filter(item =>
                     item.type === 'blob' &&
                     item.path.startsWith(prefix) &&
-                    defCandidates.some(d => item.path.endsWith(`/${d}`) || item.path === d) &&
+                    defCandidates.some(d => item.path.endsWith(`/${d}`) || (prefix && item.path === `${prefix}${d}`)) &&
                     !otherPrefixes.some(op => item.path.startsWith(op))
                 );
 

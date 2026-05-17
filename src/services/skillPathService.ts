@@ -147,7 +147,7 @@ export class SkillPathService {
     /**
      * Returns true when the extension is running inside Cursor.
      */
-    private isCursor(): boolean {
+    protected isCursor(): boolean {
         return vscode.env.appName === 'Cursor';
     }
 

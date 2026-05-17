@@ -710,6 +710,10 @@ suite('Extension Test Suite', () => {
 				return '/home/user';
 			}
 
+			protected override isCursor(): boolean {
+				return true;
+			}
+
 			override getWorkspaceFolder(): vscode.WorkspaceFolder | undefined {
 				return {
 					uri: vscode.Uri.file('/workspace'),
