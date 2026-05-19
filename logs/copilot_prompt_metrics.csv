@@ -17,3 +17,4 @@ datetime,summary_lt_10_words,wall_clock_time,premium_usage,estimated_human_time,
 2026-05-17 10:29:33,Check matching GitHub branch protection rule,00:02:00,unknown,00:06:00,GPT-5.3-Codex
 2026-05-17 10:30:39,Why protected warning appears now,00:02:30,unknown,00:08:00,GPT-5.3-Codex
 2026-05-17 10:31:57,Purpose of protected branch warning,00:01:00,unknown,00:03:00,GPT-5.3-Codex
+2026-05-18 00:20:00,Update changelog and docs for v0.3.4,00:06:00,unknown,00:20:00,GPT-5.3-Codex

@@ -4,6 +4,16 @@ All notable changes to the "ai-tools-organizer" extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.3.4]
+
+### Fixed
+
+- Improved delete reliability for installed items on Windows, especially when tools are installed through linked folders. Delete actions now still complete even when the system trash/recycle-bin handoff is unavailable.
+
+### Changed
+
+- Consolidated delete behavior across Skills and area views so item, file, folder, move/copy overwrite, and delete-all actions follow the same consistent delete flow.
+
 ## [0.3.3]
 
 ### Fixed

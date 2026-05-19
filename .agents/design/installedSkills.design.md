@@ -110,14 +110,14 @@ All actions appear in the `AIToolsOrganizer.skills` view title bar.
 | Rename | `AIToolsOrganizer.renameItem` | Always | Prompts for a new name, renames the skill folder on disk, and updates the `name` field in `SKILL.md` frontmatter. |
 | Update older skill copies with latest | `AIToolsOrganizer.syncSkill` | Newest (green) only | Copies this skill to all other locations that have an older copy. |
 | Get latest copy of skill | `AIToolsOrganizer.getLatestSkill` | Older (orange) only | Replaces this copy with the newest version from another location. |
-| Delete | `AIToolsOrganizer.uninstall` | Always | Deletes the skill folder (moved to trash, no confirmation prompt). |
+| Delete | `AIToolsOrganizer.uninstall` | Always | Deletes the skill folder. The extension tries trash first and falls back to direct delete when trash is unavailable. |
 | Show in Marketplace | `AIToolsOrganizer.showInMarketplace` | Always | Reveals and highlights the matching skill in the Marketplace tree view. |
 
 ### InstalledSkillTreeItem Inline Buttons
 
 | Button | Command | Description |
 |---|---|---|
-| Delete (trash icon) | `AIToolsOrganizer.uninstall` | Deletes the skill folder immediately (moved to trash, no confirmation prompt). |
+| Delete (trash icon) | `AIToolsOrganizer.uninstall` | Deletes the skill folder immediately. The extension tries trash first and falls back to direct delete when trash is unavailable. |
 | Open Skill Folder (folder-opened icon) | `AIToolsOrganizer.openSkillFolder` | Reveals the skill folder in the Explorer and opens `SKILL.md` in the editor. |
 
 ### LocationTreeItem Right-Click Context Menu
@@ -125,7 +125,7 @@ All actions appear in the `AIToolsOrganizer.skills` view title bar.
 | Menu Item | Command | Description |
 |---|---|---|
 | Add Skill | `AIToolsOrganizer.newSkillAtLocation` | Prompts for a name and creates a new skill folder with `SKILL.md` scaffolding at this location. |
-| Delete | `AIToolsOrganizer.deleteAllSkills` | Deletes all skills under this location folder (moved to trash). |
+| Delete | `AIToolsOrganizer.deleteAllSkills` | Deletes all skills under this location folder. The extension tries trash first and falls back to direct delete when trash is unavailable. |
 | Reveal in File Explorer | `AIToolsOrganizer.revealInFileExplorer` | Opens the location folder in the system file explorer. |
 
 ### SkillFolderTreeItem Right-Click Context Menu
@@ -137,7 +137,7 @@ All actions appear in the `AIToolsOrganizer.skills` view title bar.
 | Copy #{path} | `AIToolsOrganizer.copyItemPath` | Copies a chat-ready path reference for the folder to the clipboard. |
 | Copy Absolute Path | `AIToolsOrganizer.copyAbsolutePath` | Copies the fully resolved filesystem path for the folder to the clipboard. |
 | Reveal in File Explorer | `AIToolsOrganizer.revealInFileExplorer` | Opens the subfolder in the system file explorer. |
-| Delete | `AIToolsOrganizer.deleteSkillFolder` | Deletes the folder and its contents (moved to trash). |
+| Delete | `AIToolsOrganizer.deleteSkillFolder` | Deletes the folder and its contents. The extension tries trash first and falls back to direct delete when trash is unavailable. |
 
 ### SkillFileTreeItem Right-Click Context Menu
 
@@ -147,7 +147,7 @@ All actions appear in the `AIToolsOrganizer.skills` view title bar.
 | Copy Absolute Path | `AIToolsOrganizer.copyAbsolutePath` | Copies the fully resolved filesystem path for the file to the clipboard. |
 | Rename | `AIToolsOrganizer.renameFile` | Prompts for a new file name and renames the file. |
 | Reveal in File Explorer | `AIToolsOrganizer.revealInFileExplorer` | Opens the file's location in the system file explorer. |
-| Delete | `AIToolsOrganizer.deleteSkillFile` | Deletes the file (moved to trash). |
+| Delete | `AIToolsOrganizer.deleteSkillFile` | Deletes the file. The extension tries trash first and falls back to direct delete when trash is unavailable. |
 
 ---
 
