@@ -64,7 +64,10 @@ jobs:
 
       - name: Read package version
         id: pkg
-        run: echo "version=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
+        shell: bash
+        run: |
+          version="$(node -p 'require("./package.json").version')"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Package VSIX
         run: npx vsce package -o ai-tools-organizer-v${{ steps.pkg.outputs.version }}.vsix
