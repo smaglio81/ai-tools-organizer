@@ -12,5 +12,7 @@
   * Rename the branch if needed.
   * Update the origin with the rename if needed.
 
+* Perform actions from docs.prompt.md
+
 * Commit the latest changes with the summary.
 * Push the latest commits to origin.
