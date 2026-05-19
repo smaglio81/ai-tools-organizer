@@ -29,6 +29,9 @@ metadata:
 * Create a Pull Request between the version branch and `main`.
   * Use CHANGELOG.md to create a Pull Request summary.
 
+* Once the Pull Request is created, the Copilot Reviewer should automatically review the PR.
+  * Can you use the review-with-copilot skill to wait for the Copilot review to complete and the follow the skills instructions.
+
 ## Output
 
 The output should include a link to the PR

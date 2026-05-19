@@ -63,7 +63,7 @@ Editing a file automatically triggers re-comparison. File watchers cover both wo
 | Get latest copy | Older (orange) items only | Replaces this copy with the newest version from another location |
 | Show in Marketplace | Items | Reveals and highlights the matching item in the Marketplace tree |
 | Reveal in File Explorer | Everything | Opens the item's location in the system file explorer |
-| Delete | Items, files, folders | Removes the item (moved to trash) |
+| Delete | Items, files, folders | Removes the item. The extension sends it to trash when available, and still removes it if the OS trash flow is unavailable. |
 | Add File | Multi-file items and subfolders | Creates a new empty file and opens it in the editor |
 | Add Folder | Multi-file items and subfolders | Creates a new subfolder |
 | Rename | Files inside items | Renames the file |

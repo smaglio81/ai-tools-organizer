@@ -110,8 +110,11 @@ The Skills view uses its own dedicated `InstalledSkillsTreeDataProvider` with ad
 |---|---|
 | `GitHubSkillsClient` | Fetches content from GitHub. Uses Git Trees API for efficiency; `raw.githubusercontent.com` for file content (no rate limit). Discovers content areas via `discoverAreas()`. Fetches all area content via `fetchRepoContent()`. Parses `plugin.json`/`hooks.json` as JSON and markdown files via YAML frontmatter. YAML parser handles block scalar indicators (`>`, `|`, `>-`, `|-`) for multiline values and strips surrounding quotes from description values. For JSON-based areas, also fetches `README.md` for detail panel body content. Caches results per `AIToolsOrganizer.cacheTimeout`. |
 | `SkillPathService` | Resolves location strings (including `~` home paths) to `vscode.Uri` values. Provides scan locations, per-area default download locations (`getDefaultDownloadLocation(area)`), and install target resolution. Manages `AIToolsOrganizer.installLocations` config (read, write, ensure defaults on activation). |
-| `SkillInstallationService` | Downloads, deletes, moves, copies, syncs skills. Uses area-specific download locations based on `skill.area`. Handles overwrite confirmation, progress notifications, and trash-based deletion. |
+| `SkillInstallationService` | Downloads, deletes, moves, copies, syncs skills. Uses area-specific download locations based on `skill.area`. Handles overwrite confirmation, progress notifications, and resilient deletion via shared trash-first fallback behavior. |
 | `PluginSyncService` | Handles "Get latest copy" and "Copy to area" operations for plugin subfolders. Maps plugin subfolder names to content areas (`agents→agents`, `skills→skills`, `commands→prompts`, `hooks→hooksGithub`). Provides `syncPluginItem()` with `SyncResult` including failure reasons. Also used by "Update Plugins" to push item changes to all plugins containing a copy. |
+
+Shared filesystem helper:
+- `deleteWithTrashFallback` (`src/fsUtils.ts`) centralizes delete operations used by extension commands and services. It attempts `useTrash: true` first, then retries with permanent delete when trash handoff fails.
 
 ---
 
