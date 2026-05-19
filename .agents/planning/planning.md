@@ -276,3 +276,4 @@ Currently, Skills has a view.
 * Area Items should have a right-click option for `Duplicate`
   * This option should create a copy of the item (and all it's files) with a new name
   * This option should be in the same group and below `Copy Name`
+
