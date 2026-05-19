@@ -15,6 +15,7 @@ import { Skill, InstalledSkill, SkillRepository, isSameRepository, normalizeSepa
 import { parseAzureDevOpsGitUrl, stripGitCredentialPrefix } from './git/azureDevOpsUrl';
 import { getResolvedAzureDevOpsPat } from './repos/azureDevOpsRepoTransport';
 import { PLUGIN_SUBFOLDER_TO_AREA, PLUGIN_AREA_SUBFOLDERS, AREA_TO_PLUGIN_SUBFOLDER, resolveInstalledItemUri, syncPluginItem } from './services/pluginSyncService';
+import { deleteWithTrashFallback } from './fsUtils';
 
 /**
  * Validate a file or folder name: non-empty, no path separators, no traversal.
@@ -380,7 +381,7 @@ export async function activate(context: vscode.ExtensionContext) {
             await vscode.workspace.fs.createDirectory(targetDir);
             await vscode.workspace.fs.copy(item.itemUri, targetUri, { overwrite: false });
             if (mode === 'move') {
-                await vscode.workspace.fs.delete(item.itemUri, { recursive: true, useTrash: true });
+                await deleteWithTrashFallback(item.itemUri, { recursive: true });
             }
             vscode.window.showInformationMessage(`Successfully ${mode === 'move' ? 'moved' : 'copied'} "${item.installedItem.name}"`);
             await syncInstalledStatus();
@@ -446,7 +447,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 const targetUri = vscode.Uri.joinPath(targetDir, itemName);
                 await vscode.workspace.fs.copy(sourceUri, targetUri, { overwrite: false });
                 if (mode === 'move') {
-                    await vscode.workspace.fs.delete(sourceUri, { recursive: true, useTrash: true });
+                    await deleteWithTrashFallback(sourceUri, { recursive: true });
                 }
             }
             vscode.window.showInformationMessage(`Successfully ${mode === 'move' ? 'moved' : 'copied'} ${locationItem.items.length} item(s)`);
@@ -494,7 +495,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 const targetUri = vscode.Uri.joinPath(targetDir, skillName);
                 await vscode.workspace.fs.copy(sourceUri, targetUri, { overwrite: false });
                 if (mode === 'move') {
-                    await vscode.workspace.fs.delete(sourceUri, { recursive: true, useTrash: true });
+                    await deleteWithTrashFallback(sourceUri, { recursive: true });
                 }
             }
             vscode.window.showInformationMessage(`Successfully ${mode === 'move' ? 'moved' : 'copied'} ${locationItem.skills.length} skill(s)`);
@@ -1074,9 +1075,9 @@ export async function activate(context: vscode.ExtensionContext) {
             if (item instanceof AreaInstalledItemTreeItem) {
                 try {
                     if (item.isSingleFile) {
-                        await vscode.workspace.fs.delete(item.itemUri, { useTrash: true });
+                        await deleteWithTrashFallback(item.itemUri);
                     } else {
-                        await vscode.workspace.fs.delete(item.itemUri, { recursive: true, useTrash: true });
+                        await deleteWithTrashFallback(item.itemUri, { recursive: true });
                     }
                     vscode.window.showInformationMessage(`Successfully deleted "${item.installedItem.name}"`);
                     await syncInstalledStatus();
@@ -1219,7 +1220,7 @@ export async function activate(context: vscode.ExtensionContext) {
         // Delete a file inside a skill or area folder (moved to trash)
         vscode.commands.registerCommand('AIToolsOrganizer.deleteSkillFile', async (item: SkillFileTreeItem | AreaItemFileTreeItem) => {
             const fileUri = item instanceof SkillFileTreeItem ? item.fileUri : item.fileUri;
-            await vscode.workspace.fs.delete(fileUri, { useTrash: true });
+            await deleteWithTrashFallback(fileUri);
             if (item instanceof SkillFileTreeItem) {
                 await installedProvider.refresh();
             } else {
@@ -1230,7 +1231,7 @@ export async function activate(context: vscode.ExtensionContext) {
         // Delete a subfolder inside a skill or area folder (moved to trash)
         vscode.commands.registerCommand('AIToolsOrganizer.deleteSkillFolder', async (item: SkillFolderTreeItem | AreaItemFolderTreeItem) => {
             const folderUri = item instanceof SkillFolderTreeItem ? item.folderUri : item.folderUri;
-            await vscode.workspace.fs.delete(folderUri, { recursive: true, useTrash: true });
+            await deleteWithTrashFallback(folderUri, { recursive: true });
             if (item instanceof SkillFolderTreeItem) {
                 await installedProvider.refresh();
             } else {
@@ -1527,7 +1528,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     'Overwrite'
                 );
                 if (overwrite !== 'Overwrite') { return; }
-                await vscode.workspace.fs.delete(targetUri, { recursive: true, useTrash: true });
+                await deleteWithTrashFallback(targetUri, { recursive: true });
             } catch { /* doesn't exist, continue */ }
 
             try {
@@ -1597,7 +1598,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 }
 
                 try {
-                    await vscode.workspace.fs.delete(targetUri, { recursive: true, useTrash: true });
+                    await deleteWithTrashFallback(targetUri, { recursive: true });
                     await vscode.workspace.fs.copy(sourceUri, targetUri, { overwrite: true });
                     updatedCount++;
                     results.push({ pluginName: plugin.name, updated: true });
@@ -1845,7 +1846,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     'Overwrite'
                 );
                 if (overwrite !== 'Overwrite') { return; }
-                await vscode.workspace.fs.delete(targetUri, { recursive: true, useTrash: true });
+                await deleteWithTrashFallback(targetUri, { recursive: true });
             } catch { /* doesn't exist */ }
 
             try {
@@ -1880,7 +1881,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     const targetUri = pathService.resolveLocationToUri(targetLoc, targetWf);
                     if (!targetUri) { continue; }
                     try {
-                        await vscode.workspace.fs.delete(targetUri, { recursive: true, useTrash: true });
+                        await deleteWithTrashFallback(targetUri, { recursive: true });
                         await vscode.workspace.fs.copy(item.itemUri, targetUri, { overwrite: true });
                         synced++;
                     } catch { /* skip */ }
@@ -1916,7 +1917,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 const newestUri = pathService.resolveLocationToUri(newestLoc, newestWf);
                 if (!newestUri) { return; }
                 try {
-                    await vscode.workspace.fs.delete(item.itemUri, { recursive: true, useTrash: true });
+                    await deleteWithTrashFallback(item.itemUri, { recursive: true });
                     await vscode.workspace.fs.copy(newestUri, item.itemUri, { overwrite: true });
                     vscode.window.showInformationMessage(`Updated "${item.installedItem.name}" from latest copy.`);
                     await syncInstalledStatus();
@@ -1949,7 +1950,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     if (parentUri) {
                         const itemUri = vscode.Uri.joinPath(parentUri, itemName);
                         try {
-                            await vscode.workspace.fs.delete(itemUri, { recursive: true, useTrash: true });
+                            await deleteWithTrashFallback(itemUri, { recursive: true });
                         } catch { /* ignore */ }
                     }
                 }

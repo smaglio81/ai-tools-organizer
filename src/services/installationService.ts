@@ -6,6 +6,7 @@ import * as vscode from 'vscode';
 import { Skill, InstalledSkill, normalizeSeparators, buildRepoWebUrl } from '../types';
 import { GitHubSkillsClient } from '../github/skillsClient';
 import { SkillPathService } from './skillPathService';
+import { deleteWithTrashFallback } from '../fsUtils';
 
 export class SkillInstallationService {
     constructor(
@@ -47,7 +48,7 @@ export class SkillInstallationService {
                 return false;
             }
             // Delete existing
-            await vscode.workspace.fs.delete(targetDir, { recursive: true, useTrash: true });
+            await deleteWithTrashFallback(targetDir, { recursive: true });
         } catch {
             // Not installed, continue
         }
@@ -145,7 +146,7 @@ export class SkillInstallationService {
                 return false;
             }
 
-            await vscode.workspace.fs.delete(skillDir, { recursive: true, useTrash: true });
+            await deleteWithTrashFallback(skillDir, { recursive: true });
             vscode.window.showInformationMessage(`Successfully uninstalled skill "${skill.name}"`);
             return true;
         } catch (error) {
@@ -226,7 +227,7 @@ export class SkillInstallationService {
             if (overwrite !== 'Overwrite') {
                 return false;
             }
-            await vscode.workspace.fs.delete(targetDir, { recursive: true, useTrash: true });
+            await deleteWithTrashFallback(targetDir, { recursive: true });
         } catch {
             // Doesn't exist at target, continue
         }
@@ -242,7 +243,7 @@ export class SkillInstallationService {
 
             // Copy source to target, then delete source (move)
             await vscode.workspace.fs.copy(sourceDir, targetDir, { overwrite: true });
-            await vscode.workspace.fs.delete(sourceDir, { recursive: true, useTrash: true });
+            await deleteWithTrashFallback(sourceDir, { recursive: true });
 
             vscode.window.showInformationMessage(`Moved "${skill.name}" to ${targetLocation}`);
             return true;
@@ -312,7 +313,7 @@ export class SkillInstallationService {
             if (overwrite !== 'Overwrite') {
                 return false;
             }
-            await vscode.workspace.fs.delete(targetDir, { recursive: true, useTrash: true });
+            await deleteWithTrashFallback(targetDir, { recursive: true });
         } catch {
             // Doesn't exist at target, continue
         }
@@ -370,7 +371,7 @@ export class SkillInstallationService {
             }
 
             try {
-                await vscode.workspace.fs.delete(targetDir, { recursive: true, useTrash: true });
+                await deleteWithTrashFallback(targetDir, { recursive: true });
                 await vscode.workspace.fs.copy(sourceDir, targetDir, { overwrite: true });
                 synced++;
             } catch (error) {
@@ -406,7 +407,7 @@ export class SkillInstallationService {
         }
 
         try {
-            await vscode.workspace.fs.delete(targetDir, { recursive: true, useTrash: true });
+            await deleteWithTrashFallback(targetDir, { recursive: true });
             await vscode.workspace.fs.copy(sourceDir, targetDir, { overwrite: true });
             vscode.window.showInformationMessage(`Updated "${targetSkill.name}" from latest copy.`);
             return true;
@@ -430,7 +431,7 @@ export class SkillInstallationService {
             }
 
             try {
-                await vscode.workspace.fs.delete(skillDir, { recursive: true, useTrash: true });
+                await deleteWithTrashFallback(skillDir, { recursive: true });
                 deleted++;
             } catch (error) {
                 const message = error instanceof Error ? error.message : String(error);

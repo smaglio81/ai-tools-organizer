@@ -3,6 +3,8 @@ datetime,summary_lt_10_words,wall_clock_time,premium_usage,estimated_human_time,
 2026-05-16 18:39:09,"Find mouse combo mapping line",00:06:00,unknown,00:12:00,GPT-5.3-Codex
 2026-05-16 18:40:42,"Decode mouse profile keycodes",00:03:30,unknown,00:15:00,GPT-5.3-Codex
 2026-05-17 09:46:49,Add post-publish tag and release,00:04:30,unknown,00:20:00,GPT-5.3-Codex
+2026-05-18 00:00:00,Debug skill delete symlink error,00:02:00,1,00:15:00,Claude Sonnet 4.6
+2026-05-18 00:05:00,Consolidate delete with trash fallback,00:04:00,1,00:25:00,Claude Sonnet 4.6
 2026-05-17 09:54:24,Explain workflow_dispatch vs push trigger,00:02:30,unknown,00:08:00,GPT-5.3-Codex
 2026-05-17 09:58:48,Versioned VSIX filename compatibility check,00:03:00,unknown,00:10:00,GPT-5.3-Codex
 2026-05-17 10:01:45,Define extensionFile in publish action,00:01:30,unknown,00:03:00,GPT-5.3-Codex

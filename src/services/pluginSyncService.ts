@@ -13,6 +13,7 @@
 
 import * as vscode from 'vscode';
 import { InstalledSkill, normalizeSeparators, ContentArea } from '../types';
+import { deleteWithTrashFallback } from '../fsUtils';
 
 /** Maps plugin subfolder names to their source content area */
 export const PLUGIN_SUBFOLDER_TO_AREA: Record<string, ContentArea> = {
@@ -78,7 +79,7 @@ export async function syncPluginItem(
     try {
         // Delete the old copy and replace with the latest
         try {
-            await vscode.workspace.fs.delete(itemUri, { recursive: true, useTrash: true });
+            await deleteWithTrashFallback(itemUri, { recursive: true });
         } catch { /* didn't exist */ }
         await vscode.workspace.fs.copy(sourceUri, itemUri, { overwrite: true });
         return { updated: true };
