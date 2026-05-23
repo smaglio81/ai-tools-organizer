@@ -4,6 +4,8 @@
 
 The Marketplace view (`AIToolsOrganizer.marketplace`) lets users browse content from configured GitHub repositories across multiple content areas (agents, hooks, instructions, plugins, prompts, skills), search by name or description, view details, and download items.
 
+The view starts **collapsed** on first install (visibility: collapsed) so the Skills view is the first panel users see. `github/awesome-copilot` is the default configured repository (`AIToolsOrganizer.skillRepositories`) so content loads automatically without manual setup.
+
 ---
 
 ## Content Areas

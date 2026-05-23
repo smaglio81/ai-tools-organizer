@@ -4,6 +4,16 @@ All notable changes to the "ai-tools-organizer" extension will be documented in 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.3.5]
+
+### Fixed
+
+- New installs no longer show an empty Marketplace. `github/awesome-copilot` is now the default value for `AIToolsOrganizer.skillRepositories` so the Marketplace populates immediately without any manual configuration.
+
+### Changed
+
+- The Marketplace view now starts **collapsed** on first install so the Skills view is the first panel the user sees.
+
 ## [0.3.4]
 
 ### Fixed

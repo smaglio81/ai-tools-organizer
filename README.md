@@ -26,8 +26,9 @@ The extension scans conventional paths under your workspace and home directory, 
 
 1. Install the extension from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=smaglio81.agent-organizer) (works in Cursor as well)
 2. Open the **AI Tools Organizer** panel in the Activity Bar
-3. Browse the Marketplace and click the download button on any item
-4. Your downloaded items appear in the corresponding area view
+3. Expand the **Marketplace** view — `github/awesome-copilot` is pre-configured so content loads automatically
+4. Browse and click the download button on any item
+5. Your downloaded items appear in the corresponding area view
 
 ## Key features
 
