@@ -376,11 +376,6 @@ export class SkillInstallationService {
             }
         }
 
-        if (synced > 0) {
-            vscode.window.showInformationMessage(
-                `Synchronized "${skill.name}" to ${synced} location${synced !== 1 ? 's' : ''}.`
-            );
-        }
         return synced > 0;
     }
 

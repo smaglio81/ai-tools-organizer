@@ -1702,9 +1702,6 @@ export async function activate(context: vscode.ExtensionContext) {
             } catch { /* can't read folder */ }
 
             const areaLabel = AREA_DEFINITIONS[area].label;
-            if (results.length > 0 && results.every(r => !r.updated)) {
-                vscode.window.showWarningMessage(`${areaLabel}: All sync attempts failed. No items were updated.`);
-            }
             await showSyncResults(
                 `Get Latest — ${areaLabel}`,
                 results.map(r => ({ label: r.name, updated: r.updated, reason: r.reason }))
@@ -1867,6 +1864,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     return;
                 }
                 let synced = 0;
+                let failed = 0;
                 for (const target of duplicates) {
                     const targetLoc = normalizeSeparators(target.location);
                     const targetWf = pathService.getWorkspaceFolderForLocation(targetLoc);
@@ -1876,10 +1874,12 @@ export async function activate(context: vscode.ExtensionContext) {
                         await deleteWithTrashFallback(targetUri, { recursive: true });
                         await vscode.workspace.fs.copy(item.itemUri, targetUri, { overwrite: true });
                         synced++;
-                    } catch { /* skip */ }
+                    } catch { failed++; }
                 }
                 if (synced > 0) {
                     await syncInstalledStatus();
+                } else if (failed > 0) {
+                    vscode.window.showWarningMessage(`Could not synchronize "${item.installedItem.name}" to any location.`);
                 }
             } else if (item?.installedSkill) {
                 const success = await installationService.syncSkill(
