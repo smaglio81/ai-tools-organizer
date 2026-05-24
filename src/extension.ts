@@ -321,7 +321,11 @@ export async function activate(context: vscode.ExtensionContext) {
         );
     }
 
-    /** Write sync results to the output channel and show a toast with optional "Show Details" button. */
+    /**
+     * Write sync results to the output channel. Shows a warning toast only if there are failures (silent on success).
+     * The toast summarizes the number of failures and offers a "Show Details" button to open the output channel.
+     * No notification is shown if all items succeed.
+     */
     async function showSyncResults(
         title: string,
         results: { label: string; updated: boolean; reason?: string }[]
@@ -1683,6 +1687,7 @@ export async function activate(context: vscode.ExtensionContext) {
             const results: { name: string; updated: boolean; reason?: string }[] = [];
             try {
                 const entries = await vscode.workspace.fs.readDirectory(item.folderUri);
+
                 for (const [name] of entries) {
                     const itemUri = vscode.Uri.joinPath(item.folderUri, name);
                     const def = AREA_DEFINITIONS[area];
@@ -1697,6 +1702,9 @@ export async function activate(context: vscode.ExtensionContext) {
             } catch { /* can't read folder */ }
 
             const areaLabel = AREA_DEFINITIONS[area].label;
+            if (results.length > 0 && results.every(r => !r.updated)) {
+                vscode.window.showWarningMessage(`${areaLabel}: All sync attempts failed. No items were updated.`);
+            }
             await showSyncResults(
                 `Get Latest — ${areaLabel}`,
                 results.map(r => ({ label: r.name, updated: r.updated, reason: r.reason }))
