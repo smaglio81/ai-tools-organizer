@@ -321,10 +321,13 @@ export async function activate(context: vscode.ExtensionContext) {
         );
     }
 
-    /** Write sync results to the output channel and show a toast with optional "Show Details" button. */
+    /**
+     * Write sync results to the output channel. Shows a warning toast only if there are failures (silent on success).
+     * The toast summarizes the number of failures and offers a "Show Details" button to open the output channel.
+     * No notification is shown if all items succeed.
+     */
     async function showSyncResults(
         title: string,
-        toastMessage: string,
         results: { label: string; updated: boolean; reason?: string }[]
     ): Promise<void> {
         const updated = results.filter(r => r.updated).length;
@@ -336,8 +339,11 @@ export async function activate(context: vscode.ExtensionContext) {
             const note = !r.updated && r.reason ? ` — ${r.reason}` : '';
             outputChannel.appendLine(`  ${status} ${r.label}${note}`);
         }
-        const action = await vscode.window.showInformationMessage(toastMessage, 'Show Details');
-        if (action === 'Show Details') { outputChannel.show(); }
+        const failed = results.filter(r => !r.updated && r.reason).length;
+        if (failed > 0) {
+            const action = await vscode.window.showWarningMessage(`${failed} of ${results.length} item(s) could not be updated.`, 'Show Details');
+            if (action === 'Show Details') { outputChannel.show(); }
+        }
     }
 
     /** Move or copy an area item to a different scan location */
@@ -383,7 +389,6 @@ export async function activate(context: vscode.ExtensionContext) {
             if (mode === 'move') {
                 await deleteWithTrashFallback(item.itemUri, { recursive: true });
             }
-            vscode.window.showInformationMessage(`Successfully ${mode === 'move' ? 'moved' : 'copied'} "${item.installedItem.name}"`);
             await syncInstalledStatus();
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
@@ -450,7 +455,6 @@ export async function activate(context: vscode.ExtensionContext) {
                     await deleteWithTrashFallback(sourceUri, { recursive: true });
                 }
             }
-            vscode.window.showInformationMessage(`Successfully ${mode === 'move' ? 'moved' : 'copied'} ${locationItem.items.length} item(s)`);
             await syncInstalledStatus();
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
@@ -498,7 +502,6 @@ export async function activate(context: vscode.ExtensionContext) {
                     await deleteWithTrashFallback(sourceUri, { recursive: true });
                 }
             }
-            vscode.window.showInformationMessage(`Successfully ${mode === 'move' ? 'moved' : 'copied'} ${locationItem.skills.length} skill(s)`);
             await syncInstalledStatus();
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
@@ -1050,7 +1053,6 @@ export async function activate(context: vscode.ExtensionContext) {
                     const parentUri = targetUri.with({ path: targetUri.path.replace(/\/[^/]+$/, '') });
                     await vscode.workspace.fs.createDirectory(parentUri);
                     await vscode.workspace.fs.writeFile(targetUri, new TextEncoder().encode(content));
-                    vscode.window.showInformationMessage(`Successfully downloaded "${fileItem.name}"`);
                     await syncInstalledStatus();
                 } catch (error) {
                     const message = error instanceof Error ? error.message : String(error);
@@ -1079,7 +1081,6 @@ export async function activate(context: vscode.ExtensionContext) {
                     } else {
                         await deleteWithTrashFallback(item.itemUri, { recursive: true });
                     }
-                    vscode.window.showInformationMessage(`Successfully deleted "${item.installedItem.name}"`);
                     await syncInstalledStatus();
                 } catch (error) {
                     const message = error instanceof Error ? error.message : String(error);
@@ -1245,7 +1246,6 @@ export async function activate(context: vscode.ExtensionContext) {
                 ? item.installedSkill.name
                 : item.installedItem.name;
             await vscode.env.clipboard.writeText(name);
-            vscode.window.showInformationMessage(`Copied "${name}" to clipboard.`);
         }),
 
         // Duplicate an installed area item or skill with a new name
@@ -1298,7 +1298,6 @@ export async function activate(context: vscode.ExtensionContext) {
                     }
                 }
 
-                vscode.window.showInformationMessage(`Duplicated "${oldName}" as "${normalized}".`);
                 if (isSkill) {
                     await installedProvider.refresh();
                 } else {
@@ -1533,7 +1532,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
             try {
                 await vscode.workspace.fs.copy(sourceUri, targetUri, { overwrite: true });
-                vscode.window.showInformationMessage(`Copied "${itemName}" to ${selected.label}/${targetSubfolder}`);
                 await syncInstalledStatus();
             } catch (error) {
                 const message = error instanceof Error ? error.message : String(error);
@@ -1580,7 +1578,6 @@ export async function activate(context: vscode.ExtensionContext) {
                 return;
             }
 
-            let updatedCount = 0;
             const results: { pluginName: string; updated: boolean; reason?: string }[] = [];
 
             for (const plugin of plugins) {
@@ -1600,7 +1597,6 @@ export async function activate(context: vscode.ExtensionContext) {
                 try {
                     await deleteWithTrashFallback(targetUri, { recursive: true });
                     await vscode.workspace.fs.copy(sourceUri, targetUri, { overwrite: true });
-                    updatedCount++;
                     results.push({ pluginName: plugin.name, updated: true });
                 } catch (error) {
                     const message = error instanceof Error ? error.message : String(error);
@@ -1613,7 +1609,6 @@ export async function activate(context: vscode.ExtensionContext) {
             } else {
                 await showSyncResults(
                     `Update Plugins — "${itemName}"`,
-                    `Updated "${itemName}" in ${updatedCount} plugin(s).`,
                     results.map(r => ({ label: r.pluginName, updated: r.updated, reason: r.reason }))
                 );
             }
@@ -1658,10 +1653,8 @@ export async function activate(context: vscode.ExtensionContext) {
             if (allResults.length === 0) {
                 vscode.window.showInformationMessage(`No AI tool subfolders found in "${item.installedItem.name}".`);
             } else {
-                const updated = allResults.filter(r => r.updated).length;
                 await showSyncResults(
                     `Get Latest — "${item.installedItem.name}"`,
-                    `Updated ${updated} of ${allResults.length} item(s) in "${item.installedItem.name}".`,
                     allResults.map(r => ({ label: `[${r.area}] ${r.name}`, updated: r.updated, reason: r.reason }))
                 );
             }
@@ -1694,6 +1687,7 @@ export async function activate(context: vscode.ExtensionContext) {
             const results: { name: string; updated: boolean; reason?: string }[] = [];
             try {
                 const entries = await vscode.workspace.fs.readDirectory(item.folderUri);
+
                 for (const [name] of entries) {
                     const itemUri = vscode.Uri.joinPath(item.folderUri, name);
                     const def = AREA_DEFINITIONS[area];
@@ -1708,10 +1702,8 @@ export async function activate(context: vscode.ExtensionContext) {
             } catch { /* can't read folder */ }
 
             const areaLabel = AREA_DEFINITIONS[area].label;
-            const updated = results.filter(r => r.updated).length;
             await showSyncResults(
                 `Get Latest — ${areaLabel}`,
-                `${areaLabel}: Updated ${updated} of ${results.length} item(s).`,
                 results.map(r => ({ label: r.name, updated: r.updated, reason: r.reason }))
             );
             await syncInstalledStatus();
@@ -1777,10 +1769,8 @@ export async function activate(context: vscode.ExtensionContext) {
             const resolveUri = (i: InstalledSkill) => resolveInstalledItemUri(i, pathService);
             const result = await syncPluginItem(itemUri, itemName, sourceItems, resolveUri);
 
-            if (result.updated) {
-                vscode.window.showInformationMessage(`Updated "${itemFileName}" with latest copy.`);
-            } else {
-                vscode.window.showInformationMessage(`Could not update "${itemFileName}": ${result.reason || 'unknown reason'}.`);
+            if (!result.updated) {
+                vscode.window.showErrorMessage(`Could not update "${itemFileName}": ${result.reason || 'unknown reason'}.`);
             }
             await syncInstalledStatus();
         }),
@@ -1851,7 +1841,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
             try {
                 await vscode.workspace.fs.copy(itemUri, targetUri, { overwrite: true });
-                vscode.window.showInformationMessage(`Copied "${itemFileName}" to ${areaLabel} (${downloadLocation})`);
                 await syncInstalledStatus();
             } catch (error) {
                 const message = error instanceof Error ? error.message : String(error);
@@ -1874,24 +1863,26 @@ export async function activate(context: vscode.ExtensionContext) {
                     vscode.window.showInformationMessage(`No other copies of "${item.installedItem.name}" to synchronize.`);
                     return;
                 }
-                let synced = 0;
+                let failed = 0;
                 for (const target of duplicates) {
                     const targetLoc = normalizeSeparators(target.location);
                     const targetWf = pathService.getWorkspaceFolderForLocation(targetLoc);
                     const targetUri = pathService.resolveLocationToUri(targetLoc, targetWf);
-                    if (!targetUri) { continue; }
+                    if (!targetUri) {
+                        failed++;
+                        continue;
+                    }
                     try {
                         await deleteWithTrashFallback(targetUri, { recursive: true });
                         await vscode.workspace.fs.copy(item.itemUri, targetUri, { overwrite: true });
-                        synced++;
-                    } catch { /* skip */ }
-                }
-                if (synced > 0) {
-                    vscode.window.showInformationMessage(
-                        `Synchronized "${item.installedItem.name}" to ${synced} location${synced !== 1 ? 's' : ''}.`
-                    );
+                    } catch {
+                        failed++;
+                    }
                 }
                 await syncInstalledStatus();
+                if (failed > 0) {
+                    vscode.window.showWarningMessage(`Could not synchronize "${item.installedItem.name}" to ${failed} of ${duplicates.length} location${duplicates.length !== 1 ? 's' : ''}.`);
+                }
             } else if (item?.installedSkill) {
                 const success = await installationService.syncSkill(
                     item.installedSkill,
@@ -1919,7 +1910,6 @@ export async function activate(context: vscode.ExtensionContext) {
                 try {
                     await deleteWithTrashFallback(item.itemUri, { recursive: true });
                     await vscode.workspace.fs.copy(newestUri, item.itemUri, { overwrite: true });
-                    vscode.window.showInformationMessage(`Updated "${item.installedItem.name}" from latest copy.`);
                     await syncInstalledStatus();
                 } catch (error) {
                     const message = error instanceof Error ? error.message : String(error);

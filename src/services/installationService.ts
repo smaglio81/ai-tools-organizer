@@ -110,7 +110,6 @@ export class SkillInstallationService {
                     });
                 }
 
-                vscode.window.showInformationMessage(`Successfully downloaded "${skill.name}"`);
                 return true;
                 
             } catch (error) {
@@ -147,7 +146,6 @@ export class SkillInstallationService {
             }
 
             await deleteWithTrashFallback(skillDir, { recursive: true });
-            vscode.window.showInformationMessage(`Successfully uninstalled skill "${skill.name}"`);
             return true;
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
@@ -245,7 +243,6 @@ export class SkillInstallationService {
             await vscode.workspace.fs.copy(sourceDir, targetDir, { overwrite: true });
             await deleteWithTrashFallback(sourceDir, { recursive: true });
 
-            vscode.window.showInformationMessage(`Moved "${skill.name}" to ${targetLocation}`);
             return true;
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
@@ -330,7 +327,6 @@ export class SkillInstallationService {
             // Copy source to target (no delete — keep original)
             await vscode.workspace.fs.copy(sourceDir, targetDir, { overwrite: true });
 
-            vscode.window.showInformationMessage(`Copied "${skill.name}" to ${targetLocation}`);
             return true;
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
@@ -380,11 +376,6 @@ export class SkillInstallationService {
             }
         }
 
-        if (synced > 0) {
-            vscode.window.showInformationMessage(
-                `Synchronized "${skill.name}" to ${synced} location${synced !== 1 ? 's' : ''}.`
-            );
-        }
         return synced > 0;
     }
 

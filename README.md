@@ -26,8 +26,9 @@ The extension scans conventional paths under your workspace and home directory, 
 
 1. Install the extension from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=smaglio81.agent-organizer) (works in Cursor as well)
 2. Open the **AI Tools Organizer** panel in the Activity Bar
-3. Browse the Marketplace and click the download button on any item
-4. Your downloaded items appear in the corresponding area view
+3. Expand the **Marketplace** view — `github/awesome-copilot` is pre-configured so content loads automatically
+4. Browse and click the download button on any item
+5. Your downloaded items appear in the corresponding area view
 
 ## Key features
 
@@ -42,6 +43,8 @@ The extension scans conventional paths under your workspace and home directory, 
 **Cursor plugins and marketplaces** — detects per-plugin manifests at `plugin.json` or `.cursor-plugin/plugin.json`, and can expand multi-plugin catalogs described by `.cursor-plugin/marketplace.json`.
 
 **Duplicate detection** — when the same item exists in multiple locations, color-coded icons show which copy is newest (green), older (orange), identical (blue), or unique (purple).
+
+**Quiet by default** — actions like download, delete, move, and copy complete silently. Notifications only appear when something goes wrong.
 
 **Plugin sync** — keep plugin subfolders (`/agents`, `/skills`, `/commands`, `/hooks`) in sync with your latest installed items. Use "Get latest copy" to pull updates into a plugin, or "Update Plugins" to push changes out to all plugins that contain a copy.
 

@@ -23,6 +23,10 @@ Click any item to view its details in a panel with:
 
 Downloaded items appear in the corresponding area view and get a green check in the Marketplace.
 
+## Default repository
+
+`github/awesome-copilot` is pre-configured as the default marketplace source for new installs. The Marketplace loads its content automatically the first time you open the panel.
+
 ## Adding repositories
 
 Click the **+** button in the Marketplace toolbar and paste a GitHub or Azure DevOps URL. The extension parses the URL and resolves the default branch automatically.
