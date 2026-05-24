@@ -13,6 +13,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ### Changed
 
 - The Marketplace view now starts **collapsed** on first install so the Skills view is the first panel the user sees.
+- Successful actions (download, delete, move, copy, sync) no longer show a pop-up notification. Notifications now only appear when something goes wrong, keeping the UI quiet during normal use.
 
 ## [0.3.4]
 

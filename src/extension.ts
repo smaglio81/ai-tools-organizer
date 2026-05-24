@@ -336,8 +336,11 @@ export async function activate(context: vscode.ExtensionContext) {
             const note = !r.updated && r.reason ? ` — ${r.reason}` : '';
             outputChannel.appendLine(`  ${status} ${r.label}${note}`);
         }
-        const action = await vscode.window.showInformationMessage(toastMessage, 'Show Details');
-        if (action === 'Show Details') { outputChannel.show(); }
+        const failed = results.filter(r => !r.updated && r.reason).length;
+        if (failed > 0) {
+            const action = await vscode.window.showInformationMessage(toastMessage, 'Show Details');
+            if (action === 'Show Details') { outputChannel.show(); }
+        }
     }
 
     /** Move or copy an area item to a different scan location */
@@ -383,7 +386,6 @@ export async function activate(context: vscode.ExtensionContext) {
             if (mode === 'move') {
                 await deleteWithTrashFallback(item.itemUri, { recursive: true });
             }
-            vscode.window.showInformationMessage(`Successfully ${mode === 'move' ? 'moved' : 'copied'} "${item.installedItem.name}"`);
             await syncInstalledStatus();
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
@@ -450,7 +452,6 @@ export async function activate(context: vscode.ExtensionContext) {
                     await deleteWithTrashFallback(sourceUri, { recursive: true });
                 }
             }
-            vscode.window.showInformationMessage(`Successfully ${mode === 'move' ? 'moved' : 'copied'} ${locationItem.items.length} item(s)`);
             await syncInstalledStatus();
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
@@ -498,7 +499,6 @@ export async function activate(context: vscode.ExtensionContext) {
                     await deleteWithTrashFallback(sourceUri, { recursive: true });
                 }
             }
-            vscode.window.showInformationMessage(`Successfully ${mode === 'move' ? 'moved' : 'copied'} ${locationItem.skills.length} skill(s)`);
             await syncInstalledStatus();
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
@@ -1050,7 +1050,6 @@ export async function activate(context: vscode.ExtensionContext) {
                     const parentUri = targetUri.with({ path: targetUri.path.replace(/\/[^/]+$/, '') });
                     await vscode.workspace.fs.createDirectory(parentUri);
                     await vscode.workspace.fs.writeFile(targetUri, new TextEncoder().encode(content));
-                    vscode.window.showInformationMessage(`Successfully downloaded "${fileItem.name}"`);
                     await syncInstalledStatus();
                 } catch (error) {
                     const message = error instanceof Error ? error.message : String(error);
@@ -1079,7 +1078,6 @@ export async function activate(context: vscode.ExtensionContext) {
                     } else {
                         await deleteWithTrashFallback(item.itemUri, { recursive: true });
                     }
-                    vscode.window.showInformationMessage(`Successfully deleted "${item.installedItem.name}"`);
                     await syncInstalledStatus();
                 } catch (error) {
                     const message = error instanceof Error ? error.message : String(error);
@@ -1245,7 +1243,6 @@ export async function activate(context: vscode.ExtensionContext) {
                 ? item.installedSkill.name
                 : item.installedItem.name;
             await vscode.env.clipboard.writeText(name);
-            vscode.window.showInformationMessage(`Copied "${name}" to clipboard.`);
         }),
 
         // Duplicate an installed area item or skill with a new name
@@ -1298,7 +1295,6 @@ export async function activate(context: vscode.ExtensionContext) {
                     }
                 }
 
-                vscode.window.showInformationMessage(`Duplicated "${oldName}" as "${normalized}".`);
                 if (isSkill) {
                     await installedProvider.refresh();
                 } else {
@@ -1533,7 +1529,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
             try {
                 await vscode.workspace.fs.copy(sourceUri, targetUri, { overwrite: true });
-                vscode.window.showInformationMessage(`Copied "${itemName}" to ${selected.label}/${targetSubfolder}`);
                 await syncInstalledStatus();
             } catch (error) {
                 const message = error instanceof Error ? error.message : String(error);
@@ -1777,9 +1772,7 @@ export async function activate(context: vscode.ExtensionContext) {
             const resolveUri = (i: InstalledSkill) => resolveInstalledItemUri(i, pathService);
             const result = await syncPluginItem(itemUri, itemName, sourceItems, resolveUri);
 
-            if (result.updated) {
-                vscode.window.showInformationMessage(`Updated "${itemFileName}" with latest copy.`);
-            } else {
+            if (!result.updated) {
                 vscode.window.showInformationMessage(`Could not update "${itemFileName}": ${result.reason || 'unknown reason'}.`);
             }
             await syncInstalledStatus();
@@ -1851,7 +1844,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
             try {
                 await vscode.workspace.fs.copy(itemUri, targetUri, { overwrite: true });
-                vscode.window.showInformationMessage(`Copied "${itemFileName}" to ${areaLabel} (${downloadLocation})`);
                 await syncInstalledStatus();
             } catch (error) {
                 const message = error instanceof Error ? error.message : String(error);
@@ -1887,11 +1879,8 @@ export async function activate(context: vscode.ExtensionContext) {
                     } catch { /* skip */ }
                 }
                 if (synced > 0) {
-                    vscode.window.showInformationMessage(
-                        `Synchronized "${item.installedItem.name}" to ${synced} location${synced !== 1 ? 's' : ''}.`
-                    );
+                    await syncInstalledStatus();
                 }
-                await syncInstalledStatus();
             } else if (item?.installedSkill) {
                 const success = await installationService.syncSkill(
                     item.installedSkill,
@@ -1919,7 +1908,6 @@ export async function activate(context: vscode.ExtensionContext) {
                 try {
                     await deleteWithTrashFallback(item.itemUri, { recursive: true });
                     await vscode.workspace.fs.copy(newestUri, item.itemUri, { overwrite: true });
-                    vscode.window.showInformationMessage(`Updated "${item.installedItem.name}" from latest copy.`);
                     await syncInstalledStatus();
                 } catch (error) {
                     const message = error instanceof Error ? error.message : String(error);

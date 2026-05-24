@@ -13,5 +13,6 @@
     // Disable suggestion status bar for markdown files
     "[markdown]": {
         "editor.suggest.showStatusBar": false
-    }
+    },
+    "github.copilot.chat.otel.dbSpanExporter.enabled": true
 }

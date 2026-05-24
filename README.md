@@ -44,6 +44,8 @@ The extension scans conventional paths under your workspace and home directory, 
 
 **Duplicate detection** — when the same item exists in multiple locations, color-coded icons show which copy is newest (green), older (orange), identical (blue), or unique (purple).
 
+**Quiet by default** — actions like download, delete, move, and copy complete silently. Notifications only appear when something goes wrong.
+
 **Plugin sync** — keep plugin subfolders (`/agents`, `/skills`, `/commands`, `/hooks`) in sync with your latest installed items. Use "Get latest copy" to pull updates into a plugin, or "Update Plugins" to push changes out to all plugins that contain a copy.
 
 **More reliable delete behavior** — delete actions are now more resilient on Windows and linked-folder setups, so item cleanup continues to work even when the OS trash flow is unavailable.
