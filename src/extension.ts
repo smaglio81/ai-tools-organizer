@@ -324,7 +324,6 @@ export async function activate(context: vscode.ExtensionContext) {
     /** Write sync results to the output channel and show a toast with optional "Show Details" button. */
     async function showSyncResults(
         title: string,
-        toastMessage: string,
         results: { label: string; updated: boolean; reason?: string }[]
     ): Promise<void> {
         const updated = results.filter(r => r.updated).length;
@@ -338,7 +337,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }
         const failed = results.filter(r => !r.updated && r.reason).length;
         if (failed > 0) {
-            const action = await vscode.window.showInformationMessage(toastMessage, 'Show Details');
+            const action = await vscode.window.showWarningMessage(`${failed} of ${results.length} item(s) could not be updated.`, 'Show Details');
             if (action === 'Show Details') { outputChannel.show(); }
         }
     }
@@ -1575,7 +1574,6 @@ export async function activate(context: vscode.ExtensionContext) {
                 return;
             }
 
-            let updatedCount = 0;
             const results: { pluginName: string; updated: boolean; reason?: string }[] = [];
 
             for (const plugin of plugins) {
@@ -1595,7 +1593,6 @@ export async function activate(context: vscode.ExtensionContext) {
                 try {
                     await deleteWithTrashFallback(targetUri, { recursive: true });
                     await vscode.workspace.fs.copy(sourceUri, targetUri, { overwrite: true });
-                    updatedCount++;
                     results.push({ pluginName: plugin.name, updated: true });
                 } catch (error) {
                     const message = error instanceof Error ? error.message : String(error);
@@ -1608,7 +1605,6 @@ export async function activate(context: vscode.ExtensionContext) {
             } else {
                 await showSyncResults(
                     `Update Plugins — "${itemName}"`,
-                    `Updated "${itemName}" in ${updatedCount} plugin(s).`,
                     results.map(r => ({ label: r.pluginName, updated: r.updated, reason: r.reason }))
                 );
             }
@@ -1653,10 +1649,8 @@ export async function activate(context: vscode.ExtensionContext) {
             if (allResults.length === 0) {
                 vscode.window.showInformationMessage(`No AI tool subfolders found in "${item.installedItem.name}".`);
             } else {
-                const updated = allResults.filter(r => r.updated).length;
                 await showSyncResults(
                     `Get Latest — "${item.installedItem.name}"`,
-                    `Updated ${updated} of ${allResults.length} item(s) in "${item.installedItem.name}".`,
                     allResults.map(r => ({ label: `[${r.area}] ${r.name}`, updated: r.updated, reason: r.reason }))
                 );
             }
@@ -1703,10 +1697,8 @@ export async function activate(context: vscode.ExtensionContext) {
             } catch { /* can't read folder */ }
 
             const areaLabel = AREA_DEFINITIONS[area].label;
-            const updated = results.filter(r => r.updated).length;
             await showSyncResults(
                 `Get Latest — ${areaLabel}`,
-                `${areaLabel}: Updated ${updated} of ${results.length} item(s).`,
                 results.map(r => ({ label: r.name, updated: r.updated, reason: r.reason }))
             );
             await syncInstalledStatus();
@@ -1773,7 +1765,7 @@ export async function activate(context: vscode.ExtensionContext) {
             const result = await syncPluginItem(itemUri, itemName, sourceItems, resolveUri);
 
             if (!result.updated) {
-                vscode.window.showInformationMessage(`Could not update "${itemFileName}": ${result.reason || 'unknown reason'}.`);
+                vscode.window.showErrorMessage(`Could not update "${itemFileName}": ${result.reason || 'unknown reason'}.`);
             }
             await syncInstalledStatus();
         }),
