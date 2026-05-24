@@ -1868,11 +1868,16 @@ export async function activate(context: vscode.ExtensionContext) {
                     const targetLoc = normalizeSeparators(target.location);
                     const targetWf = pathService.getWorkspaceFolderForLocation(targetLoc);
                     const targetUri = pathService.resolveLocationToUri(targetLoc, targetWf);
-                    if (!targetUri) { continue; }
+                    if (!targetUri) {
+                        failed++;
+                        continue;
+                    }
                     try {
                         await deleteWithTrashFallback(targetUri, { recursive: true });
                         await vscode.workspace.fs.copy(item.itemUri, targetUri, { overwrite: true });
-                    } catch { failed++; }
+                    } catch {
+                        failed++;
+                    }
                 }
                 await syncInstalledStatus();
                 if (failed > 0) {
