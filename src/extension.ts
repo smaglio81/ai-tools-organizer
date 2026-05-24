@@ -1863,7 +1863,6 @@ export async function activate(context: vscode.ExtensionContext) {
                     vscode.window.showInformationMessage(`No other copies of "${item.installedItem.name}" to synchronize.`);
                     return;
                 }
-                let synced = 0;
                 let failed = 0;
                 for (const target of duplicates) {
                     const targetLoc = normalizeSeparators(target.location);
@@ -1873,13 +1872,11 @@ export async function activate(context: vscode.ExtensionContext) {
                     try {
                         await deleteWithTrashFallback(targetUri, { recursive: true });
                         await vscode.workspace.fs.copy(item.itemUri, targetUri, { overwrite: true });
-                        synced++;
                     } catch { failed++; }
                 }
-                if (synced > 0) {
-                    await syncInstalledStatus();
-                } else if (failed > 0) {
-                    vscode.window.showWarningMessage(`Could not synchronize "${item.installedItem.name}" to any location.`);
+                await syncInstalledStatus();
+                if (failed > 0) {
+                    vscode.window.showWarningMessage(`Could not synchronize "${item.installedItem.name}" to ${failed} of ${duplicates.length} location${duplicates.length !== 1 ? 's' : ''}.`);
                 }
             } else if (item?.installedSkill) {
                 const success = await installationService.syncSkill(
